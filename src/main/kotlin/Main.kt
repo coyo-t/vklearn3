@@ -1,26 +1,24 @@
 package com.catsofwar
 
+import org.tinylog.kotlin.Logger
+
 
 class Main: GameLogic
 {
 	override fun init(context: EngineContext)
 	{
-		TODO("Not yet implemented")
 	}
 
 	override fun input(context: EngineContext, diffTimeMillis: Long)
 	{
-		TODO("Not yet implemented")
 	}
 
 	override fun update(context: EngineContext, diffTimeMillis: Long)
 	{
-		TODO("Not yet implemented")
 	}
 
 	override fun close()
 	{
-		TODO("Not yet implemented")
 	}
 
 
@@ -29,13 +27,10 @@ class Main: GameLogic
 		@JvmStatic
 		fun main (vararg args: String)
 		{
-			val name = "Kotlin"
-			println("Hello, $name!")
-
-			for (i in 1..5)
-			{
-				println("i = $i")
-			}
+			Logger.info("MACHINE WITNESS BEGIN")
+			val engine = Engine("MACHINE WITNESS", Main())
+			Logger.info("MACHINE WITNESS REIFICATION")
+			engine.run()
 		}
 	}
 }

@@ -1,5 +1,7 @@
 package com.catsofwar
 
+import org.tinylog.kotlin.Logger
+
 class Engine (
 	windowTitle: String,
 	private val gameLogic: GameLogic,
@@ -26,33 +28,44 @@ class Engine (
 	fun run()
 	{
 		var initialTime = System.currentTimeMillis()
-		val timeU = 1000.0f / EngineConfig.ups
+		val timeU = 1000.0f / EngineConfig.updatesPerSecond
 		var deltaUpdate = 0.0
 
 		var updateTime = initialTime
 		val window = context.window
-		while (!window.shouldClose)
+		try
 		{
-			val now = System.currentTimeMillis()
-			deltaUpdate += ((now - initialTime) / timeU).toDouble()
-
-			window.pollEvents()
-			gameLogic.input(context, now - initialTime)
-			window.resetInput()
-
-			if (deltaUpdate >= 1)
+			while (!window.shouldClose)
 			{
-				val diffTimeMillis = now - updateTime
-				gameLogic.update(context, diffTimeMillis)
-				updateTime = now
-				deltaUpdate--
+				val now = System.currentTimeMillis()
+				deltaUpdate += ((now - initialTime) / timeU).toDouble()
+
+				window.pollEvents()
+				gameLogic.input(context, now - initialTime)
+				window.resetInput()
+
+				if (deltaUpdate >= 1)
+				{
+					val diffTimeMillis = now - updateTime
+					gameLogic.update(context, diffTimeMillis)
+					updateTime = now
+					deltaUpdate--
+				}
+
+				render.render(context)
+
+				initialTime = now
 			}
-
-			render.render(context)
-
-			initialTime = now
 		}
-
+		catch (sg: StopGame)
+		{
+			Logger.info("hard-stopping game")
+			when (val reason = sg.reason)
+			{
+				null -> Logger.info("no reason given")
+				else -> Logger.info("reason: \"$reason\"")
+			}
+		}
 		cleanup()
 	}
 }
