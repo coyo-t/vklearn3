@@ -7,6 +7,5 @@ data class EngineContext(
 {
 	override fun close ()
 	{
-		window.cleanup()
 	}
 }

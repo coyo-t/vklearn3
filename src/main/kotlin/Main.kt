@@ -28,6 +28,7 @@ class Main: GameLogic
 		fun main (vararg args: String)
 		{
 			Logger.info("MACHINE WITNESS BEGIN")
+			Logger.info("yeah :)")
 			val engine = Engine("MACHINE WITNESS", Main())
 			Logger.info("MACHINE WITNESS REIFICATION")
 			engine.run()

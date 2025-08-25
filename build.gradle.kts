@@ -10,19 +10,19 @@ repositories {
 	mavenCentral()
 }
 
-val lwjglNatives = Pair(
-	System.getProperty("os.name")!!,
-	System.getProperty("os.arch")!!
-).let { (name, arch) ->
-	when {
-		arrayOf("Linux", "SunOS", "Unit").any { name.startsWith(it) } -> "natives-linux"
-		arrayOf("Windows").any { name.startsWith(it) } -> "natives-windows"
-		else ->
-			throw Error("Unrecognized or unsupported platform. Please set \"lwjglNatives\" manually")
-	}
-}
 
 dependencies {
+	val lwjglNatives = Pair(
+		System.getProperty("os.name")!!,
+		System.getProperty("os.arch")!!
+	).let { (name, arch) ->
+		when {
+			arrayOf("Linux", "SunOS", "Unit").any { name.startsWith(it) } -> "natives-linux"
+			arrayOf("Windows").any { name.startsWith(it) } -> "natives-windows"
+			else ->
+				throw Error("Unrecognized or unsupported platform. Please set \"lwjglNatives\" manually")
+		}
+	}
 //	testImplementation(kotlin("test"))
 
 	implementation(platform("org.lwjgl:lwjgl-bom:3.3.6"))
@@ -114,10 +114,15 @@ dependencies {
 //	provided 'party.iroiro.luajava:lua54-platform:4.0.2:natives-desktop'
 }
 
-//tasks.test {
-//	useJUnitPlatform()
-//}
+
 kotlin {
 	jvmToolchain(24)
+
 }
+
+
+java {
+
+}
+
 

@@ -21,7 +21,6 @@ class KeyboardInput (val window: Window) : GLFWKeyCallbackI
 
 	fun input()
 	{
-		GLFW.glfwPollEvents()
 	}
 
 	override fun invoke (handle: Long, keyCode: Int, scanCode: Int, action: Int, mods: Int)

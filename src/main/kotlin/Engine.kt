@@ -1,5 +1,6 @@
 package com.catsofwar
 
+import org.lwjgl.glfw.GLFW
 import org.tinylog.kotlin.Logger
 
 class Engine (
@@ -23,6 +24,7 @@ class Engine (
 		gameLogic.close()
 		render.close()
 		context.close()
+		context.window.cleanup()
 	}
 
 	fun run()
@@ -40,6 +42,7 @@ class Engine (
 				val now = System.currentTimeMillis()
 				deltaUpdate += ((now - initialTime) / timeU).toDouble()
 
+				GLFW.glfwPollEvents()
 				window.pollEvents()
 				gameLogic.input(context, now - initialTime)
 				window.resetInput()
@@ -66,6 +69,15 @@ class Engine (
 				else -> Logger.info("reason: \"$reason\"")
 			}
 		}
+		catch (e: Exception)
+		{
+			Logger.error(e) { "EXCEPTION FUCK" }
+		}
+		catch (t: Throwable)
+		{
+			Logger.error(t) { "SOMETHING THREW HARDER THAN ELI FUCK" }
+		}
+
 		cleanup()
 	}
 }
