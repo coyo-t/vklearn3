@@ -4,7 +4,7 @@ import com.catsofwar.vk.VKContext
 
 class Render (engineContext: EngineContext): AutoCloseable
 {
-	private val vkContext = VKContext()
+	private val vkContext = VKContext(engineContext.window)
 
 	override fun close()
 	{

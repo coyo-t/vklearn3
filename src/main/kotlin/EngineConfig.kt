@@ -3,11 +3,18 @@ package com.catsofwar
 
 object EngineConfig
 {
-//	const val FILENAME = "eng.properties"
 	var updatesPerSecond = 30
 		private set
 
-	var vkUseValidationLayers = false
+	var useVulkanValidationLayers = false
 		private set
 
+	var preferredPhysicalDevice: String? = null
+		private set
+
+	var useVerticalSync = true
+		private set
+
+	var preferredImageBufferingCount = 3
+		private set
 }

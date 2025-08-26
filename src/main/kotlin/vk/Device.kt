@@ -70,7 +70,12 @@ class Device (physDevice: PhysicalDevice): AutoCloseable
 	{
 		MemoryStack.stackPush().use { stack ->
 			val numExtensionsBuf = stack.callocInt(1)
-			vkEnumerateDeviceExtensionProperties(physDevice.vkPhysicalDevice, null as String?, numExtensionsBuf, null)
+			vkEnumerateDeviceExtensionProperties(
+				physDevice.vkPhysicalDevice,
+				null as String?,
+				numExtensionsBuf,
+				null,
+			)
 			val numExtensions = numExtensionsBuf.get(0)
 			val propsBuff = VkExtensionProperties.calloc(numExtensions, stack)
 			vkEnumerateDeviceExtensionProperties(
