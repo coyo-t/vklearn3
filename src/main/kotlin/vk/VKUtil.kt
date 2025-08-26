@@ -1,6 +1,13 @@
 package com.catsofwar.vk
 
+import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK13.*
+import org.lwjgl.vulkan.VkCommandBuffer
+import org.lwjgl.vulkan.VkDependencyInfo
+import org.lwjgl.vulkan.VkImageMemoryBarrier2
+import org.lwjgl.vulkan.VkImageSubresourceRange
+import java.util.function.Consumer
+
 
 object VKUtil
 {
@@ -36,6 +43,46 @@ object VKUtil
 				return DUDE_IDFK
 			}
 		}
+	}
+
+	fun imageBarrier(
+		stack: MemoryStack,
+		cmdHandle: VkCommandBuffer,
+		image: Long,
+		oldLayout: Int,
+		newLayout: Int,
+		srcStage: Long,
+		dstStage: Long,
+		srcAccess: Long,
+		dstAccess: Long,
+		aspectMask: Int,
+	)
+	{
+		val imageBarrier = VkImageMemoryBarrier2.calloc(1, stack)
+			.`sType$Default`()
+			.oldLayout(oldLayout)
+			.newLayout(newLayout)
+			.srcStageMask(srcStage)
+			.dstStageMask(dstStage)
+			.srcAccessMask(srcAccess)
+			.dstAccessMask(dstAccess)
+			.srcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+			.dstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+			.subresourceRange {
+				it
+					.aspectMask(aspectMask)
+					.baseMipLevel(0)
+					.levelCount(VK_REMAINING_MIP_LEVELS)
+					.baseArrayLayer(0)
+					.layerCount(VK_REMAINING_ARRAY_LAYERS)
+			}
+			.image(image)
+
+		val depInfo = VkDependencyInfo.calloc(stack)
+			.`sType$Default`()
+			.pImageMemoryBarriers(imageBarrier)
+
+		vkCmdPipelineBarrier2(cmdHandle, depInfo)
 	}
 
 	fun vkCheck(err: Int, errMsg: String?)

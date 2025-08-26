@@ -209,14 +209,11 @@ class VKInstance (validate: Boolean): AutoCloseable
 		Logger.debug("Destroying Vulkan instance")
 		if (vkDebugHandle != VK_NULL_HANDLE)
 		{
-			vkDestroyDebugUtilsMessengerEXT(vkInstance!!, vkDebugHandle, null)
+			vkDestroyDebugUtilsMessengerEXT(vkInstance, vkDebugHandle, null)
 		}
-		vkDestroyInstance(vkInstance!!, null)
-		if (debugUtils != null)
-		{
-			debugUtils!!.pfnUserCallback().free()
-			debugUtils!!.free()
-		}
+		vkDestroyInstance(vkInstance, null)
+		debugUtils.pfnUserCallback().free()
+		debugUtils.free()
 	}
 
 	companion object

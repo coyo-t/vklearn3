@@ -17,4 +17,7 @@ object EngineConfig
 
 	var preferredImageBufferingCount = 3
 		private set
+
+	var maxInFlightFrames = 2
+		private set
 }

@@ -23,6 +23,8 @@ class VKContext (window: Window): AutoCloseable
 		vsync = EngineConfig.useVerticalSync,
 	)
 
+	val vkDevice get() = device.vkDevice
+
 //	val instance = run {
 //		val cfg = EngineConfig
 //		VKInstance(cfg.vkUseValidationLayers)

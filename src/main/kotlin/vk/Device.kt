@@ -92,7 +92,7 @@ class Device (physDevice: PhysicalDevice): AutoCloseable
 					val props = propsBuff.get(i)
 					val extensionName = props.extensionNameString()
 					add(extensionName)
-					sb.appendLine("\textensionName")
+					sb.appendLine("\t$extensionName")
 				}
 				Logger.trace(sb.toString())
 			}
