@@ -7,6 +7,7 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugUtils.*
+import org.lwjgl.vulkan.KHRPortabilityEnumeration.VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR
 import org.lwjgl.vulkan.VK13.*
 import org.tinylog.kotlin.Logger
 
@@ -58,7 +59,7 @@ class VKInstance (validate: Boolean): AutoCloseable
 			val instanceExtensions = getInstanceExtensions()
 			val usePortability = (
 				instanceExtensions.contains(PORTABILITY_EXTENSION) &&
-				VKUtil.isMacintosh
+				VKUtil.OSType.isMacintosh
 			)
 
 			// GLFW Extension
@@ -100,8 +101,8 @@ class VKInstance (validate: Boolean): AutoCloseable
 				.ppEnabledExtensionNames(requiredExtensions)
 			if (usePortability)
 			{
-				// VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR
-				instanceInfo.flags(0x00000001)
+//				instanceInfo.flags(0x00000001)
+				instanceInfo.flags(VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR)
 			}
 
 			val pInstance = stack.mallocPointer(1)
@@ -156,18 +157,19 @@ class VKInstance (validate: Boolean): AutoCloseable
 			val numExtensionsBuf = stack.callocInt(1)
 			vkEnumerateInstanceExtensionProperties(null as String?, numExtensionsBuf, null)
 			val numExtensions = numExtensionsBuf.get(0)
-			Logger.trace("Instance supports [{}] extensions", numExtensions)
-
 			val instanceExtensionsProps = VkExtensionProperties.calloc(numExtensions, stack)
 			vkEnumerateInstanceExtensionProperties(null as String?, numExtensionsBuf, instanceExtensionsProps)
 			return buildSet {
+				val sb = StringBuilder()
+				sb.appendLine("Instance supports [$numExtensions] extensions")
 				for (i in 0..<numExtensions)
 				{
 					val props = instanceExtensionsProps.get(i)
 					val extensionName = props.extensionNameString()
 					add(extensionName)
-					Logger.trace("Supported instance extension [{}]", extensionName)
+					sb.appendLine("\t$extensionName")
 				}
+				Logger.trace(sb.toString())
 			}
 		}
 	}
@@ -178,18 +180,18 @@ class VKInstance (validate: Boolean): AutoCloseable
 			val numLayersArr = stack.callocInt(1)
 			vkEnumerateInstanceLayerProperties(numLayersArr, null)
 			val numLayers = numLayersArr[0]
-			Logger.debug("Instance supports [{}] layers", numLayers)
-
 			val propsBuf = VkLayerProperties.calloc(numLayers, stack)
 			vkEnumerateInstanceLayerProperties(numLayersArr, propsBuf)
 			val supportedLayers = buildList {
+				val sb = StringBuilder("Instance supports [$numLayers] layers:\n")
 				for (i in 0..<numLayers)
 				{
 					val props = propsBuf.get(i)
 					val layerName = props.layerNameString()
 					add(layerName)
-					Logger.trace("Supported layer [{}]", layerName)
+					sb.appendLine("\t$layerName")
 				}
+				Logger.trace(sb.toString())
 			}
 
 			// Main validation layer
