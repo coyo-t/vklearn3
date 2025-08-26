@@ -7,4 +7,7 @@ object EngineConfig
 	var updatesPerSecond = 30
 		private set
 
+	var vkUseValidationLayers = false
+		private set
+
 }

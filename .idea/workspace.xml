@@ -5,19 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="facc042d-f938-4867-8ce5-d1cc935641f0" name="Changes" comment="sw">
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/vk/VKContext.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/vk/VKInstance.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/vk/VKUtil.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradlew" beforeDir="false" afterPath="$PROJECT_DIR$/gradlew" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradlew.bat" beforeDir="false" afterPath="$PROJECT_DIR$/gradlew.bat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Engine.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Engine.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/EngineContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/EngineContext.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/KeyboardInput.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/KeyboardInput.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/EngineConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/EngineConfig.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/KeyboardInput.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/MouseInput.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Inputterz.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/Render.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Render.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vulkan_learning_3.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Window.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Window.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,6 +69,7 @@
         <option value="Kotlin File" />
         <option value="Kotlin Interface" />
         <option value="Kotlin Class" />
+        <option value="Kotlin Object" />
       </list>
     </option>
   </component>
@@ -207,7 +204,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1756151302463</updated>
-      <workItem from="1756151303750" duration="6720000" />
+      <workItem from="1756151303750" duration="11250000" />
     </task>
     <task id="LOCAL-00001" summary="sw">
       <option name="closed" value="true" />
@@ -249,7 +246,15 @@
       <option name="project" value="LOCAL" />
       <updated>1756159544470</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="sw">
+      <option name="closed" value="true" />
+      <created>1756160660762</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1756160660762</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

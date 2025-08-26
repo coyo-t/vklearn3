@@ -2,9 +2,14 @@ package com.catsofwar
 
 import org.joml.Vector2f
 import org.lwjgl.glfw.GLFW
+import org.lwjgl.glfw.GLFWCharCallbackI
+import org.lwjgl.glfw.GLFWKeyCallbackI
 
-class MouseInput (val window: Window)
+class Inputterz (val window: Window) : GLFWKeyCallbackI
 {
+	private val singlePressKeyMap = mutableMapOf<Int, Boolean>()
+	private val callbacks = mutableListOf<GLFWKeyCallbackI>()
+
 	val currentPos = Vector2f()
 	val deltaPos = Vector2f()
 	private val previousPos = Vector2f(-1f)
@@ -19,6 +24,8 @@ class MouseInput (val window: Window)
 
 	init
 	{
+		GLFW.glfwSetKeyCallback(window.handle, this)
+
 		GLFW.glfwSetCursorPosCallback(window.handle) { handle, xpos, ypos ->
 			currentPos.x = xpos.toFloat()
 			currentPos.y = ypos.toFloat()
@@ -30,9 +37,15 @@ class MouseInput (val window: Window)
 			this.isLeftButtonPressed = button == GLFW.GLFW_MOUSE_BUTTON_1 && action == GLFW.GLFW_PRESS
 			this.isRightButtonPressed = button == GLFW.GLFW_MOUSE_BUTTON_2 && action == GLFW.GLFW_PRESS
 		}
+
 	}
 
-	fun input ()
+	fun addKeyCallBack (callback: GLFWKeyCallbackI)
+	{
+		callbacks.add(callback)
+	}
+
+	fun input()
 	{
 		deltaPos.x = 0f
 		deltaPos.y = 0f
@@ -43,5 +56,32 @@ class MouseInput (val window: Window)
 		}
 		previousPos.x = currentPos.x
 		previousPos.y = currentPos.y
+
+	}
+
+	override fun invoke (handle: Long, keyCode: Int, scanCode: Int, action: Int, mods: Int)
+	{
+		singlePressKeyMap[keyCode] = action == GLFW.GLFW_PRESS
+		callbacks.forEach { it.invoke(handle, keyCode, scanCode, action, mods) }
+	}
+
+	fun keyPressed(keyCode: Int): Boolean
+	{
+		return GLFW.glfwGetKey(window.handle, keyCode) == GLFW.GLFW_PRESS
+	}
+
+	fun keySinglePress(keyCode: Int): Boolean
+	{
+		return singlePressKeyMap[keyCode] == true
+	}
+
+	fun resetInput ()
+	{
+		singlePressKeyMap.clear()
+	}
+
+	fun setCharCallBack (charCallback: GLFWCharCallbackI?)
+	{
+		GLFW.glfwSetCharCallback(window.handle, charCallback)
 	}
 }

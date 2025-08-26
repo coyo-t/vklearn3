@@ -17,9 +17,7 @@ class Window private constructor(
 	var tall = tall
 		private set
 
-	lateinit var keyboardInput: KeyboardInput
-		private set
-	lateinit var mouseInput: MouseInput
+	lateinit var input: Inputterz
 		private set
 
 	companion object
@@ -57,8 +55,7 @@ class Window private constructor(
 				outs.tall = h
 			}
 
-			outs.keyboardInput = KeyboardInput(outs)
-			outs.mouseInput = MouseInput(outs)
+			outs.input = Inputterz(outs)
 
 			return outs
 		}
@@ -73,13 +70,12 @@ class Window private constructor(
 
 	fun pollEvents()
 	{
-		keyboardInput.input()
-		mouseInput.input()
+		input.input()
 	}
 
 	fun resetInput()
 	{
-		keyboardInput.resetInput()
+		input.resetInput()
 	}
 
 	var shouldClose: Boolean
