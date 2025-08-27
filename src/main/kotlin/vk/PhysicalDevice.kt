@@ -1,12 +1,11 @@
 package com.catsofwar.vk
 
+import com.catsofwar.Main
 import com.catsofwar.vk.VKUtil.vkCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK13.*
-import org.tinylog.kotlin.Logger
-import java.util.HashSet
 
 
 class PhysicalDevice
@@ -56,7 +55,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice): AutoCloseable
 
 	override fun close ()
 	{
-		Logger.debug("Destroying physical device [{}]", deviceName)
+		Main.logDebug("Destroying physical device [$deviceName]")
 		vkMemoryProperties.free()
 		vkPhysicalDeviceFeatures.free()
 		vkQueueFamilyProps.free()
@@ -97,10 +96,8 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice): AutoCloseable
 		val result = copyExtensions.isEmpty()
 		if (!result)
 		{
-			Logger.debug(
-				"At least [{}] extension is not supported by device [{}]",
-				copyExtensions.iterator().next(),
-				deviceName
+			Main.logDebug(
+				"At least [${copyExtensions.iterator().next()}] extension is not supported by device [deviceName]",
 			)
 		}
 		return result
@@ -122,7 +119,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice): AutoCloseable
 				"Failed to get number of physical devices"
 			)
 			val numDevices = intBuffer.get(0)
-			Logger.debug("Detected {} physical device(s)", numDevices)
+			Main.logDebug("Detected $numDevices physical device(s)")
 
 			// Populate physical devices list pointer
 			pPhysicalDevices = stack.mallocPointer(numDevices)
@@ -135,7 +132,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice): AutoCloseable
 
 		fun createPhysicalDevice(instance: VKInstance, prefDeviceName: String?): PhysicalDevice
 		{
-			Logger.debug("Selecting physical devices")
+			Main.logDebug("Selecting physical devices")
 			var result: PhysicalDevice? = null
 			MemoryStack.stackPush().use { stack ->
 				// Get available devices
@@ -152,14 +149,14 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice): AutoCloseable
 						val deviceName = physDevice.deviceName
 						if (!physDevice.hasGraphicsQueueFamily())
 						{
-							Logger.debug("Device [{}] does not support graphics queue family", deviceName)
+							Main.logDebug("Device [$deviceName] does not support graphics queue family")
 							physDevice.close()
 							continue
 						}
 
 						if (!physDevice.supportsExtensions(REQUIRED_EXTENSIONS))
 						{
-							Logger.debug("Device [{}] does not support required extensions", deviceName)
+							Main.logDebug("Device [$deviceName] does not support required extensions")
 							physDevice.close()
 							continue
 						}
@@ -185,7 +182,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice): AutoCloseable
 
 				// Clean up non-selected devices
 				physDevices.forEach(PhysicalDevice::close)
-				Logger.debug("Selected device: [{}]", result?.deviceName)
+				Main.logDebug("Selected device: [${result?.deviceName}]")
 				return requireNotNull(result) {
 					"No suitable physical devices found"
 				}

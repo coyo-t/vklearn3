@@ -1,5 +1,6 @@
 package com.catsofwar.vk
 
+import com.catsofwar.Main
 import com.catsofwar.Window
 import com.catsofwar.vk.ImageView.ImageViewData
 import com.catsofwar.vk.VKUtil.vkCheck
@@ -8,10 +9,7 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_ERROR_OUT_OF_DATE_KHR
 import org.lwjgl.vulkan.KHRSwapchain.VK_SUBOPTIMAL_KHR
-import org.lwjgl.vulkan.VK10.*
-import org.tinylog.kotlin.Logger
-import java.util.*
-import java.util.function.Consumer
+import org.lwjgl.vulkan.VK14.*
 import kotlin.math.max
 import kotlin.math.min
 
@@ -32,8 +30,8 @@ class SwapChain (
 
 	init
 	{
-		Logger.debug("Creating Vulkan SwapChain")
 		MemoryStack.stackPush().use { stack ->
+			Main.logDebug("Creating Vulkan SwapChain")
 			val surfaceCaps = surface.surfaceCaps
 			val reqImages = calcNumImages(surfaceCaps, requestedImages)
 			swapChainExtent = calcSwapChainExtent(window, surfaceCaps)
@@ -82,7 +80,7 @@ class SwapChain (
 			result = min(requestedImages, maxImages)
 		}
 		result = max(result, minImages)
-		Logger.debug(
+		Main.logDebug(
 			"Requested [{}] images, got [{}] images. Surface capabilities, maxImages: [{}], minImages [{}]",
 			requestedImages, result, maxImages, minImages
 		)
@@ -165,7 +163,7 @@ class SwapChain (
 
 	fun cleanup(device: Device)
 	{
-		Logger.debug("Destroying Vulkan SwapChain")
+		Main.logDebug("Destroying Vulkan SwapChain")
 		swapChainExtent.free()
 		for (it in imageViews)
 		{

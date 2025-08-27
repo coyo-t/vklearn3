@@ -27,10 +27,44 @@ class Main: GameLogic
 		@JvmStatic
 		fun main (vararg args: String)
 		{
-			Logger.info("MACHINE WITNESS BEGIN")
+			Main.logInfo("MACHINE WITNESS BEGIN")
 			val engine = Engine("MACHINE WITNESS", Main())
-			Logger.info("MACHINE WITNESS REIFICATION")
+			Main.logInfo("MACHINE WITNESS REIFICATION")
 			engine.run()
+		}
+
+		fun logInfo (f:String, vararg args:Any?)
+		{
+//			println(f.format(*args))
+			Logger.info(f, *args)
+		}
+
+		fun logWarn (f:String, vararg args:Any?)
+		{
+//			println(f.format(*args))
+			Logger.warn(f, *args)
+		}
+
+		fun logError (f:String, vararg args:Any?)
+		{
+//			println(f.format(*args))
+			Logger.error(f, *args)
+		}
+
+		fun logDebug (f:String, vararg args:Any?)
+		{
+//			println(f.format(*args))
+			Logger.debug(f, *args)
+		}
+
+		fun logTrace (n: Any?)
+		{
+			Logger.trace(n)
+		}
+
+		fun logError (t: Throwable, k:()->String)
+		{
+			Logger.error(t, k)
 		}
 	}
 }

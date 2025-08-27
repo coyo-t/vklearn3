@@ -1,5 +1,6 @@
 package com.catsofwar.vk
 
+import com.catsofwar.Main
 import com.catsofwar.vk.VKUtil.vkCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFWVulkan
@@ -21,7 +22,7 @@ class VKInstance (validate: Boolean): AutoCloseable
 
 	init
 	{
-		Logger.debug("Creating Vulkan instance")
+		Main.logDebug("Creating Vulkan instance")
 		MemoryStack.stackPush().use { stack ->
 			// Create application information
 			val appShortName = stack.UTF8("VulkanBook")
@@ -40,9 +41,9 @@ class VKInstance (validate: Boolean): AutoCloseable
 			if (validate && numValidationLayers == 0)
 			{
 				supportsValidation = false
-				Logger.warn("Request validation but no supported validation layers found. Falling back to no validation")
+				Main.logWarn("Request validation but no supported validation layers found. Falling back to no validation")
 			}
-			Logger.debug("Validation: {}", supportsValidation)
+			Main.logDebug("Validation: $supportsValidation")
 
 			// Set required  layers
 			var requiredLayers: PointerBuffer? = null
@@ -51,8 +52,9 @@ class VKInstance (validate: Boolean): AutoCloseable
 				requiredLayers = stack.mallocPointer(numValidationLayers)
 				for (i in 0..<numValidationLayers)
 				{
-					Logger.debug("Using validation layer [{}]", validationLayers.get(i))
-					requiredLayers.put(i, stack.ASCII(validationLayers.get(i)!!))
+					val args = validationLayers[i]
+					Main.logDebug("Using validation layer [$args]")
+					requiredLayers.put(i, stack.ASCII(args))
 				}
 			}
 
@@ -134,19 +136,19 @@ class VKInstance (validate: Boolean): AutoCloseable
 				val callbackData = VkDebugUtilsMessengerCallbackDataEXT.create(pCallbackData)
 				if ((messageSeverity and VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) != 0)
 				{
-					Logger.info(DBG_CALL_BACK_PREF, callbackData.pMessageString())
+					Main.logInfo(DBG_CALL_BACK_PREF, callbackData.pMessageString())
 				}
 				else if ((messageSeverity and VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) != 0)
 				{
-					Logger.warn(DBG_CALL_BACK_PREF, callbackData.pMessageString())
+					Main.logWarn(DBG_CALL_BACK_PREF, callbackData.pMessageString())
 				}
 				else if ((messageSeverity and VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) != 0)
 				{
-					Logger.error(DBG_CALL_BACK_PREF, callbackData.pMessageString())
+					Main.logError(DBG_CALL_BACK_PREF, callbackData.pMessageString())
 				}
 				else
 				{
-					Logger.debug(DBG_CALL_BACK_PREF, callbackData.pMessageString())
+					Main.logDebug(DBG_CALL_BACK_PREF, callbackData.pMessageString())
 				}
 				VK_FALSE
 			}
@@ -170,7 +172,7 @@ class VKInstance (validate: Boolean): AutoCloseable
 					add(extensionName)
 					sb.appendLine("\t$extensionName")
 				}
-				Logger.trace(sb.toString())
+				Main.logTrace(sb.toString())
 			}
 		}
 	}
@@ -192,7 +194,7 @@ class VKInstance (validate: Boolean): AutoCloseable
 					add(layerName)
 					sb.appendLine("\t$layerName")
 				}
-				Logger.trace(sb.toString())
+				Main.logTrace(sb.toString())
 			}
 
 			// Main validation layer
@@ -207,7 +209,7 @@ class VKInstance (validate: Boolean): AutoCloseable
 
 	override fun close()
 	{
-		Logger.debug("Destroying Vulkan instance")
+		Main.logDebug("Destroying Vulkan instance")
 		if (vkDebugHandle != VK_NULL_HANDLE)
 		{
 			vkDestroyDebugUtilsMessengerEXT(vkInstance, vkDebugHandle, null)

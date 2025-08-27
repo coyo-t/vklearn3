@@ -6,6 +6,52 @@
   <component name="ChangeListManager">
     <list default="true" id="facc042d-f938-4867-8ce5-d1cc935641f0" name="Changes" comment="sw">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hs_err_pid10728.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hs_err_pid11668.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hs_err_pid12728.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hs_err_pid2224.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hs_err_pid5348.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hs_err_pid8624.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hs_err_pid9048.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hs_err_pid9068.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hs_err_pid9512.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hs_err_pid9684.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hs_err_pid9764.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/Main.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/EngCfg.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/EngCtx.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/Engine.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/IGameLogic.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/Render.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/scn/ScnRender.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/vk/CmdBuffer.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/vk/CmdPool.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/vk/Device.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/vk/Fence.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/vk/ImageView.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/vk/Instance.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/vk/PhysDevice.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/vk/Queue.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/vk/Semaphore.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/vk/Surface.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/vk/SwapChain.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/vk/VkCtx.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/graph/vk/VkUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/scene/Scene.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/wnd/KeyboardInput.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/wnd/MouseInput.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/vulkanb/eng/wnd/Window.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Engine.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Engine.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/CommandBuffer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/CommandBuffer.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/CommandPool.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/CommandPool.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/CommandQueue.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/CommandQueue.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/Device.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/Device.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/ImageView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/ImageView.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/PhysicalDevice.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/PhysicalDevice.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/Surface.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/Surface.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/SwapChain.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/SwapChain.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/VKInstance.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/VKInstance.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -129,7 +175,7 @@
       <recent name="com.catsofwar" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Main">
+  <component name="RunManager" selected="Kotlin.Main">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="org.vulkanb.Main" />
       <module name="vulkan_learning_3.main" />
@@ -213,7 +259,7 @@
       <option name="presentableId" value="Default" />
       <updated>1756151302463</updated>
       <workItem from="1756151303750" duration="19357000" />
-      <workItem from="1756233667511" duration="11941000" />
+      <workItem from="1756233667511" duration="13621000" />
     </task>
     <task id="LOCAL-00001" summary="sw">
       <option name="closed" value="true" />
@@ -311,7 +357,15 @@
       <option name="project" value="LOCAL" />
       <updated>1756258031015</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="sw">
+      <option name="closed" value="true" />
+      <created>1756258649573</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1756258649573</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -320,21 +374,5 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="sw" />
     <option name="LAST_COMMIT_MESSAGE" value="sw" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/src/main/kotlin/vk/SwapChain.kt</url>
-          <line>167</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/src/main/kotlin/Engine.kt</url>
-          <line>23</line>
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>

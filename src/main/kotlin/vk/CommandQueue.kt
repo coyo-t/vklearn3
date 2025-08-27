@@ -1,12 +1,11 @@
 package com.catsofwar.vk
 
+import com.catsofwar.Main
 import com.catsofwar.vk.VKUtil.vkCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VK13.vkQueueSubmit2
-import org.tinylog.kotlin.Logger
-import java.util.*
 
 
 sealed class CommandQueue (vkCtx: VKContext, queueFamilyIndex: Int, queueIndex: Int)
@@ -16,10 +15,10 @@ sealed class CommandQueue (vkCtx: VKContext, queueFamilyIndex: Int, queueIndex: 
 
 	init
 	{
-		Logger.debug("Creating queue")
 
 		this.queueFamilyIndex = queueFamilyIndex
 		MemoryStack.stackPush().use { stack ->
+			Main.logDebug("Creating queue")
 			val pQueue = stack.mallocPointer(1)
 			vkGetDeviceQueue(vkCtx.device.vkDevice, queueFamilyIndex, queueIndex, pQueue)
 			val queue = pQueue.get(0)

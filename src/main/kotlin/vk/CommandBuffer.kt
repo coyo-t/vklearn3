@@ -1,11 +1,10 @@
 package com.catsofwar.vk
 
+import com.catsofwar.Main
 import com.catsofwar.vk.VKUtil.vkCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import org.tinylog.kotlin.Logger
-import java.util.*
 
 
 class CommandBuffer (vkCtx: VKContext, cmdPool: CommandPool, primary: Boolean, oneTimeSubmit: Boolean)
@@ -17,7 +16,7 @@ class CommandBuffer (vkCtx: VKContext, cmdPool: CommandPool, primary: Boolean, o
 
 	init
 	{
-		Logger.trace("Creating command buffer")
+		Main.logTrace("Creating command buffer")
 		this.primary = primary
 		this.oneTimeSubmit = oneTimeSubmit
 		val vkDevice = vkCtx.vkDevice
@@ -78,7 +77,7 @@ class CommandBuffer (vkCtx: VKContext, cmdPool: CommandPool, primary: Boolean, o
 
 	fun cleanup(vkCtx: VKContext, cmdPool: CommandPool)
 	{
-		Logger.trace("Destroying command buffer")
+		Main.logTrace("Destroying command buffer")
 		vkFreeCommandBuffers(
 			vkCtx.device.vkDevice, cmdPool.vkCommandPool,
 			vkCommandBuffer

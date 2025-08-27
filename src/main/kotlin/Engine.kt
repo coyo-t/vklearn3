@@ -1,7 +1,6 @@
 package com.catsofwar
 
 import org.lwjgl.glfw.GLFW
-import org.tinylog.kotlin.Logger
 
 class Engine (
 	windowTitle: String,
@@ -62,20 +61,20 @@ class Engine (
 		}
 		catch (sg: StopGame)
 		{
-			Logger.info("hard-stopping game")
+			Main.logInfo("hard-stopping game")
 			when (val reason = sg.reason)
 			{
-				null -> Logger.info("no reason given")
-				else -> Logger.info("reason: \"$reason\"")
+				null -> Main.logInfo("no reason given")
+				else -> Main.logInfo("reason: \"$reason\"")
 			}
 		}
 		catch (e: Exception)
 		{
-			Logger.error(e) { "EXCEPTION FUCK" }
+			Main.logError(e) { "EXCEPTION FUCK" }
 		}
 		catch (t: Throwable)
 		{
-			Logger.error(t) { "SOMETHING THREW HARDER THAN ELI FUCK" }
+			Main.logError(t) { "SOMETHING THREW HARDER THAN ELI FUCK" }
 		}
 
 		cleanup()

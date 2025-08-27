@@ -1,10 +1,10 @@
 package com.catsofwar.vk
 
+import com.catsofwar.Main
 import com.catsofwar.vk.VKUtil.vkCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkCommandPoolCreateInfo
-import org.tinylog.kotlin.Logger
 
 
 class CommandPool(vkCtx: VKContext, queueFamilyIndex: Int, supportReset: Boolean)
@@ -14,9 +14,9 @@ class CommandPool(vkCtx: VKContext, queueFamilyIndex: Int, supportReset: Boolean
 
 	init
 	{
-		Logger.debug("Creating Vulkan command pool")
 
 		MemoryStack.stackPush().use { stack ->
+			Main.logDebug("Creating Vulkan command pool")
 			val cmdPoolInfo = VkCommandPoolCreateInfo.calloc(stack)
 				.`sType$Default`()
 				.queueFamilyIndex(queueFamilyIndex)
@@ -36,7 +36,7 @@ class CommandPool(vkCtx: VKContext, queueFamilyIndex: Int, supportReset: Boolean
 
 	fun cleanup(vkCtx: VKContext)
 	{
-		Logger.debug("Destroying Vulkan command pool")
+		Main.logDebug("Destroying Vulkan command pool")
 		vkDestroyCommandPool(vkCtx.device.vkDevice, vkCommandPool, null)
 	}
 

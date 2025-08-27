@@ -1,5 +1,6 @@
 package com.catsofwar.vk
 
+import com.catsofwar.Main
 import com.catsofwar.Window
 import com.catsofwar.vk.VKUtil.vkCheck
 import org.lwjgl.glfw.GLFWVulkan
@@ -8,7 +9,6 @@ import org.lwjgl.vulkan.KHRSurface
 import org.lwjgl.vulkan.VK10.VK_FORMAT_B8G8R8A8_SRGB
 import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR
 import org.lwjgl.vulkan.VkSurfaceFormatKHR
-import org.tinylog.kotlin.Logger
 
 
 class Surface (instance: VKInstance, physDevice: PhysicalDevice, window: Window)
@@ -20,7 +20,7 @@ class Surface (instance: VKInstance, physDevice: PhysicalDevice, window: Window)
 
 	init
 	{
-		Logger.debug("Creating Vulkan surface")
+		Main.logDebug("Creating Vulkan surface")
 		MemoryStack.stackPush().use { stack ->
 			val pSurface = stack.mallocLong(1)
 			GLFWVulkan.glfwCreateWindowSurface(
@@ -85,7 +85,7 @@ class Surface (instance: VKInstance, physDevice: PhysicalDevice, window: Window)
 
 	fun cleanup (instance: VKInstance)
 	{
-		Logger.debug("Destroying Vulkan surface")
+		Main.logDebug("Destroying Vulkan surface")
 		surfaceCaps.free()
 		KHRSurface.vkDestroySurfaceKHR(instance.vkInstance, vkSurface, null)
 	}

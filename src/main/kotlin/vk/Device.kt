@@ -1,12 +1,12 @@
 package com.catsofwar.vk
 
+import com.catsofwar.Main
 import com.catsofwar.vk.VKUtil.vkCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRPortabilitySubset.VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
 import org.lwjgl.vulkan.VK13.*
-import org.tinylog.kotlin.Logger
 
 
 class Device (physDevice: PhysicalDevice): AutoCloseable
@@ -15,7 +15,7 @@ class Device (physDevice: PhysicalDevice): AutoCloseable
 
 	init
 	{
-		Logger.debug("Creating device")
+		Main.logDebug("Creating device")
 
 		MemoryStack.stackPush().use { stack ->
 			val reqExtensions = createReqExtensions(physDevice, stack)
@@ -103,14 +103,14 @@ class Device (physDevice: PhysicalDevice): AutoCloseable
 					add(extensionName)
 					sb.appendLine("\t$extensionName")
 				}
-				Logger.trace(sb.toString())
+				Main.logTrace(sb.toString())
 			}
 		}
 	}
 
 	override fun close()
 	{
-		Logger.debug("Destroying Vulkan device")
+		Main.logDebug("Destroying Vulkan device")
 		vkDestroyDevice(vkDevice, null)
 	}
 
