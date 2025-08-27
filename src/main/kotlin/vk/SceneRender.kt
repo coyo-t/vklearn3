@@ -5,11 +5,9 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
 import org.lwjgl.vulkan.VK13.*
-import java.util.*
-import java.util.function.Consumer
 
 
-class ScnRender (vkCtx: VKContext): AutoCloseable
+class SceneRender (vkCtx: GPUContext)
 {
 
 	private val clrValueColor = VkClearValue.calloc().color { c ->
@@ -19,7 +17,7 @@ class ScnRender (vkCtx: VKContext): AutoCloseable
 	private val renderInfo = createRenderInfo(vkCtx, attInfoColor)
 
 	private fun createColorAttachmentsInfo(
-		vkCtx: VKContext,
+		vkCtx: GPUContext,
 		clearValue: VkClearValue
 	): List<VkRenderingAttachmentInfo.Buffer>
 	{
@@ -36,7 +34,7 @@ class ScnRender (vkCtx: VKContext): AutoCloseable
 	}
 
 	private fun createRenderInfo(
-		vkCtx: VKContext,
+		vkCtx: GPUContext,
 		attachments: List<VkRenderingAttachmentInfo.Buffer>
 	): List<VkRenderingInfo>
 	{
@@ -57,21 +55,21 @@ class ScnRender (vkCtx: VKContext): AutoCloseable
 		}
 	}
 
-	override fun close ()
+	fun close ()
 	{
 		renderInfo.forEach(VkRenderingInfo::free)
 		attInfoColor.forEach(VkRenderingAttachmentInfo.Buffer::free)
 		clrValueColor.free()
 	}
 
-	fun render (vkCtx: VKContext, cmdBuffer: CommandBuffer, imageIndex: Int)
+	fun render (vkCtx: GPUContext, cmdBuffer: GPUCommandBuffer, imageIndex: Int)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val swapChain = vkCtx.swapChain
 			val swapChainImage = swapChain.imageViews[imageIndex].vkImage
 			val cmdHandle = cmdBuffer.vkCommandBuffer
 
-			VKUtil.imageBarrier(
+			GPUtil.imageBarrier(
 				stack, cmdHandle, swapChainImage,
 				VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
@@ -82,7 +80,7 @@ class ScnRender (vkCtx: VKContext): AutoCloseable
 			vkCmdBeginRendering(cmdHandle, renderInfo[imageIndex])
 
 			vkCmdEndRendering(cmdHandle)
-			VKUtil.imageBarrier(
+			GPUtil.imageBarrier(
 				stack, cmdHandle, swapChainImage,
 				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,

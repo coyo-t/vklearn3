@@ -6,46 +6,43 @@ import org.lwjgl.vulkan.VK13.VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT
 import org.lwjgl.vulkan.VK13.VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT
 import org.lwjgl.vulkan.VkCommandBufferSubmitInfo
 import org.lwjgl.vulkan.VkSemaphoreSubmitInfo
-import java.util.*
 
 
-class Render (engineContext: EngineContext): AutoCloseable
+class Render (engineContext: EngineContext)
 {
-	private val vkContext = VKContext(engineContext.window)
+	private val vkContext = GPUContext(engineContext.window)
 	private var currentFrame = 0
 
-	private val graphQueue = CommandQueue.GraphicsQueue(vkContext, 0)
-	private val presentQueue = CommandQueue.PresentQueue(vkContext, 0)
+	private val graphQueue = GPUCommandQueue.GraphicsQueue(vkContext, 0)
+	private val presentQueue = GPUCommandQueue.PresentQueue(vkContext, 0)
 
 	private val cmdPools = List(EngineConfig.maxInFlightFrames) {
-		CommandPool(vkContext, graphQueue.queueFamilyIndex, false)
+		GPUCommandPool(vkContext, graphQueue.queueFamilyIndex, false)
 	}
 	private val cmdBuffers = cmdPools.map {
-		CommandBuffer(vkContext, it, primary = true, oneTimeSubmit = true)
+		GPUCommandBuffer(vkContext, it, primary = true, oneTimeSubmit = true)
 	}
 	private val imageAqSemphs = List(EngineConfig.maxInFlightFrames) {
-		Semaphore(vkContext)
+		GPUSemaphore(vkContext)
 	}
 	private val fences = List(EngineConfig.maxInFlightFrames) {
-		Fence(vkContext, signaled = true)
+		GPUFence(vkContext, signaled = true)
 	}
 	private val renderCompleteSemphs = List(vkContext.swapChain.numImages) {
-		Semaphore(vkContext)
+		GPUSemaphore(vkContext)
 	}
 
-	private val scnRender = ScnRender(vkContext)
+	private val scnRender = SceneRender(vkContext)
 
-	override fun close()
+	fun close()
 	{
 		vkContext.device.waitIdle()
 
 		scnRender.close()
 
-		vkContext.closeAll(
-			renderCompleteSemphs,
-			imageAqSemphs,
-			fences,
-		)
+		renderCompleteSemphs.forEach { it.close(vkContext) }
+		imageAqSemphs.forEach { it.close(vkContext) }
+		fences.forEach { it.close(vkContext) }
 
 		for ((cb, cp) in cmdBuffers.zip(cmdPools))
 		{
@@ -61,18 +58,18 @@ class Render (engineContext: EngineContext): AutoCloseable
 		fences[currentFrame].fenceWait(vkContext)
 	}
 
-	private fun recordingStart(cmdPool: CommandPool, cmdBuffer: CommandBuffer)
+	private fun recordingStart(cmdPool: GPUCommandPool, cmdBuffer: GPUCommandBuffer)
 	{
 		cmdPool.reset(vkContext)
 		cmdBuffer.beginRecording()
 	}
 
-	private fun recordingStop(cmdBuffer: CommandBuffer)
+	private fun recordingStop(cmdBuffer: GPUCommandBuffer)
 	{
 		cmdBuffer.endRecording()
 	}
 
-	private fun submit(cmdBuff: CommandBuffer, currentFrame: Int, imageIndex: Int)
+	private fun submit(cmdBuff: GPUCommandBuffer, currentFrame: Int, imageIndex: Int)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val fence = fences[currentFrame]

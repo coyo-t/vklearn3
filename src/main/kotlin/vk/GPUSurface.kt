@@ -2,16 +2,17 @@ package com.catsofwar.vk
 
 import com.catsofwar.Main
 import com.catsofwar.Window
-import com.catsofwar.vk.VKUtil.vkCheck
+import com.catsofwar.vk.GPUtil.vkCheck
 import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.KHRSurface
-import org.lwjgl.vulkan.VK10.VK_FORMAT_B8G8R8A8_SRGB
+import org.lwjgl.vulkan.KHRSurface.VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
+import org.lwjgl.vulkan.VK14.VK_FORMAT_B8G8R8A8_SRGB
 import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR
 import org.lwjgl.vulkan.VkSurfaceFormatKHR
 
 
-class Surface (instance: VKInstance, physDevice: PhysicalDevice, window: Window)
+class GPUSurface (instance: GPUInstance, physDevice: GPUPhysical, window: Window)
 {
 
 	val surfaceCaps: VkSurfaceCapabilitiesKHR
@@ -40,7 +41,7 @@ class Surface (instance: VKInstance, physDevice: PhysicalDevice, window: Window)
 		}
 	}
 
-	private fun calcSurfaceFormat(physDevice: PhysicalDevice, vkSurface: Long): SurfaceFormat
+	private fun calcSurfaceFormat(physDevice: GPUPhysical, vkSurface: Long): SurfaceFormat
 	{
 		var imageFormat: Int
 		var colorSpace: Int
@@ -52,7 +53,7 @@ class Surface (instance: VKInstance, physDevice: PhysicalDevice, window: Window)
 					vkSurface, ip, null
 				), "Failed to get the number surface formats"
 			)
-			val numFormats = ip.get(0)
+			val numFormats = ip[0]
 			require(numFormats > 0) {
 				"No surface formats retrieved"
 			}
@@ -66,12 +67,12 @@ class Surface (instance: VKInstance, physDevice: PhysicalDevice, window: Window)
 			)
 
 			imageFormat = VK_FORMAT_B8G8R8A8_SRGB
-			colorSpace = surfaceFormats.get(0).colorSpace()
+			colorSpace = surfaceFormats[0].colorSpace()
 			for (i in 0..<numFormats)
 			{
-				val surfaceFormatKHR = surfaceFormats.get(i)
+				val surfaceFormatKHR = surfaceFormats[i]
 				if (surfaceFormatKHR.format() == VK_FORMAT_B8G8R8A8_SRGB &&
-					surfaceFormatKHR.colorSpace() == KHRSurface.VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
+					surfaceFormatKHR.colorSpace() == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
 				)
 				{
 					imageFormat = surfaceFormatKHR.format()
@@ -83,7 +84,7 @@ class Surface (instance: VKInstance, physDevice: PhysicalDevice, window: Window)
 		return SurfaceFormat(imageFormat, colorSpace)
 	}
 
-	fun cleanup (instance: VKInstance)
+	fun cleanup (instance: GPUInstance)
 	{
 		Main.logDebug("Destroying Vulkan surface")
 		surfaceCaps.free()

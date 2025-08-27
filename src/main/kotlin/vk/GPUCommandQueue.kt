@@ -1,14 +1,14 @@
 package com.catsofwar.vk
 
 import com.catsofwar.Main
-import com.catsofwar.vk.VKUtil.vkCheck
+import com.catsofwar.vk.GPUtil.vkCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VK13.vkQueueSubmit2
 
 
-sealed class CommandQueue (vkCtx: VKContext, queueFamilyIndex: Int, queueIndex: Int)
+sealed class GPUCommandQueue (vkCtx: GPUContext, queueFamilyIndex: Int, queueIndex: Int)
 {
 	val queueFamilyIndex: Int
 	val vkQueue: VkQueue
@@ -35,7 +35,7 @@ sealed class CommandQueue (vkCtx: VKContext, queueFamilyIndex: Int, queueIndex: 
 		commandBuffers: VkCommandBufferSubmitInfo.Buffer?,
 		waitSemaphores: VkSemaphoreSubmitInfo.Buffer?,
 		signalSemaphores: VkSemaphoreSubmitInfo.Buffer?,
-		fence: Fence?
+		fence: GPUFence?
 	)
 	{
 		MemoryStack.stackPush().use { stack ->
@@ -52,12 +52,12 @@ sealed class CommandQueue (vkCtx: VKContext, queueFamilyIndex: Int, queueIndex: 
 		}
 	}
 
-	class GraphicsQueue(vkCtx: VKContext, queueIndex: Int):
-		CommandQueue(vkCtx, getGraphicsQueueFamilyIndex(vkCtx), queueIndex)
+	class GraphicsQueue(vkCtx: GPUContext, queueIndex: Int):
+		GPUCommandQueue(vkCtx, getGraphicsQueueFamilyIndex(vkCtx), queueIndex)
 	{
 		companion object
 		{
-			private fun getGraphicsQueueFamilyIndex(vkCtx: VKContext): Int
+			private fun getGraphicsQueueFamilyIndex(vkCtx: GPUContext): Int
 			{
 				val queuePropsBuff = vkCtx.physDevice.vkQueueFamilyProps
 				val uhh = queuePropsBuff.indexOfFirst { (it.queueFlags() and VK_QUEUE_GRAPHICS_BIT) != 0 }
@@ -82,12 +82,12 @@ sealed class CommandQueue (vkCtx: VKContext, queueFamilyIndex: Int, queueIndex: 
 		}
 	}
 
-	class PresentQueue (vkCtx: VKContext, queueIndex: Int):
-		CommandQueue(vkCtx, getPresentQueueFamilyIndex(vkCtx), queueIndex)
+	class PresentQueue (vkCtx: GPUContext, queueIndex: Int):
+		GPUCommandQueue(vkCtx, getPresentQueueFamilyIndex(vkCtx), queueIndex)
 	{
 		companion object
 		{
-			private fun getPresentQueueFamilyIndex (vkCtx: VKContext): Int
+			private fun getPresentQueueFamilyIndex (vkCtx: GPUContext): Int
 			{
 				var index = -1
 				MemoryStack.stackPush().use { stack ->

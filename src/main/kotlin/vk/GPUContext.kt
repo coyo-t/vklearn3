@@ -3,19 +3,19 @@ package com.catsofwar.vk
 import com.catsofwar.EngineConfig
 import com.catsofwar.Window
 
-class VKContext (window: Window): AutoCloseable
+class GPUContext(window: Window)
 {
 
-	val instance = VKInstance(
+	val instance = GPUInstance(
 		validate = EngineConfig.useVulkanValidationLayers,
 	)
-	val physDevice = PhysicalDevice.createPhysicalDevice(
+	val physDevice = GPUPhysical.createPhysicalDevice(
 		instance,
 		prefDeviceName = EngineConfig.preferredPhysicalDevice,
 	)
-	val device = Device(physDevice)
-	val surface = Surface(instance, physDevice, window)
-	val swapChain = SwapChain(
+	val device = GPUDevice(physDevice)
+	val surface = GPUSurface(instance, physDevice, window)
+	val swapChain = GPUSwapChain(
 		window,
 		device,
 		surface,
@@ -30,22 +30,12 @@ class VKContext (window: Window): AutoCloseable
 //		VKInstance(cfg.vkUseValidationLayers)
 //	}
 
-	fun closeAll (vararg vs: List<VKContextClosable>)
+	fun close()
 	{
-		for (it in vs)
-		{
-			for (closable in it)
-			{
-				closable.close(this)
-			}
-		}
-	}
-	override fun close()
-	{
+		swapChain.cleanup(device)
 		surface.cleanup(instance)
 		device.close()
 		physDevice.close()
 		instance.close()
-		swapChain.cleanup(device)
 	}
 }

@@ -5,59 +5,32 @@ import org.lwjgl.glfw.GLFW
 class Engine (
 	windowTitle: String,
 	private val gameLogic: GameLogic,
-)
+): AutoCloseable
 {
-	private val context: EngineContext
+	private val engineContext: EngineContext
 	private val render: Render
 
 	init
 	{
 		val window = Window.create(windowTitle, 1280, 720)
-		context = EngineContext(window, Scene(window))
-		render = Render(context)
-		gameLogic.init(context)
+		engineContext = EngineContext(window, Scene(window))
+		render = Render(engineContext)
+		gameLogic.init(engineContext)
 	}
 
-	private fun cleanup()
+	override fun close ()
 	{
 		gameLogic.close()
 		render.close()
-		context.close()
-		context.window.cleanup()
+		engineContext.close()
+		engineContext.window.close()
 	}
 
-	fun run()
+	fun run ()
 	{
-		var initialTime = System.currentTimeMillis()
-		val timeU = 1000.0f / EngineConfig.updatesPerSecond
-		var deltaUpdate = 0.0
-
-		var updateTime = initialTime
-		val window = context.window
 		try
 		{
-			while (!window.shouldClose)
-			{
-				val now = System.currentTimeMillis()
-				deltaUpdate += ((now - initialTime) / timeU).toDouble()
-
-				GLFW.glfwPollEvents()
-				window.pollEvents()
-				gameLogic.input(context, now - initialTime)
-				window.resetInput()
-
-				if (deltaUpdate >= 1)
-				{
-					val diffTimeMillis = now - updateTime
-					gameLogic.update(context, diffTimeMillis)
-					updateTime = now
-					deltaUpdate--
-				}
-
-				render.render(context)
-
-				initialTime = now
-			}
+			spinning()
 		}
 		catch (sg: StopGame)
 		{
@@ -76,7 +49,38 @@ class Engine (
 		{
 			Main.logError(t) { "SOMETHING THREW HARDER THAN ELI FUCK" }
 		}
+//		cleanup()
+	}
 
-		cleanup()
+	private fun spinning()
+	{
+		var initialTime = System.currentTimeMillis()
+		val timeU = 1000.0f / EngineConfig.updatesPerSecond
+		var deltaUpdate = 0.0
+
+		var updateTime = initialTime
+		val window = engineContext.window
+		while (!window.shouldClose)
+		{
+			val now = System.currentTimeMillis()
+			deltaUpdate += ((now - initialTime) / timeU).toDouble()
+
+			GLFW.glfwPollEvents()
+			window.pollEvents()
+			gameLogic.input(engineContext, now - initialTime)
+			window.resetInput()
+
+			if (deltaUpdate >= 1)
+			{
+				val diffTimeMillis = now - updateTime
+				gameLogic.update(engineContext, diffTimeMillis)
+				updateTime = now
+				deltaUpdate--
+			}
+
+			render.render(engineContext)
+
+			initialTime = now
+		}
 	}
 }

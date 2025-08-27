@@ -1,13 +1,13 @@
 package com.catsofwar.vk
 
-import com.catsofwar.vk.VKUtil.vkCheck
+import com.catsofwar.vk.GPUtil.vkCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkImageViewCreateInfo
 
 
-class ImageView (
-	device: Device,
+class GPUImageView (
+	device: GPUDevice,
 	val vkImage: Long,
 	imageViewData: ImageViewData,
 )
@@ -38,7 +38,7 @@ class ImageView (
 	}
 
 
-	fun cleanup(device: Device)
+	fun cleanup(device: GPUDevice)
 	{
 		vkDestroyImageView(device.vkDevice, vkImageView, null)
 	}

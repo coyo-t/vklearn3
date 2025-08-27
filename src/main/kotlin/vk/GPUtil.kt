@@ -7,7 +7,7 @@ import org.lwjgl.vulkan.VkDependencyInfo
 import org.lwjgl.vulkan.VkImageMemoryBarrier2
 
 
-object VKUtil
+object GPUtil
 {
 	enum class OSType
 	{
@@ -82,6 +82,12 @@ object VKUtil
 
 		vkCmdPipelineBarrier2(cmdHandle, depInfo)
 	}
+
+	fun vkCheck(err:Int, messageProvider:(Int)->String)
+	{
+		vkCheck(err, messageProvider(err))
+	}
+
 
 	fun vkCheck(err: Int, errMsg: String?)
 	{

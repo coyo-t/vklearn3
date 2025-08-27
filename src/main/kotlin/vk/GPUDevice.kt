@@ -1,0 +1,117 @@
+package com.catsofwar.vk
+
+import com.catsofwar.Main
+import com.catsofwar.vk.GPUtil.vkCheck
+import org.lwjgl.PointerBuffer
+import org.lwjgl.system.MemoryStack
+import org.lwjgl.vulkan.*
+import org.lwjgl.vulkan.KHRPortabilitySubset.VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
+import org.lwjgl.vulkan.VK13.*
+
+
+class GPUDevice (physDevice: GPUPhysical)
+{
+	val vkDevice = MemoryStack.stackPush().use { stack ->
+		Main.logDebug("REIFYING DEVICE ")
+		val reqExtensions = createReqExtensions(physDevice, stack)
+		// Enable all the queue families
+		val queuePropsBuff = physDevice.vkQueueFamilyProps
+		val numQueuesFamilies = queuePropsBuff.capacity()
+		val queueCreationInfoBuf = VkDeviceQueueCreateInfo.calloc(numQueuesFamilies, stack)
+		for (i in 0..<numQueuesFamilies)
+		{
+			val priorities = stack.callocFloat(queuePropsBuff.get(i).queueCount())
+			queueCreationInfoBuf.get(i)
+				.`sType$Default`()
+				.queueFamilyIndex(i)
+				.pQueuePriorities(priorities)
+		}
+
+
+		// Set up required features
+		val features13 = VkPhysicalDeviceVulkan13Features.calloc(stack)
+			.`sType$Default`()
+			.dynamicRendering(true)
+			.synchronization2(true)
+
+		val features2 = VkPhysicalDeviceFeatures2.calloc(stack).`sType$Default`()
+		features2.pNext(features13.address())
+
+		val deviceCreateInfo = VkDeviceCreateInfo.calloc(stack)
+			.`sType$Default`()
+			.pNext(features2.address())
+			.ppEnabledExtensionNames(reqExtensions)
+			.pQueueCreateInfos(queueCreationInfoBuf)
+
+		val pp = stack.mallocPointer(1)
+		vkCheck(
+			vkCreateDevice(physDevice.vkPhysicalDevice, deviceCreateInfo, null, pp),
+			"Failed to create device"
+		)
+		VkDevice(pp.get(0), physDevice.vkPhysicalDevice, deviceCreateInfo)
+	}
+
+
+	private fun createReqExtensions(physDevice: GPUPhysical, stack: MemoryStack): PointerBuffer
+	{
+		val deviceExtensions = getDeviceExtensions(physDevice)
+		val usePortability = (VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME in deviceExtensions) && GPUtil.OSType.isMacintosh
+
+		val extsList = buildList {
+			addAll(GPUPhysical.REQUIRED_EXTENSIONS.map(stack::ASCII))
+			if (usePortability)
+			{
+				add(stack.ASCII(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME))
+			}
+		}
+		return stack.mallocPointer(extsList.size).apply {
+			extsList.forEach(this::put)
+			flip()
+		}
+	}
+
+	private fun getDeviceExtensions(physDevice: GPUPhysical): Set<String>
+	{
+		MemoryStack.stackPush().use { stack ->
+			val numExtensionsBuf = stack.callocInt(1)
+			vkEnumerateDeviceExtensionProperties(
+				physDevice.vkPhysicalDevice,
+				null as String?,
+				numExtensionsBuf,
+				null,
+			)
+			val numExtensions = numExtensionsBuf.get(0)
+			val propsBuff = VkExtensionProperties.calloc(numExtensions, stack)
+			vkEnumerateDeviceExtensionProperties(
+				physDevice.vkPhysicalDevice,
+				null as String?,
+				numExtensionsBuf,
+				propsBuff
+			)
+			return buildSet {
+				val sb = StringBuilder()
+				sb.append("Device supports [$numExtensions] extensions")
+				for (i in 0..<numExtensions)
+				{
+					val props = propsBuff.get(i)
+					val extensionName = props.extensionNameString()
+					add(extensionName)
+//					sb.appendLine("\t$extensionName")
+				}
+				Main.logTrace(sb.toString())
+			}
+		}
+	}
+
+	fun close()
+	{
+		Main.logDebug("Destroying Vulkan device")
+		vkDestroyDevice(vkDevice, null)
+	}
+
+	fun waitIdle()
+	{
+		vkDeviceWaitIdle(vkDevice)
+	}
+
+}

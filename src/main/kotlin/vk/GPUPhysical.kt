@@ -1,15 +1,15 @@
 package com.catsofwar.vk
 
 import com.catsofwar.Main
-import com.catsofwar.vk.VKUtil.vkCheck
+import com.catsofwar.vk.GPUtil.vkCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK13.*
 
 
-class PhysicalDevice
-private constructor (vkPhysicalDevice: VkPhysicalDevice): AutoCloseable
+class GPUPhysical
+private constructor (vkPhysicalDevice: VkPhysicalDevice)
 {
 	val vkDeviceExtensions: VkExtensionProperties.Buffer
 	val vkMemoryProperties: VkPhysicalDeviceMemoryProperties
@@ -53,7 +53,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice): AutoCloseable
 		}
 	}
 
-	override fun close ()
+	fun close ()
 	{
 		Main.logDebug("Destroying physical device [$deviceName]")
 		vkMemoryProperties.free()
@@ -109,7 +109,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice): AutoCloseable
 			KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 		).toMutableSet()
 
-		internal fun getPhysicalDevices (instance: VKInstance, stack: MemoryStack): PointerBuffer
+		internal fun getPhysicalDevices (instance: GPUInstance, stack: MemoryStack): PointerBuffer
 		{
 			val pPhysicalDevices: PointerBuffer
 			// Get number of physical devices
@@ -130,10 +130,10 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice): AutoCloseable
 			return pPhysicalDevices
 		}
 
-		fun createPhysicalDevice(instance: VKInstance, prefDeviceName: String?): PhysicalDevice
+		fun createPhysicalDevice(instance: GPUInstance, prefDeviceName: String?): GPUPhysical
 		{
 			Main.logDebug("Selecting physical devices")
-			var result: PhysicalDevice? = null
+			var result: GPUPhysical? = null
 			MemoryStack.stackPush().use { stack ->
 				// Get available devices
 				val pPhysicalDevices = getPhysicalDevices(instance, stack)
@@ -144,7 +144,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice): AutoCloseable
 					for (i in 0..<numDevices)
 					{
 						val vkPhysicalDevice = VkPhysicalDevice(pPhysicalDevices.get(i), instance.vkInstance)
-						val physDevice = PhysicalDevice(vkPhysicalDevice)
+						val physDevice = GPUPhysical(vkPhysicalDevice)
 
 						val deviceName = physDevice.deviceName
 						if (!physDevice.hasGraphicsQueueFamily())
@@ -181,7 +181,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice): AutoCloseable
 				result = if (result == null && !physDevices.isEmpty()) physDevices.removeFirst() else result
 
 				// Clean up non-selected devices
-				physDevices.forEach(PhysicalDevice::close)
+				physDevices.forEach(GPUPhysical::close)
 				Main.logDebug("Selected device: [${result?.deviceName}]")
 				return requireNotNull(result) {
 					"No suitable physical devices found"

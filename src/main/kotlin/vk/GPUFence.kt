@@ -1,16 +1,17 @@
 package com.catsofwar.vk
 
-import com.catsofwar.vk.VKUtil.vkCheck
+import com.catsofwar.vk.GPUtil.vkCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkFenceCreateInfo
 
-class Fence private constructor (val vkFence: Long):
-	VKContextClosable
+@JvmInline
+value class GPUFence
+private constructor (val vkFence: Long): GPUClosable
 {
 	companion object
 	{
-		operator fun invoke (vkCtx: VKContext, signaled: Boolean): Fence
+		operator fun invoke (vkCtx: GPUContext, signaled: Boolean): GPUFence
 		{
 			MemoryStack.stackPush().use { stack ->
 				val fenceCreateInfo = VkFenceCreateInfo.calloc(stack)
@@ -18,22 +19,22 @@ class Fence private constructor (val vkFence: Long):
 					.flags(if (signaled) VK_FENCE_CREATE_SIGNALED_BIT else 0)
 				val lp = stack.mallocLong(1)
 				vkCheck(vkCreateFence(vkCtx.vkDevice, fenceCreateInfo, null, lp), "Failed to create fence")
-				return Fence(lp.get(0))
+				return GPUFence(lp.get(0))
 			}
 		}
 	}
 
-	override fun close (context: VKContext)
+	override fun close (context: GPUContext)
 	{
 		vkDestroyFence(context.device.vkDevice, vkFence, null)
 	}
 
-	fun fenceWait(vkCtx: VKContext)
+	fun fenceWait(vkCtx: GPUContext)
 	{
 		vkWaitForFences(vkCtx.device.vkDevice, vkFence, true, Long.MAX_VALUE)
 	}
 
-	fun reset(vkCtx: VKContext)
+	fun reset(vkCtx: GPUContext)
 	{
 		vkResetFences(vkCtx.device.vkDevice, vkFence)
 	}

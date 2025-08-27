@@ -10,7 +10,7 @@ class Window private constructor(
 	val handle: Long,
 	wide:Int,
 	tall:Int,
-)
+): AutoCloseable
 {
 	var wide = wide
 		private set
@@ -61,7 +61,7 @@ class Window private constructor(
 		}
 	}
 
-	fun cleanup ()
+	override fun close ()
 	{
 		glfwFreeCallbacks(handle)
 		glfwDestroyWindow(handle)

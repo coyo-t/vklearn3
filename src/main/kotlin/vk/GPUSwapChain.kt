@@ -2,11 +2,15 @@ package com.catsofwar.vk
 
 import com.catsofwar.Main
 import com.catsofwar.Window
-import com.catsofwar.vk.ImageView.ImageViewData
-import com.catsofwar.vk.VKUtil.vkCheck
+import com.catsofwar.vk.GPUImageView.ImageViewData
+import com.catsofwar.vk.GPUtil.vkCheck
+import org.joml.Math.clamp
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
+import org.lwjgl.vulkan.KHRSurface.VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR
+import org.lwjgl.vulkan.KHRSurface.VK_PRESENT_MODE_FIFO_KHR
+import org.lwjgl.vulkan.KHRSurface.VK_PRESENT_MODE_IMMEDIATE_KHR
 import org.lwjgl.vulkan.KHRSwapchain.VK_ERROR_OUT_OF_DATE_KHR
 import org.lwjgl.vulkan.KHRSwapchain.VK_SUBOPTIMAL_KHR
 import org.lwjgl.vulkan.VK14.*
@@ -14,16 +18,16 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-class SwapChain (
+class GPUSwapChain (
 	window: Window,
-	device: Device,
-	surface: Surface,
+	device: GPUDevice,
+	surface: GPUSurface,
 	requestedImages: Int,
 	vsync: Boolean,
 )
 {
 
-	val imageViews: List<ImageView>
+	val imageViews: List<GPUImageView>
 	val numImages: Int
 	val swapChainExtent: VkExtent2D
 	val vkSwapChain: Long
@@ -47,16 +51,13 @@ class SwapChain (
 				.imageArrayLayers(1)
 				.imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
 				.preTransform(surfaceCaps.currentTransform())
-				.compositeAlpha(KHRSurface.VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR)
+				.compositeAlpha(VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR)
 				.clipped(true)
-			if (vsync)
-			{
-				vkSwapchainCreateInfo.presentMode(KHRSurface.VK_PRESENT_MODE_FIFO_KHR)
-			}
-			else
-			{
-				vkSwapchainCreateInfo.presentMode(KHRSurface.VK_PRESENT_MODE_IMMEDIATE_KHR)
-			}
+
+			vkSwapchainCreateInfo.presentMode(
+				if (vsync) VK_PRESENT_MODE_FIFO_KHR
+				else VK_PRESENT_MODE_IMMEDIATE_KHR
+			)
 
 			val lp = stack.mallocLong(1)
 			vkCheck(
@@ -81,8 +82,9 @@ class SwapChain (
 		}
 		result = max(result, minImages)
 		Main.logDebug(
-			"Requested [{}] images, got [{}] images. Surface capabilities, maxImages: [{}], minImages [{}]",
-			requestedImages, result, maxImages, minImages
+			"Requested [$requestedImages] images, got [$result] images. " +
+			"Surface capabilities, " +
+			"image range ($minImages..$maxImages)"
 		)
 
 		return result
@@ -94,14 +96,10 @@ class SwapChain (
 		if (surfCapabilities.currentExtent().width() == -0x1)
 		{
 			// Surface size undefined. Set to the window size if within bounds
-			var width = window.wide.coerceAtMost(surfCapabilities.maxImageExtent().width())
-			width = width.coerceAtLeast(surfCapabilities.minImageExtent().width())
-
-			var height = window.tall.coerceAtMost(surfCapabilities.maxImageExtent().height())
-			height = height.coerceAtLeast(surfCapabilities.minImageExtent().height())
-
-			result.width(width)
-			result.height(height)
+			val minn = surfCapabilities.minImageExtent()
+			val maxx = surfCapabilities.maxImageExtent()
+			result.width(clamp(window.wide, minn.width(), maxx.width()))
+			result.height(clamp(window.tall, minn.height(), maxx.height()))
 		}
 		else
 		{
@@ -111,7 +109,7 @@ class SwapChain (
 		return result
 	}
 
-	private fun createImageViews(stack: MemoryStack, device: Device, swapChain: Long, format: Int): List<ImageView>
+	private fun createImageViews(stack: MemoryStack, device: GPUDevice, swapChain: Long, format: Int): List<GPUImageView>
 	{
 		val ip = stack.mallocInt(1)
 		vkCheck(
@@ -131,11 +129,11 @@ class SwapChain (
 			aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 		)
 		return List(numImages) {
-			ImageView(device, swapChainImages[it], imageViewData)
+			GPUImageView(device, swapChainImages[it], imageViewData)
 		}
 	}
 
-	fun acquireNextImage(device: Device, imageAqSem: Semaphore): Int
+	fun acquireNextImage(device: GPUDevice, imageAqSem: GPUSemaphore): Int
 	{
 		val imageIndex: Int
 		MemoryStack.stackPush().use { stack ->
@@ -154,14 +152,14 @@ class SwapChain (
 			}
 			else if (err != VK_SUCCESS)
 			{
-				throw RuntimeException("Failed to acquire image: " + err)
+				throw RuntimeException("Failed to acquire image: $err")
 			}
 			imageIndex = ip.get(0)
 		}
 		return imageIndex
 	}
 
-	fun cleanup(device: Device)
+	fun cleanup(device: GPUDevice)
 	{
 		Main.logDebug("Destroying Vulkan SwapChain")
 		swapChainExtent.free()
@@ -173,7 +171,7 @@ class SwapChain (
 	}
 
 
-	fun presentImage(queue: CommandQueue, renderCompleteSem: Semaphore, imageIndex: Int): Boolean
+	fun presentImage(queue: GPUCommandQueue, renderCompleteSem: GPUSemaphore, imageIndex: Int): Boolean
 	{
 		var resize = false
 		MemoryStack.stackPush().use { stack ->
@@ -194,7 +192,7 @@ class SwapChain (
 			}
 			else if (err != VK_SUCCESS)
 			{
-				throw RuntimeException("Failed to present KHR: " + err)
+				throw RuntimeException("Failed to present KHR: $err")
 			}
 		}
 		return resize

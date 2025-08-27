@@ -1,13 +1,13 @@
 package com.catsofwar.vk
 
 import com.catsofwar.Main
-import com.catsofwar.vk.VKUtil.vkCheck
+import com.catsofwar.vk.GPUtil.vkCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 
 
-class CommandBuffer (vkCtx: VKContext, cmdPool: CommandPool, primary: Boolean, oneTimeSubmit: Boolean)
+class GPUCommandBuffer (vkCtx: GPUContext, cmdPool: GPUCommandPool, primary: Boolean, oneTimeSubmit: Boolean)
 {
 
 	val oneTimeSubmit: Boolean
@@ -36,12 +36,7 @@ class CommandBuffer (vkCtx: VKContext, cmdPool: CommandPool, primary: Boolean, o
 		}
 	}
 
-	fun beginRecording()
-	{
-		beginRecording(null)
-	}
-
-	fun beginRecording (inheritanceInfo: InheritanceInfo?)
+	fun beginRecording (inheritanceInfo:InheritanceInfo?=null)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val cmdBufInfo = VkCommandBufferBeginInfo.calloc(stack).`sType$Default`()
@@ -75,7 +70,7 @@ class CommandBuffer (vkCtx: VKContext, cmdPool: CommandPool, primary: Boolean, o
 		}
 	}
 
-	fun cleanup(vkCtx: VKContext, cmdPool: CommandPool)
+	fun cleanup(vkCtx: GPUContext, cmdPool: GPUCommandPool)
 	{
 		Main.logTrace("Destroying command buffer")
 		vkFreeCommandBuffers(
@@ -94,9 +89,9 @@ class CommandBuffer (vkCtx: VKContext, cmdPool: CommandPool, primary: Boolean, o
 		vkResetCommandBuffer(vkCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
 	}
 
-	fun submitAndWait(vkCtx: VKContext, queue: CommandQueue)
+	fun submitAndWait(vkCtx: GPUContext, queue: GPUCommandQueue)
 	{
-		val fence = Fence(vkCtx, true)
+		val fence = GPUFence(vkCtx, true)
 		fence.reset(vkCtx)
 		MemoryStack.stackPush().use { stack ->
 			val cmds = VkCommandBufferSubmitInfo.calloc(1, stack)
@@ -113,5 +108,4 @@ class CommandBuffer (vkCtx: VKContext, cmdPool: CommandPool, primary: Boolean, o
 		val colorFormats: IntArray,
 		val rasterizationSamples: Int,
 	)
-
 }

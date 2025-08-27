@@ -1,7 +1,7 @@
 package com.catsofwar.vk
 
 import com.catsofwar.Main
-import com.catsofwar.vk.VKUtil.vkCheck
+import com.catsofwar.vk.GPUtil.vkCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryStack
@@ -10,10 +10,9 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugUtils.*
 import org.lwjgl.vulkan.KHRPortabilityEnumeration.VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR
 import org.lwjgl.vulkan.VK13.*
-import org.tinylog.kotlin.Logger
 
 
-class VKInstance (validate: Boolean): AutoCloseable
+class GPUInstance (validate: Boolean)
 {
 	var vkInstance: VkInstance
 		private set
@@ -61,7 +60,7 @@ class VKInstance (validate: Boolean): AutoCloseable
 			val instanceExtensions = getInstanceExtensions()
 			val usePortability = (
 				instanceExtensions.contains(PORTABILITY_EXTENSION) &&
-				VKUtil.OSType.isMacintosh
+				GPUtil.OSType.isMacintosh
 			)
 
 			// GLFW Extension
@@ -164,13 +163,13 @@ class VKInstance (validate: Boolean): AutoCloseable
 			vkEnumerateInstanceExtensionProperties(null as String?, numExtensionsBuf, instanceExtensionsProps)
 			return buildSet {
 				val sb = StringBuilder()
-				sb.appendLine("Instance supports [$numExtensions] extensions")
+				sb.append("Instance supports [$numExtensions] extensions")
 				for (i in 0..<numExtensions)
 				{
 					val props = instanceExtensionsProps.get(i)
 					val extensionName = props.extensionNameString()
 					add(extensionName)
-					sb.appendLine("\t$extensionName")
+//					sb.appendLine("\t$extensionName")
 				}
 				Main.logTrace(sb.toString())
 			}
@@ -186,13 +185,14 @@ class VKInstance (validate: Boolean): AutoCloseable
 			val propsBuf = VkLayerProperties.calloc(numLayers, stack)
 			vkEnumerateInstanceLayerProperties(numLayersArr, propsBuf)
 			val supportedLayers = buildList {
-				val sb = StringBuilder("Instance supports [$numLayers] layers:\n")
+				val sb = StringBuilder()
+				sb.append("Instance supports [$numLayers] layers")
 				for (i in 0..<numLayers)
 				{
 					val props = propsBuf.get(i)
 					val layerName = props.layerNameString()
 					add(layerName)
-					sb.appendLine("\t$layerName")
+//					sb.appendLine("\t$layerName")
 				}
 				Main.logTrace(sb.toString())
 			}
@@ -207,7 +207,7 @@ class VKInstance (validate: Boolean): AutoCloseable
 		}
 	}
 
-	override fun close()
+	fun close()
 	{
 		Main.logDebug("Destroying Vulkan instance")
 		if (vkDebugHandle != VK_NULL_HANDLE)
