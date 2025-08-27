@@ -1,5 +1,6 @@
 package vk
 
+import com.catsofwar.vk.GPUClosable
 import com.catsofwar.vk.GPUContext
 import com.catsofwar.vk.GPUDevice
 import com.catsofwar.vk.GPUtil
@@ -23,7 +24,8 @@ import org.lwjgl.vulkan.VkMemoryAllocateInfo
 import org.lwjgl.vulkan.VkMemoryRequirements
 
 
-class GPUBuffer(vkCtx: GPUContext, size: Long, usage: Int, reqMask: Int)
+class GPUBuffer(vkCtx: GPUContext, size: Long, usage: Int, reqMask: Int):
+	GPUClosable
 {
 
 	val allocationSize: Long
@@ -65,10 +67,10 @@ class GPUBuffer(vkCtx: GPUContext, size: Long, usage: Int, reqMask: Int)
 		}
 	}
 
-	fun cleanup(vkCtx: GPUContext)
+	override fun close(context: GPUContext)
 	{
 		MemoryUtil.memFree(pb)
-		val vkDevice = vkCtx.vkDevice
+		val vkDevice = context.vkDevice
 		vkDestroyBuffer(vkDevice, buffer, null)
 		vkFreeMemory(vkDevice, memory, null)
 	}
@@ -90,6 +92,12 @@ class GPUBuffer(vkCtx: GPUContext, size: Long, usage: Int, reqMask: Int)
 			vkUnmapMemory(vkCtx.vkDevice, memory)
 			mappedMemory = NULL
 		}
+	}
+
+	inline fun doMapped (context: GPUContext, cb: (Long)->Unit)
+	{
+		cb.invoke(map(context))
+		unMap(context)
 	}
 }
 

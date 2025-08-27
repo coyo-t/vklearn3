@@ -36,6 +36,13 @@ class GPUCommandBuffer (vkCtx: GPUContext, cmdPool: GPUCommandPool, primary: Boo
 		}
 	}
 
+	inline fun record (cb: GPUCommandBuffer.()->Unit)
+	{
+		beginRecording()
+		cb.invoke(this)
+		endRecording()
+	}
+
 	fun beginRecording (inheritanceInfo:InheritanceInfo?=null)
 	{
 		MemoryStack.stackPush().use { stack ->
