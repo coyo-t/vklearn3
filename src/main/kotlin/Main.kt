@@ -49,14 +49,14 @@ class Main: GameLogic
 
 		fun logDebug (f:String, vararg args:Any?)
 		{
-			println("${ANSI_BLUE}==>${ANSI_RESET} $f".format(*args))
+			println("${ANSI_BLUE}._.${ANSI_RESET} $f".format(*args))
 		}
 
 		fun logTrace (f:String, vararg n: Any?)
 		{
 //			val uhh = RuntimeProvider.getCallerStackTraceElement(1)
 //			println("${uhh.fileName} @ ${uhh.lineNumber} ==> $f".format(*n))
-			println("${ANSI_PURPLE}==>${ANSI_RESET} $f".format(*n))
+			println("${ANSI_PURPLE}-.-${ANSI_RESET} $f".format(*n))
 		}
 
 		fun logError (t: Throwable, k:()->String)

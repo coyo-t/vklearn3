@@ -5,6 +5,9 @@ import org.lwjgl.vulkan.VK13.*
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDependencyInfo
 import org.lwjgl.vulkan.VkImageMemoryBarrier2
+import org.lwjgl.vulkan.VkMemoryType
+import java.lang.foreign.ValueLayout.JAVA_FLOAT
+import java.lang.foreign.ValueLayout.JAVA_INT
 
 
 object GPUtil
@@ -41,6 +44,30 @@ object GPUtil
 				return DUDE_IDFK
 			}
 		}
+	}
+
+	val SIZEOF_INT   = JAVA_INT.byteSize().toInt()
+	val SIZEOF_FLOAT = JAVA_FLOAT.byteSize().toInt()
+
+	fun memoryTypeFromProperties(vkCtx: GPUContext, typeBits: Int, reqsMask: Int): Int
+	{
+		var typeBits = typeBits
+		var result = -1
+		val memoryTypes: VkMemoryType.Buffer = vkCtx.physDevice.vkMemoryProperties.memoryTypes()
+		for (i in 0..<VK_MAX_MEMORY_TYPES)
+		{
+			if ((typeBits and 1) == 1 && (memoryTypes[i].propertyFlags() and reqsMask) == reqsMask)
+			{
+				result = i
+				break
+			}
+			typeBits = typeBits shr 1
+		}
+		if (result < 0)
+		{
+			throw java.lang.RuntimeException("Failed to find memoryType")
+		}
+		return result
 	}
 
 	fun imageBarrier(
@@ -87,7 +114,6 @@ object GPUtil
 	{
 		vkCheck(err, messageProvider(err))
 	}
-
 
 	fun vkCheck(err: Int, errMsg: String?)
 	{
