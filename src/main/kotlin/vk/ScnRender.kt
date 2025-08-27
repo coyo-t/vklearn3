@@ -9,7 +9,7 @@ import java.util.*
 import java.util.function.Consumer
 
 
-class ScnRender (vkCtx: VKContext)
+class ScnRender (vkCtx: VKContext): AutoCloseable
 {
 
 	private val clrValueColor = VkClearValue.calloc().color { c ->
@@ -57,7 +57,7 @@ class ScnRender (vkCtx: VKContext)
 		}
 	}
 
-	fun cleanup()
+	override fun close ()
 	{
 		renderInfo.forEach(VkRenderingInfo::free)
 		attInfoColor.forEach(VkRenderingAttachmentInfo.Buffer::free)

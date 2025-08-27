@@ -6,7 +6,8 @@ import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkFenceCreateInfo
 
 @JvmInline
-value class Fence private constructor (val vkFence: Long)
+value class Fence private constructor (val vkFence: Long):
+	VKContextClosable
 {
 	companion object
 	{
@@ -23,9 +24,9 @@ value class Fence private constructor (val vkFence: Long)
 		}
 	}
 
-	fun cleanup(vkCtx: VKContext)
+	override fun close (context: VKContext)
 	{
-		vkDestroyFence(vkCtx.device.vkDevice, vkFence, null)
+		vkDestroyFence(context.device.vkDevice, vkFence, null)
 	}
 
 	fun fenceWait(vkCtx: VKContext)

@@ -1,11 +1,9 @@
 package com.catsofwar
 
-import com.catsofwar.vk.CommandBuffer
-import com.catsofwar.vk.CommandPool
-import com.catsofwar.vk.CommandQueue
-import com.catsofwar.vk.Fence
-import com.catsofwar.vk.Semaphore
-import com.catsofwar.vk.VKContext
+import com.catsofwar.vk.*
+import java.util.*
+import java.util.function.Consumer
+
 
 class Render (engineContext: EngineContext): AutoCloseable
 {
@@ -31,10 +29,25 @@ class Render (engineContext: EngineContext): AutoCloseable
 		Semaphore(vkContext)
 	}
 
-
+	private val scnRender = ScnRender(vkContext)
 
 	override fun close()
 	{
+		vkContext.device.waitIdle()
+
+		scnRender.close()
+
+		renderCompleteSemphs.forEach(vkContext::closeFor)
+		imageAqSemphs.forEach(vkContext::closeFor)
+		fences.forEach(vkContext::closeFor)
+
+		for ((cb, cp) in cmdBuffers.zip(cmdPools))
+		{
+			cb.cleanup(vkContext, cp)
+			cp.cleanup(vkContext)
+		}
+
+		vkContext.close()
 	}
 
 	fun render (engineContext: EngineContext)

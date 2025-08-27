@@ -5,19 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="facc042d-f938-4867-8ce5-d1cc935641f0" name="Changes" comment="sw">
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/vk/CommandBuffer.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/vk/CommandPool.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/vk/Fence.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/vk/ScnRender.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/vk/Semaphore.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/vk/VKContextClosable.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/EngineConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/EngineConfig.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/Render.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Render.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/CommandQueue.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/CommandQueue.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/Device.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/Device.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/Fence.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/Fence.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/ScnRender.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/ScnRender.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/Semaphore.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/Semaphore.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/VKContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/VKContext.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/VKInstance.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/VKInstance.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/VKUtil.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/VKUtil.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,9 +65,9 @@
       <list>
         <option value="Kotlin Data Class" />
         <option value="Kotlin File" />
-        <option value="Kotlin Interface" />
         <option value="Kotlin Object" />
         <option value="Kotlin Class" />
+        <option value="Kotlin Interface" />
       </list>
     </option>
   </component>
@@ -209,7 +203,7 @@
       <option name="presentableId" value="Default" />
       <updated>1756151302463</updated>
       <workItem from="1756151303750" duration="19357000" />
-      <workItem from="1756233667511" duration="7299000" />
+      <workItem from="1756233667511" duration="7698000" />
     </task>
     <task id="LOCAL-00001" summary="sw">
       <option name="closed" value="true" />
@@ -283,7 +277,15 @@
       <option name="project" value="LOCAL" />
       <updated>1756235713456</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="sw">
+      <option name="closed" value="true" />
+      <created>1756252572978</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1756252572978</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
