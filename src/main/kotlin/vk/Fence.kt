@@ -5,8 +5,7 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkFenceCreateInfo
 
-@JvmInline
-value class Fence private constructor (val vkFence: Long):
+class Fence private constructor (val vkFence: Long):
 	VKContextClosable
 {
 	companion object

@@ -3,13 +3,11 @@ package com.catsofwar.vk
 import com.catsofwar.vk.VKUtil.vkCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
+import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRPortabilitySubset.VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
 import org.lwjgl.vulkan.VK13.*
-import org.lwjgl.vulkan.VkDevice
-import org.lwjgl.vulkan.VkDeviceCreateInfo
-import org.lwjgl.vulkan.VkDeviceQueueCreateInfo
-import org.lwjgl.vulkan.VkExtensionProperties
 import org.tinylog.kotlin.Logger
+
 
 class Device (physDevice: PhysicalDevice): AutoCloseable
 {
@@ -34,8 +32,19 @@ class Device (physDevice: PhysicalDevice): AutoCloseable
 					.pQueuePriorities(priorities)
 			}
 
+
+			// Set up required features
+			val features13 = VkPhysicalDeviceVulkan13Features.calloc(stack)
+				.`sType$Default`()
+				.dynamicRendering(true)
+				.synchronization2(true)
+
+			val features2 = VkPhysicalDeviceFeatures2.calloc(stack).`sType$Default`()
+			features2.pNext(features13.address())
+
 			val deviceCreateInfo = VkDeviceCreateInfo.calloc(stack)
 				.`sType$Default`()
+				.pNext(features2.address())
 				.ppEnabledExtensionNames(reqExtensions)
 				.pQueueCreateInfos(queueCreationInfoBuf)
 

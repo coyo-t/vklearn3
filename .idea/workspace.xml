@@ -5,13 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="facc042d-f938-4867-8ce5-d1cc935641f0" name="Changes" comment="sw">
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/vk/VKContextClosable.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/Render.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Render.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/CommandBuffer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/CommandBuffer.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/Device.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/Device.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/Fence.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/Fence.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/ScnRender.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/ScnRender.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/Semaphore.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/Semaphore.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/SwapChain.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/SwapChain.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/VKContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/VKContext.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/VKInstance.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/VKInstance.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -104,31 +106,31 @@
     <option name="showLibraryContents" value="true" />
     <option name="showMembers" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Gradle.Download Sources.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.vulkan_learning_3 [:com.catsofwar.Main.main()].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.vulkan_learning_3 [:com.catsofwar.MainKt.main()].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.vulkan_learning_3 [wrapper].executor&quot;: &quot;Run&quot;,
-    &quot;Kotlin.Main.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Gradle.Download Sources.executor": "Run",
+    "Gradle.vulkan_learning_3 [:com.catsofwar.Main.main()].executor": "Run",
+    "Gradle.vulkan_learning_3 [:com.catsofwar.MainKt.main()].executor": "Run",
+    "Gradle.vulkan_learning_3 [wrapper].executor": "Run",
+    "Kotlin.Main.executor": "Debug",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "reference.settingsdialog.project.gradle"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="K2MoveDeclarationsDialog.RECENT_PACKAGE_KEY">
       <recent name="com.catsofwar" />
@@ -203,7 +205,7 @@
       <option name="presentableId" value="Default" />
       <updated>1756151302463</updated>
       <workItem from="1756151303750" duration="19357000" />
-      <workItem from="1756233667511" duration="7698000" />
+      <workItem from="1756233667511" duration="11197000" />
     </task>
     <task id="LOCAL-00001" summary="sw">
       <option name="closed" value="true" />
@@ -285,7 +287,15 @@
       <option name="project" value="LOCAL" />
       <updated>1756252572978</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="sw">
+      <option name="closed" value="true" />
+      <created>1756253008369</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1756253008369</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -294,5 +304,16 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="sw" />
     <option name="LAST_COMMIT_MESSAGE" value="sw" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/vk/SwapChain.kt</url>
+          <line>167</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

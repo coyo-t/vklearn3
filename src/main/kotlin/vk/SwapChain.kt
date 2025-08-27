@@ -2,14 +2,18 @@ package com.catsofwar.vk
 
 import com.catsofwar.Window
 import com.catsofwar.vk.ImageView.ImageViewData
-import com.catsofwar.vk.Surface.SurfaceFormat
 import com.catsofwar.vk.VKUtil.vkCheck
-import org.joml.Math.clamp
 import org.lwjgl.system.MemoryStack
+import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.VK10.VK_IMAGE_ASPECT_COLOR_BIT
-import org.lwjgl.vulkan.VK10.VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+import org.lwjgl.vulkan.KHRSwapchain.VK_ERROR_OUT_OF_DATE_KHR
+import org.lwjgl.vulkan.KHRSwapchain.VK_SUBOPTIMAL_KHR
+import org.lwjgl.vulkan.VK10.*
 import org.tinylog.kotlin.Logger
+import java.util.*
+import java.util.function.Consumer
+import kotlin.math.max
+import kotlin.math.min
 
 
 class SwapChain (
@@ -30,11 +34,11 @@ class SwapChain (
 	{
 		Logger.debug("Creating Vulkan SwapChain")
 		MemoryStack.stackPush().use { stack ->
-			val surfaceCaps: VkSurfaceCapabilitiesKHR = surface.surfaceCaps
+			val surfaceCaps = surface.surfaceCaps
 			val reqImages = calcNumImages(surfaceCaps, requestedImages)
 			swapChainExtent = calcSwapChainExtent(window, surfaceCaps)
 
-			val surfaceFormat: SurfaceFormat = surface.surfaceFormat
+			val surfaceFormat = surface.surfaceFormat
 			val vkSwapchainCreateInfo = VkSwapchainCreateInfoKHR.calloc(stack)
 				.`sType$Default`()
 				.surface(surface.vkSurface)
@@ -75,9 +79,9 @@ class SwapChain (
 		var result = minImages
 		if (maxImages != 0)
 		{
-			result = minOf(requestedImages, maxImages)
+			result = min(requestedImages, maxImages)
 		}
-		result = maxOf(result, minImages)
+		result = max(result, minImages)
 		Logger.debug(
 			"Requested [{}] images, got [{}] images. Surface capabilities, maxImages: [{}], minImages [{}]",
 			requestedImages, result, maxImages, minImages
@@ -92,16 +96,14 @@ class SwapChain (
 		if (surfCapabilities.currentExtent().width() == -0x1)
 		{
 			// Surface size undefined. Set to the window size if within bounds
-			val maxExts = surfCapabilities.maxImageExtent()
-			val minExts = surfCapabilities.minImageExtent()
+			var width = window.wide.coerceAtMost(surfCapabilities.maxImageExtent().width())
+			width = width.coerceAtLeast(surfCapabilities.minImageExtent().width())
 
-//			var width = minOf(window.wide, maxExts.width())
-//			width = maxOf(width, minExts.width())
-//			var height = minOf(window.tall, maxExts.height())
-//			height = maxOf(height, minExts.height())
+			var height = window.tall.coerceAtMost(surfCapabilities.maxImageExtent().height())
+			height = height.coerceAtLeast(surfCapabilities.minImageExtent().height())
 
-			result.width(clamp(window.wide, minExts.width(), maxExts.width()))
-			result.height(clamp(window.tall, minExts.height(), maxExts.height()))
+			result.width(width)
+			result.height(height)
 		}
 		else
 		{
@@ -130,15 +132,74 @@ class SwapChain (
 			format = format,
 			aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 		)
-		return (0..<numImages).map { ImageView(device, swapChainImages[it], imageViewData) }
+		return List(numImages) {
+			ImageView(device, swapChainImages[it], imageViewData)
+		}
+	}
+
+	fun acquireNextImage(device: Device, imageAqSem: Semaphore): Int
+	{
+		val imageIndex: Int
+		MemoryStack.stackPush().use { stack ->
+			val ip = stack.mallocInt(1)
+			val err = KHRSwapchain.vkAcquireNextImageKHR(
+				device.vkDevice, vkSwapChain, 0L.inv(),
+				imageAqSem.vkSemaphore, MemoryUtil.NULL, ip
+			)
+			if (err == VK_ERROR_OUT_OF_DATE_KHR)
+			{
+				return -1
+			}
+			else if (err == VK_SUBOPTIMAL_KHR)
+			{
+				// Not optimal but swapchain can still be used
+			}
+			else if (err != VK_SUCCESS)
+			{
+				throw RuntimeException("Failed to acquire image: " + err)
+			}
+			imageIndex = ip.get(0)
+		}
+		return imageIndex
 	}
 
 	fun cleanup(device: Device)
 	{
 		Logger.debug("Destroying Vulkan SwapChain")
 		swapChainExtent.free()
-		imageViews.forEach { it.cleanup(device) }
+		for (it in imageViews)
+		{
+			it.cleanup(device)
+		}
 		KHRSwapchain.vkDestroySwapchainKHR(device.vkDevice, vkSwapChain, null)
+	}
+
+
+	fun presentImage(queue: CommandQueue, renderCompleteSem: Semaphore, imageIndex: Int): Boolean
+	{
+		var resize = false
+		MemoryStack.stackPush().use { stack ->
+			val present = VkPresentInfoKHR.calloc(stack)
+				.`sType$Default`()
+				.pWaitSemaphores(stack.longs(renderCompleteSem.vkSemaphore))
+				.swapchainCount(1)
+				.pSwapchains(stack.longs(vkSwapChain))
+				.pImageIndices(stack.ints(imageIndex))
+			val err = KHRSwapchain.vkQueuePresentKHR(queue.vkQueue, present)
+			if (err == VK_ERROR_OUT_OF_DATE_KHR)
+			{
+				resize = true
+			}
+			else if (err == VK_SUBOPTIMAL_KHR)
+			{
+				// Not optimal but swap chain can still be used
+			}
+			else if (err != VK_SUCCESS)
+			{
+				throw RuntimeException("Failed to present KHR: " + err)
+			}
+		}
+		return resize
 	}
 
 }

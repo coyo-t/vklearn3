@@ -5,8 +5,6 @@ import org.lwjgl.vulkan.VK13.*
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDependencyInfo
 import org.lwjgl.vulkan.VkImageMemoryBarrier2
-import org.lwjgl.vulkan.VkImageSubresourceRange
-import java.util.function.Consumer
 
 
 object VKUtil

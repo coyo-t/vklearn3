@@ -16,7 +16,7 @@ class VKInstance (validate: Boolean): AutoCloseable
 {
 	var vkInstance: VkInstance
 		private set
-	private lateinit var debugUtils: VkDebugUtilsMessengerCreateInfoEXT
+	private var debugUtils: VkDebugUtilsMessengerCreateInfoEXT? = null
 	private var vkDebugHandle = 0L
 
 	init
@@ -88,8 +88,9 @@ class VKInstance (validate: Boolean): AutoCloseable
 			var extension = MemoryUtil.NULL
 			if (supportsValidation)
 			{
-				debugUtils = createDebugCallBack()
-				extension = debugUtils.address()
+				val fuck = createDebugCallBack()
+				debugUtils = fuck
+				extension = fuck.address()
 			}
 
 			// Create instance info
@@ -114,7 +115,7 @@ class VKInstance (validate: Boolean): AutoCloseable
 			{
 				val longBuff = stack.mallocLong(1)
 				vkCheck(
-					vkCreateDebugUtilsMessengerEXT(vkInstance, debugUtils, null, longBuff),
+					vkCreateDebugUtilsMessengerEXT(vkInstance, debugUtils!!, null, longBuff),
 					"Error creating debug utils"
 				)
 				vkDebugHandle = longBuff[0]
@@ -212,8 +213,10 @@ class VKInstance (validate: Boolean): AutoCloseable
 			vkDestroyDebugUtilsMessengerEXT(vkInstance, vkDebugHandle, null)
 		}
 		vkDestroyInstance(vkInstance, null)
-		debugUtils.pfnUserCallback().free()
-		debugUtils.free()
+		debugUtils?.apply {
+			pfnUserCallback().free()
+			free()
+		}
 	}
 
 	companion object

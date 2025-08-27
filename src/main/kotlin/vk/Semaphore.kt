@@ -7,8 +7,7 @@ import org.lwjgl.vulkan.VK10.vkDestroySemaphore
 import org.lwjgl.vulkan.VkSemaphoreCreateInfo
 
 
-@JvmInline
-value class Semaphore (val vkSemaphore: Long): VKContextClosable
+class Semaphore (val vkSemaphore: Long): VKContextClosable
 {
 
 	override fun close (vkCtx: VKContext)

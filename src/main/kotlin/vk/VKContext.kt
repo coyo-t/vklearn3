@@ -30,11 +30,16 @@ class VKContext (window: Window): AutoCloseable
 //		VKInstance(cfg.vkUseValidationLayers)
 //	}
 
-	fun closeFor (v: VKContextClosable)
+	fun closeAll (vararg vs: List<VKContextClosable>)
 	{
-		v.close(this)
+		for (it in vs)
+		{
+			for (closable in it)
+			{
+				closable.close(this)
+			}
+		}
 	}
-
 	override fun close()
 	{
 		surface.cleanup(instance)

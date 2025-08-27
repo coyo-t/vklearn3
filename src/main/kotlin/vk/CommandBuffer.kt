@@ -106,7 +106,7 @@ class CommandBuffer (vkCtx: VKContext, cmdPool: CommandPool, primary: Boolean, o
 			queue.submit(cmds, null, null, fence)
 		}
 		fence.fenceWait(vkCtx)
-		fence.cleanup(vkCtx)
+		fence.close(vkCtx)
 	}
 
 	class InheritanceInfo (
