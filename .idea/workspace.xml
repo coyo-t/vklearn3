@@ -6,14 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="facc042d-f938-4867-8ce5-d1cc935641f0" name="Changes" comment="sw">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Render.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Render.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/CommandBuffer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/CommandBuffer.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/Device.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/Device.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/Fence.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/Fence.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/Semaphore.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/Semaphore.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/SwapChain.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/SwapChain.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/VKContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/VKContext.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/VKInstance.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/VKInstance.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -108,11 +100,12 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.Main.executor": "Run",
     "Gradle.Download Sources.executor": "Run",
     "Gradle.vulkan_learning_3 [:com.catsofwar.Main.main()].executor": "Run",
     "Gradle.vulkan_learning_3 [:com.catsofwar.MainKt.main()].executor": "Run",
     "Gradle.vulkan_learning_3 [wrapper].executor": "Run",
-    "Kotlin.Main.executor": "Debug",
+    "Kotlin.Main.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -136,7 +129,20 @@
       <recent name="com.catsofwar" />
     </key>
   </component>
-  <component name="RunManager" selected="Kotlin.Main">
+  <component name="RunManager" selected="Application.Main">
+    <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="org.vulkanb.Main" />
+      <module name="vulkan_learning_3.main" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="org.vulkanb.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="vulkan_learning_3 [wrapper]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -180,11 +186,13 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Application.Main" />
       <item itemvalue="Gradle.vulkan_learning_3 [wrapper]" />
       <item itemvalue="Kotlin.Main" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Main" />
         <item itemvalue="Gradle.vulkan_learning_3 [wrapper]" />
       </list>
     </recent_temporary>
@@ -205,7 +213,7 @@
       <option name="presentableId" value="Default" />
       <updated>1756151302463</updated>
       <workItem from="1756151303750" duration="19357000" />
-      <workItem from="1756233667511" duration="11197000" />
+      <workItem from="1756233667511" duration="11941000" />
     </task>
     <task id="LOCAL-00001" summary="sw">
       <option name="closed" value="true" />
@@ -295,7 +303,15 @@
       <option name="project" value="LOCAL" />
       <updated>1756253008369</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="sw">
+      <option name="closed" value="true" />
+      <created>1756258031015</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1756258031015</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -312,6 +328,11 @@
           <url>file://$PROJECT_DIR$/src/main/kotlin/vk/SwapChain.kt</url>
           <line>167</line>
           <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/Engine.kt</url>
+          <line>23</line>
+          <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
