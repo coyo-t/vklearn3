@@ -12,7 +12,7 @@ data class GPUMesh(
 {
 	fun cleanup(vkCtx: GPUContext)
 	{
-		verticesBuffer.cleanup(vkCtx)
-		indicesBuffer.cleanup(vkCtx)
+		verticesBuffer.close(vkCtx)
+		indicesBuffer.close(vkCtx)
 	}
 }
