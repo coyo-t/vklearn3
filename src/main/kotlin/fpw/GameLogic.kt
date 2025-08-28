@@ -2,7 +2,7 @@ package fpw
 
 interface GameLogic: AutoCloseable
 {
-	fun init(context: EngineContext)
+	fun init(context: EngineContext): InitData
 	fun input(context: EngineContext, diffTimeMillis: Long)
 	fun update(context: EngineContext, diffTimeMillis: Long)
 }

@@ -81,7 +81,7 @@ object ShaderAssetThinger
 	}
 
 	data class Sources (
-		val vertex: String? = null,
-		val fragment: String? = null,
+		val vertex: String,
+		val fragment: String,
 	)
 }

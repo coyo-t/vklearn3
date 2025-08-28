@@ -6,6 +6,7 @@ import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDependencyInfo
 import org.lwjgl.vulkan.VkImageMemoryBarrier2
 import org.lwjgl.vulkan.VkMemoryType
+import org.lwjgl.vulkan.VkRenderingInfo
 import java.lang.foreign.ValueLayout.JAVA_FLOAT
 import java.lang.foreign.ValueLayout.JAVA_INT
 
@@ -142,6 +143,19 @@ object GPUtil
 				else -> "Not mapped"
 			}
 			throw RuntimeException("$errMsg: $errCode [$err]")
+		}
+	}
+
+	inline fun renderScoped (cmd: VkCommandBuffer, info: VkRenderingInfo, cm:()->Unit)
+	{
+		try
+		{
+			vkCmdBeginRendering(cmd, info)
+			cm()
+		}
+		finally
+		{
+			vkCmdEndRendering(cmd)
 		}
 	}
 }

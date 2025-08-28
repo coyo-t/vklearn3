@@ -1,10 +1,26 @@
 package fpw
 
+import fpw.ren.gpu.GPUMeshData
+import fpw.ren.gpu.GPUModelData
+
 
 class Main: GameLogic
 {
-	override fun init(context: EngineContext)
+	override fun init(context: EngineContext): InitData
 	{
+		val modelId = "TriangleModel"
+		val meshData = GPUMeshData(
+			"triangle-mesh",
+			floatArrayOf(
+				-0.5f, -0.5f, 0f,
+				+0.0f, +0.5f, 0f,
+				+0.5f, -0.5f, 0f,
+			),
+			intArrayOf(0, 1, 2)
+		)
+		val modelData = GPUModelData(modelId, listOf(meshData))
+		return InitData(listOf(modelData))
+
 	}
 
 	override fun input(context: EngineContext, diffTimeMillis: Long)
@@ -25,10 +41,17 @@ class Main: GameLogic
 		@JvmStatic
 		fun main (vararg args: String)
 		{
-			Main.logInfo("MACHINE WITNESS BEGIN")
-			Engine("MACHINE WITNESS", Main()).use {
-				logInfo("MACHINE WITNESS REIFICATION")
-				it.run()
+			try
+			{
+				logInfo("MACHINE WITNESS BEGIN")
+				Engine("MACHINE WITNESS", Main()).use {
+					logInfo("MACHINE WITNESS REIFICATION")
+					it.run()
+				}
+			}
+			catch (t: Throwable)
+			{
+				logError(t) { "KERSPLOSION??? :[" }
 			}
 		}
 
@@ -63,29 +86,9 @@ class Main: GameLogic
 		{
 			println(
 				"${ANSI_RED}x_x ${k.invoke()}\n" +
-				"${t.stackTraceToString()}"+
-				"${ANSI_RESET}"
+				t.stackTraceToString() +
+				ANSI_RESET
 			)
 		}
 	}
 }
-
-private const val ANSI_RESET = "\u001B[0m"
-
-private const val ANSI_BLACK = "\u001B[30m"
-private const val ANSI_RED = "\u001B[31m"
-private const val ANSI_GREEN = "\u001B[32m"
-private const val ANSI_YELLOW = "\u001B[33m"
-private const val ANSI_BLUE = "\u001B[34m"
-private const val ANSI_PURPLE = "\u001B[35m"
-private const val ANSI_CYAN = "\u001B[36m"
-private const val ANSI_WHITE = "\u001B[37m"
-
-private const val ANSI_BLACK_BACKGROUND = "\u001B[40m"
-private const val ANSI_RED_BACKGROUND = "\u001B[41m"
-private const val ANSI_GREEN_BACKGROUND = "\u001B[42m"
-private const val ANSI_YELLOW_BACKGROUND = "\u001B[43m"
-private const val ANSI_BLUE_BACKGROUND = "\u001B[44m"
-private const val ANSI_PURPLE_BACKGROUND = "\u001B[45m"
-private const val ANSI_CYAN_BACKGROUND = "\u001B[46m"
-private const val ANSI_WHITE_BACKGROUND = "\u001B[47m"

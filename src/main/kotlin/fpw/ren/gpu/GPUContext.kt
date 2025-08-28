@@ -25,7 +25,7 @@ class GPUContext(window: Window)
 
 	val vkDevice get() = device.vkDevice
 
-	val pipelineCache = GPUPipelineCache(device)
+	val pipelineCache = GPUPipeLineCache(device)
 
 //	val instance = run {
 //		val cfg = EngineConfig

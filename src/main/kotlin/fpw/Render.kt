@@ -1,17 +1,13 @@
 package fpw
 
+import fpw.ren.ModelsCache
+import fpw.ren.SceneRender
+import fpw.ren.gpu.*
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK13.VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT
 import org.lwjgl.vulkan.VK13.VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT
 import org.lwjgl.vulkan.VkCommandBufferSubmitInfo
 import org.lwjgl.vulkan.VkSemaphoreSubmitInfo
-import fpw.ren.SceneRender
-import fpw.ren.gpu.GPUCommandBuffer
-import fpw.ren.gpu.GPUCommandPool
-import fpw.ren.gpu.GPUCommandQueue
-import fpw.ren.gpu.GPUContext
-import fpw.ren.gpu.GPUFence
-import fpw.ren.gpu.GPUSemaphore
 
 
 class Render (engineContext: EngineContext)
@@ -37,8 +33,16 @@ class Render (engineContext: EngineContext)
 	private val renderCompleteSemphs = List(vkContext.swapChain.numImages) {
 		GPUSemaphore(vkContext)
 	}
+	private val modelsCache = ModelsCache()
 
 	private val scnRender = SceneRender(vkContext)
+
+	fun init (initData: InitData)
+	{
+		val models = initData.models
+		modelsCache.loadModels(vkContext, models, cmdPools[0], graphQueue)
+		Main.logDebug("Loaded ${models.size}")
+	}
 
 	fun close()
 	{
@@ -46,10 +50,10 @@ class Render (engineContext: EngineContext)
 
 		scnRender.close()
 
+		modelsCache.close(vkContext)
 		renderCompleteSemphs.forEach { it.close(vkContext) }
 		imageAqSemphs.forEach { it.close(vkContext) }
 		fences.forEach { it.close(vkContext) }
-
 		for ((cb, cp) in cmdBuffers.zip(cmdPools))
 		{
 			cb.cleanup(vkContext, cp)
@@ -111,7 +115,7 @@ class Render (engineContext: EngineContext)
 		{
 			return
 		}
-		scnRender.render(vkContext, cmdBuffer, imageIndex)
+		scnRender.render(vkContext, cmdBuffer, modelsCache, imageIndex)
 
 		recordingStop(cmdBuffer)
 

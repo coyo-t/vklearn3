@@ -7,7 +7,7 @@ import org.lwjgl.vulkan.VK10.vkDestroyPipelineCache
 import org.lwjgl.vulkan.VkPipelineCacheCreateInfo
 
 
-class GPUPipelineCache
+class GPUPipeLineCache
 private constructor (val vkPipelineCache: Long): GPUClosable
 {
 	override fun close(context: GPUContext)
@@ -18,7 +18,7 @@ private constructor (val vkPipelineCache: Long): GPUClosable
 
 	companion object
 	{
-		operator fun invoke (device: GPUDevice): GPUPipelineCache
+		operator fun invoke (device: GPUDevice): GPUPipeLineCache
 		{
 			val outs = MemoryStack.stackPush().use { stack ->
 				val createInfo = VkPipelineCacheCreateInfo.calloc(stack).`sType$Default`()
@@ -29,7 +29,7 @@ private constructor (val vkPipelineCache: Long): GPUClosable
 				)
 				lp.get(0)
 			}
-			return GPUPipelineCache(outs)
+			return GPUPipeLineCache(outs)
 		}
 	}
 }
