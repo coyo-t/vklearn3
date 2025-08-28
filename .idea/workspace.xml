@@ -5,7 +5,50 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="facc042d-f938-4867-8ce5-d1cc935641f0" name="Changes" comment="sw">
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUMesh.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/vk/GPUMesh.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/LuaCoyote.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/ShaderAssetThinger.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUPipelineCache.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/assets/shader/scene.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/kotlinc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/kotlinc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Engine.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/Engine.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/EngineConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/EngineConfig.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/EngineContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/EngineContext.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/FUtil.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/FUtil.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/GameLogic.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/GameLogic.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Inputterz.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/Inputterz.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/Main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Render.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/Render.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Scene.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/Scene.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/StopGame.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/StopGame.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Window.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/Window.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUBuffer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUBuffer.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUClosable.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUClosable.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUCommandBuffer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUCommandBuffer.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUCommandPool.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUCommandPool.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUCommandQueue.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUCommandQueue.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUContext.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUDevice.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUDevice.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUFence.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUFence.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUImageView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUImageView.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUInstance.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUInstance.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUMesh.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUMesh.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUMeshData.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUMeshData.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUModelData.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUModelData.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUPhysical.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUPhysical.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUSemaphore.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUSemaphore.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUShaderModule.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUShaderModule.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUSurface.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUSurface.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUSwapChain.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUSwapChain.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUTransferBuffer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUTransferBuffer.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUVertexBufferStruct.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUVertexBufferStruct.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/GPUtil.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUtil.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/ModelsCache.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/ModelsCache.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/vk/SceneRender.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/SceneRender.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/assets/shader/scene_fragment.glsl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/assets/shader/scene_vertex.glsl" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,11 +100,11 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Kotlin Object" />
         <option value="Kotlin Interface" />
         <option value="Kotlin File" />
         <option value="Class" />
         <option value="Kotlin Data Class" />
+        <option value="Kotlin Object" />
         <option value="Kotlin Class" />
       </list>
     </option>
@@ -102,34 +145,37 @@
     <option name="showLibraryContents" value="true" />
     <option name="showMembers" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Download Sources.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.vulkan_learning_3 [:com.catsofwar.Main.main()].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.vulkan_learning_3 [:com.catsofwar.MainKt.main()].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.vulkan_learning_3 [wrapper].executor&quot;: &quot;Run&quot;,
-    &quot;Kotlin.Main.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Main.executor": "Run",
+    "Gradle.Download Sources.executor": "Run",
+    "Gradle.vulkan_learning_3 [:com.catsofwar.Main.main()].executor": "Run",
+    "Gradle.vulkan_learning_3 [:com.catsofwar.MainKt.main()].executor": "Run",
+    "Gradle.vulkan_learning_3 [wrapper].executor": "Run",
+    "Kotlin.Main.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "Errors"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="K2MoveDeclarationsDialog.RECENT_PACKAGE_KEY">
+      <recent name="fpw" />
+      <recent name="fpw.ren" />
+      <recent name="ren.gpu" />
       <recent name="com.catsofwar" />
     </key>
   </component>
@@ -218,7 +264,8 @@
       <updated>1756151302463</updated>
       <workItem from="1756151303750" duration="19357000" />
       <workItem from="1756233667511" duration="20215000" />
-      <workItem from="1756318204684" duration="4108000" />
+      <workItem from="1756318204684" duration="11993000" />
+      <workItem from="1756408599510" duration="3049000" />
     </task>
     <task id="LOCAL-00001" summary="sw">
       <option name="closed" value="true" />
@@ -356,7 +403,23 @@
       <option name="project" value="LOCAL" />
       <updated>1756326528537</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="sw">
+      <option name="closed" value="true" />
+      <created>1756326541095</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1756326541095</updated>
+    </task>
+    <task id="LOCAL-00019" summary="sw">
+      <option name="closed" value="true" />
+      <created>1756351138947</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1756351138947</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
