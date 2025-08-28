@@ -10,7 +10,7 @@ class GPUModel(val id: String)
 
 	fun cleanup(vkCtx: GPUContext)
 	{
-		vulkanMeshList.forEach { it.cleanup(vkCtx) }
+		vulkanMeshList.forEach { it.close(vkCtx) }
 	}
 
 }

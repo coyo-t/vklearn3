@@ -20,4 +20,7 @@ object EngineConfig
 
 	var maxInFlightFrames = 2
 		private set
+
+	var doGenerateShaderDebugSymbols = true
+		private set
 }

@@ -1,5 +1,6 @@
 package vk
 
+import com.catsofwar.vk.GPUClosable
 import com.catsofwar.vk.GPUContext
 
 
@@ -8,11 +9,11 @@ data class GPUMesh(
 	val verticesBuffer: GPUBuffer,
 	val indicesBuffer: GPUBuffer,
 	val numIndices: Int
-)
+): GPUClosable
 {
-	fun cleanup(vkCtx: GPUContext)
+	override fun close (context: GPUContext)
 	{
-		verticesBuffer.close(vkCtx)
-		indicesBuffer.close(vkCtx)
+		verticesBuffer.close(context)
+		indicesBuffer.close(context)
 	}
 }
