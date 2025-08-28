@@ -2,6 +2,7 @@ package fpw
 
 import fpw.ren.gpu.GPUMeshData
 import fpw.ren.gpu.GPUModelData
+import kotlin.io.path.Path
 
 
 class Main: GameLogic
@@ -41,6 +42,7 @@ class Main: GameLogic
 		@JvmStatic
 		fun main (vararg args: String)
 		{
+			logInfo("WE ARE AT "+ Path("./").normalize().toAbsolutePath())
 			try
 			{
 				logInfo("MACHINE WITNESS BEGIN")

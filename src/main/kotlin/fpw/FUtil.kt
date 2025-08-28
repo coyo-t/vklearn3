@@ -21,7 +21,7 @@ object FUtil
 	fun getFileBytes (at: Path): ByteBuffer
 	{
 		FileChannel.open(at, StandardOpenOption.READ).use { f ->
-			return ByteBuffer.allocateDirect(f.size().toInt()).order(ByteOrder.nativeOrder()).apply {
+			return createBuffer(f.size()).apply {
 				f.read(this)
 				flip()
 			}

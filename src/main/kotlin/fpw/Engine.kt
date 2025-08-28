@@ -16,7 +16,7 @@ class Engine (
 		engineContext = EngineContext(window, Scene(window))
 		render = Render(engineContext)
 		val idat = gameLogic.init(engineContext)
-
+		render.init(idat)
 	}
 
 	override fun close ()

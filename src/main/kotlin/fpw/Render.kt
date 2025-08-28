@@ -48,7 +48,7 @@ class Render (engineContext: EngineContext)
 	{
 		vkContext.device.waitIdle()
 
-		scnRender.close()
+		scnRender.close(vkContext)
 
 		modelsCache.close(vkContext)
 		renderCompleteSemphs.forEach { it.close(vkContext) }

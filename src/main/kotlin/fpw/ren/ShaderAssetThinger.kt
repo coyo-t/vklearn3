@@ -43,7 +43,7 @@ object ShaderAssetThinger
 				"Shader compilation failed: ${shaderc_result_get_error_message(result)}"
 			}
 			val outs = FUtil.createBuffer(shaderc_result_get_length(result))
-			return outs.put(shaderc_result_get_bytes(result))
+			return outs.put(shaderc_result_get_bytes(result)).flip()
 		}
 		finally
 		{
