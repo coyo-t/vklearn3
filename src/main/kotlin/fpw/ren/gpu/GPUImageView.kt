@@ -38,7 +38,7 @@ class GPUImageView (
 	}
 
 
-	fun cleanup(device: GPUDevice)
+	fun close (device: GPUDevice)
 	{
 		vkDestroyImageView(device.vkDevice, vkImageView, null)
 	}

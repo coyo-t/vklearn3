@@ -96,17 +96,29 @@ class ModelsCache: GPUClosable
 	private fun createVerticesBuffers(context: GPUContext, meshData: GPUMeshData): GPUTransferBuffer
 	{
 		val positions = meshData.positions
-		val numElements = positions.size
+		var texCoords = meshData.texCoords
+		// This Is Stupid
+		if (texCoords.isEmpty())
+		{
+			texCoords = FloatArray(positions.size / 3 * 2) { 0f }
+		}
+		val numElements = positions.size + texCoords.size
 		val bufferSize = (numElements * GPUtil.SIZEOF_FLOAT).toLong()
 
 		val srcBuffer = GPUBuffer(
 			context, bufferSize,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+			(
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or
+				VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+			)
 		)
 		val dstBuffer = GPUBuffer(
 			context, bufferSize,
-			VK_BUFFER_USAGE_TRANSFER_DST_BIT or VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+			(
+				VK_BUFFER_USAGE_TRANSFER_DST_BIT or
+				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+			),
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		)
 
@@ -116,10 +128,16 @@ class ModelsCache: GPUClosable
 			val rows = positions.size / 3
 			for (row in 0..<rows)
 			{
-				val startPos = row * 3
-				data.put(positions[startPos])
-				data.put(positions[startPos + 1])
-				data.put(positions[startPos + 2])
+				val coi = row * 3
+				val uvi = row * 2
+				with (data)
+				{
+					put(positions[coi])
+					put(positions[coi + 1])
+					put(positions[coi + 2])
+					put(texCoords[uvi])
+					put(texCoords[uvi + 1])
+				}
 			}
 		}
 		return GPUTransferBuffer(srcBuffer, dstBuffer)

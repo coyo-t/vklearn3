@@ -12,7 +12,7 @@ class Engine (
 
 	init
 	{
-		val window = Window.Companion.create(windowTitle, 1280, 720)
+		val window = Window.create(windowTitle, 1280, 720)
 		engineContext = EngineContext(window, Scene(window))
 		render = Render(engineContext)
 		val idat = gameLogic.init(engineContext)
@@ -35,20 +35,20 @@ class Engine (
 		}
 		catch (sg: StopGame)
 		{
-			Main.Companion.logInfo("hard-stopping game")
+			Main.logInfo("hard-stopping game")
 			when (val reason = sg.reason)
 			{
-				null -> Main.Companion.logInfo("no reason given")
-				else -> Main.Companion.logInfo("reason: \"$reason\"")
+				null -> Main.logInfo("no reason given")
+				else -> Main.logInfo("reason: \"$reason\"")
 			}
 		}
 		catch (e: Exception)
 		{
-			Main.Companion.logError(e) { "EXCEPTION FUCK" }
+			Main.logError(e) { "EXCEPTION FUCK" }
 		}
 		catch (t: Throwable)
 		{
-			Main.Companion.logError(t) { "SOMETHING THREW HARDER THAN ELI FUCK" }
+			Main.logError(t) { "SOMETHING THREW HARDER THAN ELI FUCK" }
 		}
 //		cleanup()
 	}
