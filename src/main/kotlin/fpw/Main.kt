@@ -68,7 +68,10 @@ class Main: GameLogic
 		val dt = diffTimeMillis / 1000.0
 		with (thaCubeEntity)
 		{
-			rotation.rotateX(toRadians(dt.toFloat() * 45f))
+			val fdt = dt.toFloat()
+			rotation
+			.rotateX(toRadians(fdt * 45f))
+			.rotateY(toRadians(fdt * 10f))
 			updateModelMatrix()
 		}
 	}

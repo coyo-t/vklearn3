@@ -62,12 +62,9 @@ object ShaderAssetThinger
 			check(result.type() == Lua.LuaType.TABLE) {
 				"expecting a table, got ${result.type()}"
 			}
-			val vSource = result["vertex"]!!.toString()
-			val fSource = result["fragment"]!!.toString()
-
 			return Sources(
-				vertex = vSource,
-				fragment = fSource,
+				vertex = result["vertex"]!!.toString(),
+				fragment = result["fragment"]!!.toString(),
 			)
 		}
 		catch (e: Exception)

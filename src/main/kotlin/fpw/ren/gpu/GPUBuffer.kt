@@ -19,22 +19,22 @@ import org.lwjgl.vulkan.VkMemoryAllocateInfo
 import org.lwjgl.vulkan.VkMemoryRequirements
 
 
-class GPUBuffer(vkCtx: GPUContext, size: Long, usage: Int, reqMask: Int):
-	GPUClosable
+class GPUBuffer: GPUClosable
 {
 
 	val allocationSize: Long
 	val buffer: Long
 	val memory: Long
 	val pb: PointerBuffer
-	val requestedSize = size
+	val requestedSize: Long
 
 	var mappedMemory: Long
 		private set
 
-	init
+	constructor (vkCtx: GPUContext, size: Long, usage: Int, reqMask: Int)
 	{
 		mappedMemory = NULL
+		requestedSize = size
 		MemoryStack.stackPush().use { stack ->
 			val device: GPUDevice = vkCtx.device
 			val bufferCreateInfo = VkBufferCreateInfo.calloc(stack)

@@ -7,11 +7,4 @@ class PushConstantRange(
 )
 {
 
-	constructor (stage:Int, range: ClosedRange<Int>):
-		this(
-			stage = stage,
-			offset = range.start,
-			size = range.endInclusive-range.start+1
-		)
-
 }
