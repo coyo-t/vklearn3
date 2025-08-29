@@ -2,24 +2,59 @@ package fpw
 
 import fpw.ren.gpu.GPUMeshData
 import fpw.ren.gpu.GPUModelData
+import org.joml.Math.toRadians
 import kotlin.io.path.Path
 
 
 class Main: GameLogic
 {
+	lateinit var thaCubeEntity: Entity
+
 	override fun init(context: EngineContext): InitData
 	{
-		val modelId = "TriangleModel"
+		val modelId = "Cubezor"
 		val meshData = GPUMeshData(
-			"triangle-mesh",
-			floatArrayOf(
-				-0.5f, -0.5f, 0f,
-				+0.0f, +0.5f, 0f,
-				+0.5f, -0.5f, 0f,
+			"mesh.cubezor",
+			positions = floatArrayOf(
+				-0.5f, 0.5f, 0.5f,
+				-0.5f, -0.5f, 0.5f,
+				0.5f, -0.5f, 0.5f,
+				0.5f, 0.5f, 0.5f,
+				-0.5f, 0.5f, -0.5f,
+				0.5f, 0.5f, -0.5f,
+				-0.5f, -0.5f, -0.5f,
+				0.5f, -0.5f, -0.5f,
 			),
-			intArrayOf(0, 1, 2)
+			texCoords = floatArrayOf(
+				0.0f, 0.0f,
+				0.5f, 0.0f,
+				1.0f, 0.0f,
+				1.0f, 0.5f,
+				1.0f, 1.0f,
+				0.5f, 1.0f,
+				0.0f, 1.0f,
+				0.0f, 0.5f,
+			),
+			indices = intArrayOf(
+				// Front face
+				0, 1, 3, 3, 1, 2,
+				// Top Face
+				4, 0, 3, 5, 4, 3,
+				// Right face
+				3, 2, 7, 5, 3, 7,
+				// Left face
+				6, 1, 0, 6, 0, 4,
+				// Bottom face
+				2, 1, 6, 2, 6, 7,
+				// Back face
+				7, 6, 4, 7, 4, 5,
+			)
 		)
 		val modelData = GPUModelData(modelId, listOf(meshData))
+
+		thaCubeEntity = Entity("Cubezor", modelId, 0f, 0f, -2f)
+		context.scene.entities += thaCubeEntity
+
 		return InitData(listOf(modelData))
 
 	}
@@ -30,6 +65,12 @@ class Main: GameLogic
 
 	override fun update(context: EngineContext, diffTimeMillis: Long)
 	{
+		val dt = diffTimeMillis / 1000.0
+		with (thaCubeEntity)
+		{
+			rotation.rotateX(toRadians(dt.toFloat() * 45f))
+			updateModelMatrix()
+		}
 	}
 
 	override fun close()

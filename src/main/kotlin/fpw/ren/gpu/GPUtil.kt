@@ -49,6 +49,7 @@ object GPUtil
 
 	val SIZEOF_INT   = JAVA_INT.byteSize().toInt()
 	val SIZEOF_FLOAT = JAVA_FLOAT.byteSize().toInt()
+	val SIZEOF_MAT4 = SIZEOF_FLOAT*4*4
 
 	fun memoryTypeFromProperties(vkCtx: GPUContext, typeBits: Int, reqsMask: Int): Int
 	{

@@ -5,14 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="facc042d-f938-4867-8ce5-d1cc935641f0" name="Changes" comment="sw">
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/Attachment.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUImage.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/Entity.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/Projection.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/PushConstantRange.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/Engine.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/Engine.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/ModelsCache.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/ModelsCache.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUImageView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUImageView.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUMeshData.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUMeshData.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/assets/shader/scene.lua" beforeDir="false" afterPath="$PROJECT_DIR$/resources/assets/shader/scene.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/Main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/Render.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/Render.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/Scene.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/Scene.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/SceneRender.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/SceneRender.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUContext.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUPipeLine.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUPipeLine.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUPipeLineBuildInfo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUPipeLineBuildInfo.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUSwapChain.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUSwapChain.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUVertexBufferStruct.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUVertexBufferStruct.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUtil.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/fpw/ren/gpu/GPUtil.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -186,7 +193,7 @@
       <workItem from="1756151303750" duration="19357000" />
       <workItem from="1756233667511" duration="20215000" />
       <workItem from="1756318204684" duration="11993000" />
-      <workItem from="1756408599510" duration="10016000" />
+      <workItem from="1756408599510" duration="17660000" />
     </task>
     <task id="LOCAL-00001" summary="sw">
       <option name="closed" value="true" />
@@ -364,7 +371,15 @@
       <option name="project" value="LOCAL" />
       <updated>1756417385851</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="sw">
+      <option name="closed" value="true" />
+      <created>1756426705107</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1756426705107</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

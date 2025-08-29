@@ -7,7 +7,11 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK13.VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT
 import org.lwjgl.vulkan.VK13.VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT
 import org.lwjgl.vulkan.VkCommandBufferSubmitInfo
+import org.lwjgl.vulkan.VkExtent2D
 import org.lwjgl.vulkan.VkSemaphoreSubmitInfo
+import java.util.*
+import java.util.concurrent.Semaphore
+import java.util.function.Consumer
 
 
 class Render (engineContext: EngineContext)
@@ -24,18 +28,20 @@ class Render (engineContext: EngineContext)
 	private val cmdBuffers = cmdPools.map {
 		GPUCommandBuffer(vkContext, it, primary = true, oneTimeSubmit = true)
 	}
-	private val imageAqSemphs = List(EngineConfig.maxInFlightFrames) {
+	private var imageAqSemphs = List(EngineConfig.maxInFlightFrames) {
 		GPUSemaphore(vkContext)
 	}
-	private val fences = List(EngineConfig.maxInFlightFrames) {
+	private var fences = List(EngineConfig.maxInFlightFrames) {
 		GPUFence(vkContext, signaled = true)
 	}
-	private val renderCompleteSemphs = List(vkContext.swapChain.numImages) {
+	private var renderCompleteSemphs = List(vkContext.swapChain.numImages) {
 		GPUSemaphore(vkContext)
 	}
 	private val modelsCache = ModelsCache()
 
 	private val scnRender = SceneRender(vkContext)
+
+	private var doResize = false
 
 	fun init (initData: InitData)
 	{
@@ -110,20 +116,54 @@ class Render (engineContext: EngineContext)
 
 		recordingStart(cmdPool, cmdBuffer)
 
+		if (doResize)
+		{
+			resize(engineContext)
+			return
+		}
 		val imageIndex = swapChain.acquireNextImage(vkContext.device, imageAqSemphs[currentFrame])
 		if (imageIndex < 0)
 		{
+			resize(engineContext)
 			return
 		}
-		scnRender.render(vkContext, cmdBuffer, modelsCache, imageIndex)
+		scnRender.render(engineContext, vkContext, cmdBuffer, modelsCache, imageIndex)
 
 		recordingStop(cmdBuffer)
 
 		submit(cmdBuffer, currentFrame, imageIndex)
 
-		swapChain.presentImage(presentQueue, renderCompleteSemphs[imageIndex], imageIndex)
+		doResize = swapChain.presentImage(presentQueue, renderCompleteSemphs[imageIndex], imageIndex)
 
 		currentFrame = (currentFrame + 1) % EngineConfig.maxInFlightFrames
+	}
+
+	private fun resize (engCtx: EngineContext)
+	{
+		val window = engCtx.window
+		if (window.wide == 0 || window.tall == 0)
+		{
+			return
+		}
+		doResize = false
+		vkContext.device.waitIdle()
+
+		vkContext.resize(window)
+
+		renderCompleteSemphs.forEach { it.close(vkContext) }
+		imageAqSemphs.forEach { it.close(vkContext) }
+
+		imageAqSemphs = List(EngineConfig.maxInFlightFrames) {
+			GPUSemaphore(vkContext)
+		}
+
+		renderCompleteSemphs = List(vkContext.swapChain.numImages) {
+			GPUSemaphore(vkContext)
+		}
+
+		val extent = vkContext.swapChain.swapChainExtent
+		engCtx.scene.projection.resize(extent.width(), extent.height())
+		scnRender.resize(vkContext)
 	}
 
 }

@@ -75,19 +75,58 @@ class GPUPipeLine (vkCtx: GPUContext, buildInfo: GPUPipeLineBuildInfo)
 					VK_COLOR_COMPONENT_A_BIT
 				)
 				.blendEnable(false)
+
 			val colorBlendState = VkPipelineColorBlendStateCreateInfo.calloc(stack)
 				.`sType$Default`()
 				.pAttachments(blendAttState)
 
-			val colorFormats = stack.mallocInt(1)
-			colorFormats.put(0, buildInfo.colorFormat)
+			val ds = if (buildInfo.depthFormat != VK_FORMAT_UNDEFINED)
+			{
+				VkPipelineDepthStencilStateCreateInfo.calloc(stack)
+					.`sType$Default`()
+					.depthTestEnable(true)
+					.depthWriteEnable(true)
+					.depthCompareOp(VK_COMPARE_OP_LESS_OR_EQUAL)
+					.depthBoundsTestEnable(false)
+					.stencilTestEnable(false)
+			}
+			else
+			{
+				null
+			}
+
+			val pushConstRanges = buildInfo.pushConstRange
+			val numPushConstants = pushConstRanges.size
+			val vpcr: VkPushConstantRange.Buffer?
+			if (numPushConstants > 0)
+			{
+				vpcr = VkPushConstantRange.calloc(numPushConstants, stack)
+				for (i in 0..<numPushConstants)
+				{
+					val pushConstRange = pushConstRanges[i]
+					vpcr[i]
+						.stageFlags(pushConstRange.stage)
+						.offset(pushConstRange.offset)
+						.size(pushConstRange.size)
+				}
+			}
+			else
+			{
+				vpcr = null
+			}
+
 			val rendCreateInfo = VkPipelineRenderingCreateInfo.calloc(stack)
 				.`sType$Default`()
 				.colorAttachmentCount(1)
-				.pColorAttachmentFormats(colorFormats)
+				.pColorAttachmentFormats(stack.mallocInt(1).put(0, buildInfo.colorFormat))
+			if (ds != null)
+			{
+				rendCreateInfo.depthAttachmentFormat(buildInfo.depthFormat)
+			}
 
 			val pPipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo.calloc(stack)
 				.`sType$Default`()
+				.pPushConstantRanges(vpcr)
 
 			vkCheck(
 				vkCreatePipelineLayout(device.vkDevice, pPipelineLayoutCreateInfo, null, lp),
@@ -108,6 +147,11 @@ class GPUPipeLine (vkCtx: GPUContext, buildInfo: GPUPipeLineBuildInfo)
 				.pDynamicState(dynamicStateCreateInfo)
 				.layout(vkPipelineLayout)
 				.pNext(rendCreateInfo)
+			if (ds != null)
+			{
+				createInfo.pDepthStencilState(ds)
+			}
+
 			vkCheck(
 				vkCreateGraphicsPipelines(
 					device.vkDevice,

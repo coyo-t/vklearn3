@@ -6,7 +6,7 @@ import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
 
 
-class GPUVertexBufferStruct
+class GPUVertexBufferStruct: AutoCloseable
 {
 
 	val vi = VkPipelineVertexInputStateCreateInfo.calloc()
@@ -53,7 +53,7 @@ class GPUVertexBufferStruct
 		.pVertexAttributeDescriptions(viAttrs)
 	}
 
-	fun cleanup()
+	override fun close ()
 	{
 		viBindings.free()
 		viAttrs.free()

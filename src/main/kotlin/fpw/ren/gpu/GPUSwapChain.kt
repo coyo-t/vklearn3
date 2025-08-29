@@ -165,7 +165,7 @@ class GPUSwapChain (
 		swapChainExtent.free()
 		for (it in imageViews)
 		{
-			it.cleanup(device)
+			it.close(device)
 		}
 		KHRSwapchain.vkDestroySwapchainKHR(device.vkDevice, vkSwapChain, null)
 	}
