@@ -2,7 +2,6 @@ package fpw.ren.gpu
 
 import fpw.Main
 import fpw.Window
-import fpw.ren.gpu.GPUImageView.ImageViewData
 import fpw.ren.gpu.GPUtil.vkCheck
 import org.joml.Math.clamp
 import org.lwjgl.system.MemoryStack
@@ -18,24 +17,24 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-class GPUSwapChain (
-	window: Window,
-	device: GPUDevice,
-	surface: GPUSurface,
-	requestedImages: Int,
-	vsync: Boolean,
-)
+class GPUSwapChain
 {
 
-	val imageViews: List<GPUImageView>
+	val imageViews: List<ImageView>
 	val numImages: Int
 	val swapChainExtent: VkExtent2D
 	val vkSwapChain: Long
 
-	init
+	constructor (
+		window: Window,
+		device: GPUDevice,
+		surface: Surface,
+		requestedImages: Int,
+		vsync: Boolean,
+	)
 	{
 		MemoryStack.stackPush().use { stack ->
-			Main.logDebug("Creating Vulkan SwapChain")
+//			Main.logDebug("Creating Vulkan SwapChain")
 			val surfaceCaps = surface.surfaceCaps
 			val reqImages = calcNumImages(surfaceCaps, requestedImages)
 			swapChainExtent = calcSwapChainExtent(window, surfaceCaps)
@@ -81,11 +80,11 @@ class GPUSwapChain (
 			result = min(requestedImages, maxImages)
 		}
 		result = max(result, minImages)
-		Main.logDebug(
-			"Requested [$requestedImages] images, got [$result] images. " +
-			"Surface capabilities, " +
-			"image range ($minImages..$maxImages)"
-		)
+//		Main.logDebug(
+//			"Requested [$requestedImages] images, got [$result] images. " +
+//			"Surface capabilities, " +
+//			"image range ($minImages..$maxImages)"
+//		)
 
 		return result
 	}
@@ -109,7 +108,7 @@ class GPUSwapChain (
 		return result
 	}
 
-	private fun createImageViews(stack: MemoryStack, device: GPUDevice, swapChain: Long, format: Int): List<GPUImageView>
+	private fun createImageViews(stack: MemoryStack, device: GPUDevice, swapChain: Long, format: Int): List<ImageView>
 	{
 		val ip = stack.mallocInt(1)
 		vkCheck(
@@ -129,7 +128,7 @@ class GPUSwapChain (
 			aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 		)
 		return List(numImages) {
-			GPUImageView(device, swapChainImages[it], imageViewData)
+			ImageView(device, swapChainImages[it], imageViewData)
 		}
 	}
 
@@ -161,12 +160,9 @@ class GPUSwapChain (
 
 	fun cleanup(device: GPUDevice)
 	{
-		Main.logDebug("Destroying Vulkan SwapChain")
+//		Main.logDebug("Destroying Vulkan SwapChain")
 		swapChainExtent.free()
-		for (it in imageViews)
-		{
-			it.close(device)
-		}
+		imageViews.forEach { it.close(device) }
 		KHRSwapchain.vkDestroySwapchainKHR(device.vkDevice, vkSwapChain, null)
 	}
 

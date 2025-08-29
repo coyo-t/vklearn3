@@ -1,6 +1,5 @@
 package fpw.ren.gpu
 
-import fpw.Main
 import fpw.ren.gpu.GPUtil.vkCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
@@ -15,7 +14,7 @@ private constructor (val vkCommandPool: Long)
 		operator fun invoke (vkCtx: GPUContext, queueFamilyIndex: Int, supportReset: Boolean): GPUCommandPool
 		{
 			MemoryStack.stackPush().use { stack ->
-				Main.logDebug("Creating Vulkan command pool")
+//				Main.logDebug("Creating Vulkan command pool")
 				val cmdPoolInfo = VkCommandPoolCreateInfo.calloc(stack)
 					.`sType$Default`()
 					.queueFamilyIndex(queueFamilyIndex)
@@ -36,7 +35,7 @@ private constructor (val vkCommandPool: Long)
 
 	fun cleanup(vkCtx: GPUContext)
 	{
-		Main.logDebug("Destroying Vulkan command pool")
+//		Main.logDebug("Destroying Vulkan command pool")
 		vkDestroyCommandPool(vkCtx.device.vkDevice, vkCommandPool, null)
 	}
 

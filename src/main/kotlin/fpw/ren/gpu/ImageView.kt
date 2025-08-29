@@ -6,12 +6,13 @@ import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkImageViewCreateInfo
 
 
-class GPUImageView (
+class ImageView (
 	device: GPUDevice,
-	val vkImage: Long,
+	vkImage: Long,
 	imageViewData: ImageViewData,
 )
 {
+	val vkImage = vkImage
 	val aspectMask = imageViewData.aspectMask
 	val mipLevels = imageViewData.mipLevels
 	val vkImageView = MemoryStack.stackPush().use { stack ->
@@ -32,7 +33,7 @@ class GPUImageView (
 
 		vkCheck(
 			vkCreateImageView(device.vkDevice, viewCreateInfo, null, lp),
-			"Failed to create image view"
+			"image view creation"
 		)
 		lp.get(0)
 	}
@@ -42,14 +43,5 @@ class GPUImageView (
 	{
 		vkDestroyImageView(device.vkDevice, vkImageView, null)
 	}
-
-	data class ImageViewData(
-		val aspectMask: Int = 0,
-		val baseArrayLayer: Int = 0,
-		val format: Int = 0,
-		val layerCount: Int = 1,
-		val mipLevels: Int = 1,
-		val viewType: Int = VK_IMAGE_VIEW_TYPE_2D,
-	)
 
 }

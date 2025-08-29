@@ -6,9 +6,8 @@ import org.lwjgl.vulkan.VK14.*
 
 class Attachment: GPUClosable
 {
-
 	val image: GPUImage
-	val imageView: GPUImageView
+	val imageView: ImageView
 	val isDepthAttachment: Boolean
 
 	constructor (vkCtx: GPUContext, width: Int, height: Int, format: Int, usage: Int)
@@ -23,22 +22,22 @@ class Attachment: GPUClosable
 
 		var aspectMask = 0
 		var dpm = false
-		if ((usage and VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) > 0)
+		if ((usage and VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) != 0)
 		{
 			aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
 		}
-		if ((usage and VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) > 0)
+		if ((usage and VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) != 0)
 		{
 			aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT
 			dpm = true
 		}
 		isDepthAttachment = dpm
 
-		val imageViewData = GPUImageView.ImageViewData(
+		val imageViewData = ImageViewData(
 			format = image.format,
 			aspectMask = aspectMask,
 		)
-		imageView = GPUImageView(vkCtx.device, image.vkImage, imageViewData)
+		imageView = ImageView(vkCtx.device, image.vkImage, imageViewData)
 	}
 
 	override fun close (context: GPUContext)

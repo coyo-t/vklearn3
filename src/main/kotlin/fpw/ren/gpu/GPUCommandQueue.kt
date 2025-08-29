@@ -1,6 +1,5 @@
 package fpw.ren.gpu
 
-import fpw.Main
 import fpw.ren.gpu.GPUtil.vkCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
@@ -8,17 +7,17 @@ import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VK13.vkQueueSubmit2
 
 
-sealed class GPUCommandQueue (vkCtx: GPUContext, queueFamilyIndex: Int, queueIndex: Int)
+sealed class GPUCommandQueue
 {
 	val queueFamilyIndex: Int
 	val vkQueue: VkQueue
 
-	init
+	constructor (vkCtx: GPUContext, queueFamilyIndex: Int, queueIndex: Int)
 	{
 
 		this.queueFamilyIndex = queueFamilyIndex
 		MemoryStack.stackPush().use { stack ->
-			Main.logDebug("Creating queue")
+//			Main.logDebug("Creating queue")
 			val pQueue = stack.mallocPointer(1)
 			vkGetDeviceQueue(vkCtx.device.vkDevice, queueFamilyIndex, queueIndex, pQueue)
 			val queue = pQueue.get(0)
@@ -49,71 +48,6 @@ sealed class GPUCommandQueue (vkCtx: GPUContext, queueFamilyIndex: Int, queueInd
 			}
 			val fenceHandle = fence?.vkFence ?: VK_NULL_HANDLE
 			vkCheck(vkQueueSubmit2(vkQueue, submitInfo, fenceHandle), "Failed to submit command to queue")
-		}
-	}
-
-	class GraphicsQueue(vkCtx: GPUContext, queueIndex: Int):
-		GPUCommandQueue(vkCtx, getGraphicsQueueFamilyIndex(vkCtx), queueIndex)
-	{
-		companion object
-		{
-			private fun getGraphicsQueueFamilyIndex(vkCtx: GPUContext): Int
-			{
-				val queuePropsBuff = vkCtx.physDevice.vkQueueFamilyProps
-				val uhh = queuePropsBuff.indexOfFirst { (it.queueFlags() and VK_QUEUE_GRAPHICS_BIT) != 0 }
-//				var index = -1
-//				val numQueuesFamilies = queuePropsBuff.capacity()
-//				for (i in 0..<numQueuesFamilies)
-//				{
-//					val props = queuePropsBuff.get(i)
-//					val graphicsQueue = (props.queueFlags() and VK_QUEUE_GRAPHICS_BIT) != 0
-//					if (graphicsQueue)
-//					{
-//						index = i
-//						break
-//					}
-//				}
-
-				require(uhh >= 0) {
-					"Failed to get graphics Queue family index"
-				}
-				return uhh
-			}
-		}
-	}
-
-	class PresentQueue (vkCtx: GPUContext, queueIndex: Int):
-		GPUCommandQueue(vkCtx, getPresentQueueFamilyIndex(vkCtx), queueIndex)
-	{
-		companion object
-		{
-			private fun getPresentQueueFamilyIndex (vkCtx: GPUContext): Int
-			{
-				var index = -1
-				MemoryStack.stackPush().use { stack ->
-					val queuePropsBuff = vkCtx.physDevice.vkQueueFamilyProps
-					val numQueuesFamilies: Int = queuePropsBuff.capacity()
-					val intBuff = stack.mallocInt(1)
-					for (i in 0..<numQueuesFamilies)
-					{
-						KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR(
-							vkCtx.physDevice.vkPhysicalDevice,
-							i, vkCtx.surface.vkSurface, intBuff
-						)
-						val supportsPresentation = intBuff.get(0) == VK_TRUE
-						if (supportsPresentation)
-						{
-							index = i
-							break
-						}
-					}
-				}
-				if (index < 0)
-				{
-					throw RuntimeException("Failed to get Presentation Queue family index")
-				}
-				return index
-			}
 		}
 	}
 

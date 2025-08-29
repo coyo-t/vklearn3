@@ -19,7 +19,7 @@ class GPUPipeLine (vkCtx: GPUContext, buildInfo: GPUPipeLineBuildInfo)
 
 	init
 	{
-		Main.logDebug("Creating pipeline")
+//		Main.logDebug("Creating pipeline")
 		val device = vkCtx.device
 		MemoryStack.stackPush().use { stack ->
 			val lp = stack.mallocLong(1)
@@ -168,7 +168,7 @@ class GPUPipeLine (vkCtx: GPUContext, buildInfo: GPUPipeLineBuildInfo)
 
 	fun cleanup(vkCtx: GPUContext)
 	{
-		Main.logDebug("Destroying pipeline")
+//		Main.logDebug("Destroying pipeline")
 		val vkDevice = vkCtx.vkDevice
 		vkDestroyPipelineLayout(vkDevice, vkPipelineLayout, null)
 		vkDestroyPipeline(vkDevice, vkPipeline, null)

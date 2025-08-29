@@ -12,16 +12,16 @@ import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR
 import org.lwjgl.vulkan.VkSurfaceFormatKHR
 
 
-class GPUSurface (instance: GPUInstance, physDevice: GPUPhysical, window: Window)
+class Surface
 {
 
 	val surfaceCaps: VkSurfaceCapabilitiesKHR
 	val surfaceFormat: SurfaceFormat
 	val vkSurface: Long
 
-	init
+	constructor (instance: GPUInstance, physDevice: GPUPhysical, window: Window)
 	{
-		Main.logDebug("Creating Vulkan surface")
+//		Main.logDebug("Creating Vulkan surface")
 		MemoryStack.stackPush().use { stack ->
 			val pSurface = stack.mallocLong(1)
 			GLFWVulkan.glfwCreateWindowSurface(
@@ -86,11 +86,9 @@ class GPUSurface (instance: GPUInstance, physDevice: GPUPhysical, window: Window
 
 	fun cleanup (instance: GPUInstance)
 	{
-		Main.logDebug("Destroying Vulkan surface")
+//		Main.logDebug("Destroying Vulkan surface")
 		surfaceCaps.free()
 		KHRSurface.vkDestroySurfaceKHR(instance.vkInstance, vkSurface, null)
 	}
-
-	data class SurfaceFormat(val imageFormat: Int, val colorSpace: Int)
 
 }

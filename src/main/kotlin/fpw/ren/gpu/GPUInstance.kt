@@ -21,7 +21,7 @@ class GPUInstance (validate: Boolean)
 
 	init
 	{
-		Main.logDebug("Creating Vulkan instance")
+//		Main.logDebug("Creating Vulkan instance")
 		MemoryStack.stackPush().use { stack ->
 			// Create application information
 			val appShortName = stack.UTF8("VulkanBook")
@@ -40,9 +40,9 @@ class GPUInstance (validate: Boolean)
 			if (validate && numValidationLayers == 0)
 			{
 				supportsValidation = false
-				Main.logWarn("Request validation but no supported validation layers found. Falling back to no validation")
+				Main.logWarn("requested validation but no supported validation layers found :[")
 			}
-			Main.logDebug("Validation: $supportsValidation")
+			Main.logDebug("gpu validation: $supportsValidation")
 
 			// Set required  layers
 			var requiredLayers: PointerBuffer? = null
@@ -52,7 +52,7 @@ class GPUInstance (validate: Boolean)
 				for (i in 0..<numValidationLayers)
 				{
 					val args = validationLayers[i]
-					Main.logDebug("Using validation layer [$args]")
+					Main.logDebug("using validation layer [$args]")
 					requiredLayers.put(i, stack.ASCII(args))
 				}
 			}
@@ -162,8 +162,8 @@ class GPUInstance (validate: Boolean)
 			val instanceExtensionsProps = VkExtensionProperties.calloc(numExtensions, stack)
 			vkEnumerateInstanceExtensionProperties(null as String?, numExtensionsBuf, instanceExtensionsProps)
 			return buildSet {
-				val sb = StringBuilder()
-				sb.append("Instance supports [$numExtensions] extensions")
+//				val sb = StringBuilder()
+//				sb.append("Instance supports [$numExtensions] extensions")
 				for (i in 0..<numExtensions)
 				{
 					val props = instanceExtensionsProps.get(i)
@@ -171,7 +171,7 @@ class GPUInstance (validate: Boolean)
 					add(extensionName)
 //					sb.appendLine("\t$extensionName")
 				}
-				Main.logTrace(sb.toString())
+//				Main.logDebug(sb.toString())
 			}
 		}
 	}
@@ -185,8 +185,8 @@ class GPUInstance (validate: Boolean)
 			val propsBuf = VkLayerProperties.calloc(numLayers, stack)
 			vkEnumerateInstanceLayerProperties(numLayersArr, propsBuf)
 			val supportedLayers = buildList {
-				val sb = StringBuilder()
-				sb.append("Instance supports [$numLayers] layers")
+//				val sb = StringBuilder()
+//				sb.append("Instance supports [$numLayers] layers")
 				for (i in 0..<numLayers)
 				{
 					val props = propsBuf.get(i)
@@ -194,7 +194,7 @@ class GPUInstance (validate: Boolean)
 					add(layerName)
 //					sb.appendLine("\t$layerName")
 				}
-				Main.logTrace(sb.toString())
+//				Main.logDebug(sb.toString())
 			}
 
 			// Main validation layer
@@ -209,7 +209,7 @@ class GPUInstance (validate: Boolean)
 
 	fun close()
 	{
-		Main.logDebug("Destroying Vulkan instance")
+//		Main.logDebug("Destroying Vulkan instance")
 		if (vkDebugHandle != VK_NULL_HANDLE)
 		{
 			vkDestroyDebugUtilsMessengerEXT(vkInstance, vkDebugHandle, null)
@@ -223,12 +223,12 @@ class GPUInstance (validate: Boolean)
 
 	companion object
 	{
-		val MESSAGE_SEVERITY_BITMASK = (
+		const val MESSAGE_SEVERITY_BITMASK = (
 			VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT or
 			VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT or
 			0
 		)
-		val MESSAGE_TYPE_BITMASK = (
+		const val MESSAGE_TYPE_BITMASK = (
 			VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT or
 			VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT or
 			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT or

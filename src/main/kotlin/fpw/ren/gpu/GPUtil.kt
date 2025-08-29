@@ -160,7 +160,7 @@ object GPUtil
 				-> "VK_ERROR_UNKNOWN"
 			else -> "Not mapped"
 		}
-		throw RuntimeException("$errMsg: $errCode [$err]")
+		throw RuntimeException("gpu check failed '$errMsg': $errCode [$err]")
 	}
 
 	inline fun renderScoped (cmd: VkCommandBuffer, info: VkRenderingInfo, cm:()->Unit)

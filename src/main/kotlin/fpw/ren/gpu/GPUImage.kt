@@ -39,7 +39,10 @@ class GPUImage: GPUClosable
 				.usage(imageData.usage)
 			val device = vkCtx.device
 			val lp = stack.mallocLong(1)
-			vkCheck(vkCreateImage(device.vkDevice, ici, null, lp), "gpu image creation failure")
+			vkCheck(
+				vkCreateImage(device.vkDevice, ici, null, lp),
+				"gpu image creation",
+			)
 			vkImage = lp[0]
 			val memReqs = VkMemoryRequirements.calloc(stack)
 			vkGetImageMemoryRequirements(device.vkDevice, vkImage, memReqs)
@@ -57,14 +60,14 @@ class GPUImage: GPUClosable
 			// Allocate memory
 			vkCheck(
 				vkAllocateMemory(device.vkDevice, memAlloc, null, lp),
-				"Failed to allocate memory"
+				"image memory allocate"
 			)
 			vkMemory = lp.get(0)
 
 			// Bind memory
 			vkCheck(
 				vkBindImageMemory(device.vkDevice, vkImage, vkMemory, 0),
-				"Failed to bind image memory"
+				"image memory bind"
 			)
 
 		}
@@ -73,8 +76,8 @@ class GPUImage: GPUClosable
 	override fun close(context: GPUContext)
 	{
 		val d = context.vkDevice
-		vkDestroyImage(d, vkImage, null);
-		vkFreeMemory(d, vkMemory, null);
+		vkDestroyImage(d, vkImage, null)
+		vkFreeMemory(d, vkMemory, null)
 	}
 
 
@@ -88,6 +91,4 @@ class GPUImage: GPUClosable
 		var arrayLayerCount: Int = 1,
 		var usage: Int = 0,
 	)
-	{
-	}
 }

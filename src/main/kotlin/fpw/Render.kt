@@ -7,11 +7,7 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK13.VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT
 import org.lwjgl.vulkan.VK13.VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT
 import org.lwjgl.vulkan.VkCommandBufferSubmitInfo
-import org.lwjgl.vulkan.VkExtent2D
 import org.lwjgl.vulkan.VkSemaphoreSubmitInfo
-import java.util.*
-import java.util.concurrent.Semaphore
-import java.util.function.Consumer
 
 
 class Render (engineContext: EngineContext)
@@ -19,8 +15,8 @@ class Render (engineContext: EngineContext)
 	private val vkContext = GPUContext(engineContext.window)
 	private var currentFrame = 0
 
-	private val graphQueue = GPUCommandQueue.GraphicsQueue(vkContext, 0)
-	private val presentQueue = GPUCommandQueue.PresentQueue(vkContext, 0)
+	private val graphQueue = GraphicsQueue(vkContext, 0)
+	private val presentQueue = PresentQueue(vkContext, 0)
 
 	private val cmdPools = List(EngineConfig.maxInFlightFrames) {
 		GPUCommandPool(vkContext, graphQueue.queueFamilyIndex, false)
@@ -47,7 +43,7 @@ class Render (engineContext: EngineContext)
 	{
 		val models = initData.models
 		modelsCache.loadModels(vkContext, models, cmdPools[0], graphQueue)
-		Main.logDebug("Loaded ${models.size}")
+//		Main.logDebug("Loaded ${models.size}")
 	}
 
 	fun close()

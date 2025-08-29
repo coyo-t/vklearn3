@@ -5,7 +5,7 @@ import org.lwjgl.vulkan.VK10.vkCmdCopyBuffer
 import org.lwjgl.vulkan.VkBufferCopy
 
 
-class GPUTransferBuffer(val from: GPUBuffer, val to: GPUBuffer)
+class TransferBuffer(val from: GPUBuffer, val to: GPUBuffer)
 {
 
 	fun recordTransferCommand (cmd: GPUCommandBuffer)

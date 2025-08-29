@@ -2,7 +2,6 @@ package fpw.ren.gpu
 
 import fpw.EngineConfig
 import fpw.Window
-import sun.java2d.Surface
 
 
 class GPUContext(window: Window)
@@ -16,7 +15,7 @@ class GPUContext(window: Window)
 		prefDeviceName = EngineConfig.preferredPhysicalDevice,
 	)
 	val device = GPUDevice(physDevice)
-	var surface = GPUSurface(instance, physDevice, window)
+	var surface = Surface(instance, physDevice, window)
 		private set
 	var swapChain = GPUSwapChain(
 		window,
@@ -41,7 +40,7 @@ class GPUContext(window: Window)
 		swapChain.cleanup(device)
 		surface.cleanup(instance)
 		val engCfg = EngineConfig
-		surface = GPUSurface(instance, physDevice, window)
+		surface = Surface(instance, physDevice, window)
 		swapChain = GPUSwapChain(window, device, surface, engCfg.preferredImageBufferingCount, engCfg.useVerticalSync)
 	}
 

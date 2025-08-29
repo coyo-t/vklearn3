@@ -7,16 +7,21 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 
 
-class GPUCommandBuffer (vkCtx: GPUContext, cmdPool: GPUCommandPool, primary: Boolean, oneTimeSubmit: Boolean)
+class GPUCommandBuffer
 {
 
 	val oneTimeSubmit: Boolean
 	val primary: Boolean
 	val vkCommandBuffer: VkCommandBuffer
 
-	init
+	constructor (
+		vkCtx: GPUContext,
+		cmdPool: GPUCommandPool,
+		primary: Boolean,
+		oneTimeSubmit: Boolean,
+	)
 	{
-		Main.logTrace("Creating command buffer")
+//		Main.logDebug("Creating command buffer")
 		this.primary = primary
 		this.oneTimeSubmit = oneTimeSubmit
 		val vkDevice = vkCtx.vkDevice
@@ -30,7 +35,7 @@ class GPUCommandBuffer (vkCtx: GPUContext, cmdPool: GPUCommandPool, primary: Boo
 			val pb = stack.mallocPointer(1)
 			vkCheck(
 				vkAllocateCommandBuffers(vkDevice, cmdBufAllocateInfo, pb),
-				"Failed to allocate render command buffer"
+				"allocate render command buffer"
 			)
 			vkCommandBuffer = VkCommandBuffer(pb.get(0), vkDevice)
 		}
@@ -53,9 +58,8 @@ class GPUCommandBuffer (vkCtx: GPUContext, cmdPool: GPUCommandPool, primary: Boo
 			}
 			if (!primary)
 			{
-				if (inheritanceInfo == null)
-				{
-					throw RuntimeException("Secondary buffers must declare inheritance info")
+				requireNotNull(inheritanceInfo) {
+					"Secondary buffers must declare inheritance info"
 				}
 				val numColorFormats = inheritanceInfo.colorFormats.size
 				val pColorFormats = stack.callocInt(inheritanceInfo.colorFormats.size)
@@ -73,13 +77,16 @@ class GPUCommandBuffer (vkCtx: GPUContext, cmdPool: GPUCommandPool, primary: Boo
 					.pNext(renderingInfo)
 				cmdBufInfo.pInheritanceInfo(vkInheritanceInfo)
 			}
-			vkCheck(vkBeginCommandBuffer(vkCommandBuffer, cmdBufInfo), "Failed to begin command buffer")
+			vkCheck(
+				vkBeginCommandBuffer(vkCommandBuffer, cmdBufInfo),
+				"begin command buffer",
+			)
 		}
 	}
 
 	fun cleanup(vkCtx: GPUContext, cmdPool: GPUCommandPool)
 	{
-		Main.logTrace("Destroying command buffer")
+//		Main.logTrace("Destroying command buffer")
 		vkFreeCommandBuffers(
 			vkCtx.device.vkDevice, cmdPool.vkCommandPool,
 			vkCommandBuffer
@@ -88,7 +95,10 @@ class GPUCommandBuffer (vkCtx: GPUContext, cmdPool: GPUCommandPool, primary: Boo
 
 	fun endRecording()
 	{
-		vkCheck(vkEndCommandBuffer(vkCommandBuffer), "Failed to end command buffer")
+		vkCheck(
+			vkEndCommandBuffer(vkCommandBuffer),
+			"end command buffer"
+		)
 	}
 
 	fun reset()

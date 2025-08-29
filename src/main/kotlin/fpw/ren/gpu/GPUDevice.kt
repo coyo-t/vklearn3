@@ -12,7 +12,7 @@ import org.lwjgl.vulkan.VK13.*
 class GPUDevice (physDevice: GPUPhysical)
 {
 	val vkDevice = MemoryStack.stackPush().use { stack ->
-		Main.logDebug("REIFYING DEVICE ")
+//		Main.logDebug("REIFYING DEVICE ")
 		val reqExtensions = createReqExtensions(physDevice, stack)
 		// Enable all the queue families
 		val queuePropsBuff = physDevice.vkQueueFamilyProps
@@ -58,7 +58,7 @@ class GPUDevice (physDevice: GPUPhysical)
 		val usePortability = (VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME in deviceExtensions) && GPUtil.OSType.isMacintosh
 
 		val extsList = buildList {
-			addAll(GPUPhysical.Companion.REQUIRED_EXTENSIONS.map(stack::ASCII))
+			addAll(GPUPhysical.REQUIRED_EXTENSIONS.map(stack::ASCII))
 			if (usePortability)
 			{
 				add(stack.ASCII(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME))
@@ -89,8 +89,8 @@ class GPUDevice (physDevice: GPUPhysical)
 				propsBuff
 			)
 			return buildSet {
-				val sb = StringBuilder()
-				sb.append("Device supports [$numExtensions] extensions")
+//				val sb = StringBuilder()
+//				sb.append("Device supports [$numExtensions] extensions")
 				for (i in 0..<numExtensions)
 				{
 					val props = propsBuff.get(i)
@@ -98,14 +98,14 @@ class GPUDevice (physDevice: GPUPhysical)
 					add(extensionName)
 //					sb.appendLine("\t$extensionName")
 				}
-				Main.logTrace(sb.toString())
+//				Main.logDebug(sb.toString())
 			}
 		}
 	}
 
 	fun close()
 	{
-		Main.logDebug("Destroying Vulkan device")
+//		Main.logDebug("Destroying Vulkan device")
 		vkDestroyDevice(vkDevice, null)
 	}
 

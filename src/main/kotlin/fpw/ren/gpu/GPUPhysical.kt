@@ -55,7 +55,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 
 	fun close ()
 	{
-		Main.logDebug("Destroying physical device [$deviceName]")
+//		Main.logDebug("Destroying physical device [$deviceName]")
 		vkMemoryProperties.free()
 		vkPhysicalDeviceFeatures.free()
 		vkQueueFamilyProps.free()
@@ -96,9 +96,8 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 		val result = copyExtensions.isEmpty()
 		if (!result)
 		{
-			Main.logDebug(
-				"At least [${copyExtensions.iterator().next()}] extension is not supported by device [deviceName]",
-			)
+			val uh = copyExtensions.iterator().next()
+			Main.logDebug("At least [$uh] extension is not supported by device [deviceName]")
 		}
 		return result
 	}
@@ -119,7 +118,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 				"Failed to get number of physical devices"
 			)
 			val numDevices = intBuffer.get(0)
-			Main.logDebug("Detected $numDevices physical device(s)")
+//			Main.logDebug("Detected $numDevices physical device(s)")
 
 			// Populate physical devices list pointer
 			pPhysicalDevices = stack.mallocPointer(numDevices)
@@ -132,7 +131,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 
 		fun createPhysicalDevice(instance: GPUInstance, prefDeviceName: String?): GPUPhysical
 		{
-			Main.logDebug("Selecting physical devices")
+//			Main.logDebug("Selecting physical devices")
 			var result: GPUPhysical? = null
 			MemoryStack.stackPush().use { stack ->
 				// Get available devices
@@ -149,14 +148,14 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 						val deviceName = physDevice.deviceName
 						if (!physDevice.hasGraphicsQueueFamily())
 						{
-							Main.logDebug("Device [$deviceName] does not support graphics queue family")
+							Main.logDebug("device [$deviceName] does not support graphics queue family")
 							physDevice.close()
 							continue
 						}
 
 						if (!physDevice.supportsExtensions(REQUIRED_EXTENSIONS))
 						{
-							Main.logDebug("Device [$deviceName] does not support required extensions")
+							Main.logDebug("device [$deviceName] does not support required extensions")
 							physDevice.close()
 							continue
 						}
@@ -182,7 +181,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 
 				// Clean up non-selected devices
 				physDevices.forEach(GPUPhysical::close)
-				Main.logDebug("Selected device: [${result?.deviceName}]")
+//				Main.logDebug("Selected device: [${result?.deviceName}]")
 				return requireNotNull(result) {
 					"No suitable physical devices found"
 				}

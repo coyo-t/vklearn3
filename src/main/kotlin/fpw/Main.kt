@@ -86,12 +86,9 @@ class Main: GameLogic
 		@JvmStatic
 		fun main (vararg args: String)
 		{
-			logInfo("WE ARE AT "+ Path("./").normalize().toAbsolutePath())
 			try
 			{
-				logInfo("MACHINE WITNESS BEGIN")
 				Engine("MACHINE WITNESS", Main()).use {
-					logInfo("MACHINE WITNESS REIFICATION")
 					it.run()
 				}
 			}
@@ -121,12 +118,10 @@ class Main: GameLogic
 			println("${ANSI_BLUE}._.${ANSI_RESET} $f".format(*args))
 		}
 
-		fun logTrace (f:String, vararg n: Any?)
-		{
-//			val uhh = RuntimeProvider.getCallerStackTraceElement(1)
-//			println("${uhh.fileName} @ ${uhh.lineNumber} ==> $f".format(*n))
-			println("${ANSI_PURPLE}-.-${ANSI_RESET} $f".format(*n))
-		}
+//		fun logTrace (f:String, vararg n: Any?)
+//		{
+//			println("${ANSI_PURPLE}-.-${ANSI_RESET} $f".format(*n))
+//		}
 
 		fun logError (t: Throwable, k:()->String)
 		{

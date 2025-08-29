@@ -12,7 +12,7 @@ import fpw.ren.gpu.GPUMesh
 import fpw.ren.gpu.GPUMeshData
 import fpw.ren.gpu.GPUModel
 import fpw.ren.gpu.GPUModelData
-import fpw.ren.gpu.GPUTransferBuffer
+import fpw.ren.gpu.TransferBuffer
 import fpw.ren.gpu.GPUtil
 
 
@@ -67,7 +67,7 @@ class ModelsCache: GPUClosable
 		stagingBufferList.forEach { it.close(context) }
 	}
 
-	private fun createIndicesBuffers(context: GPUContext, meshData: GPUMeshData): GPUTransferBuffer
+	private fun createIndicesBuffers(context: GPUContext, meshData: GPUMeshData): TransferBuffer
 	{
 		val indices = meshData.indices
 		val numIndices = indices.size
@@ -90,10 +90,10 @@ class ModelsCache: GPUClosable
 			val data = MemoryUtil.memIntBuffer(mapped, srcBuffer.requestedSize.toInt())
 			data.put(indices)
 		}
-		return GPUTransferBuffer(srcBuffer, dstBuffer)
+		return TransferBuffer(srcBuffer, dstBuffer)
 	}
 
-	private fun createVerticesBuffers(context: GPUContext, meshData: GPUMeshData): GPUTransferBuffer
+	private fun createVerticesBuffers(context: GPUContext, meshData: GPUMeshData): TransferBuffer
 	{
 		val positions = meshData.positions
 		var texCoords = meshData.texCoords
@@ -140,7 +140,7 @@ class ModelsCache: GPUClosable
 				}
 			}
 		}
-		return GPUTransferBuffer(srcBuffer, dstBuffer)
+		return TransferBuffer(srcBuffer, dstBuffer)
 	}
 
 

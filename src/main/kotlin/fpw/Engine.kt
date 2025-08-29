@@ -71,12 +71,14 @@ class Engine (
 			gameLogic.input(engineContext, now - initialTime)
 			window.resetInput()
 
-			if (deltaUpdate >= 1)
+			var ticks = minOf(deltaUpdate.toInt(), 10)
+
+			while (ticks >= 1)
 			{
 				val diffTimeMillis = now - updateTime
 				gameLogic.update(engineContext, diffTimeMillis)
 				updateTime = now
-				deltaUpdate--
+				ticks--
 			}
 
 			render.render(engineContext)
