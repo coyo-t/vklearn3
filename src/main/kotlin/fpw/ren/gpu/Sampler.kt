@@ -1,0 +1,59 @@
+package fpw.ren.gpu
+
+import fpw.ren.gpu.GPUtil.vkCheck
+import org.lwjgl.system.MemoryStack
+import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VkSamplerCreateInfo
+
+
+class Sampler
+{
+
+	val vkSampler: Long
+
+	constructor (vkCtx: GPUContext, textureSamplerInfo: SamplerInfo)
+	{
+		MemoryStack.stackPush().use { stack ->
+			val samplerInfo = VkSamplerCreateInfo.calloc(stack)
+				.`sType$Default`()
+				.magFilter(VK_FILTER_NEAREST)
+				.minFilter(VK_FILTER_NEAREST)
+				.addressModeU(textureSamplerInfo.addressMode)
+				.addressModeV(textureSamplerInfo.addressMode)
+				.addressModeW(textureSamplerInfo.addressMode)
+				.borderColor(textureSamplerInfo.borderColor)
+				.unnormalizedCoordinates(false)
+				.compareEnable(false)
+				.compareOp(VK_COMPARE_OP_NEVER)
+				.mipmapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST)
+				.minLod(0.0f)
+				.maxLod(textureSamplerInfo.mipLevels.toFloat())
+				.mipLodBias(0.0f)
+//			if (textureSamplerInfo.anisotropy && vkCtx.device.samplerAnisotropy)
+//			{
+//				samplerInfo
+//					.anisotropyEnable(true)
+//					.maxAnisotropy(MAX_ANISOTROPY.toFloat())
+//			}
+
+			val lp = stack.mallocLong(1)
+			vkCheck(vkCreateSampler(vkCtx.vkDevice, samplerInfo, null, lp), "Failed to create sampler")
+			vkSampler = lp.get(0)
+		}
+	}
+
+	fun cleanup(vkCtx: GPUContext)
+	{
+		vkDestroySampler(vkCtx.vkDevice, vkSampler, null)
+	}
+
+	companion object
+	{
+
+
+		private const val MAX_ANISOTROPY = 16
+
+	}
+
+}
+

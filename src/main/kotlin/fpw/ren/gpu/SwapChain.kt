@@ -1,6 +1,5 @@
 package fpw.ren.gpu
 
-import fpw.Main
 import fpw.Window
 import fpw.ren.gpu.GPUtil.vkCheck
 import org.joml.Math.clamp
@@ -17,7 +16,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-class GPUSwapChain
+class SwapChain
 {
 
 	val imageViews: List<ImageView>
@@ -128,7 +127,7 @@ class GPUSwapChain
 			aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 		)
 		return List(numImages) {
-			ImageView(device, swapChainImages[it], imageViewData)
+			ImageView(device, swapChainImages[it], imageViewData, false)
 		}
 	}
 

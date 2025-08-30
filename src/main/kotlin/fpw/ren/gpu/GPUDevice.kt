@@ -1,6 +1,5 @@
 package fpw.ren.gpu
 
-import fpw.Main
 import fpw.ren.gpu.GPUtil.vkCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
@@ -9,46 +8,61 @@ import org.lwjgl.vulkan.KHRPortabilitySubset.VK_KHR_PORTABILITY_SUBSET_EXTENSION
 import org.lwjgl.vulkan.VK13.*
 
 
-class GPUDevice (physDevice: GPUPhysical)
+class GPUDevice
 {
-	val vkDevice = MemoryStack.stackPush().use { stack ->
-//		Main.logDebug("REIFYING DEVICE ")
-		val reqExtensions = createReqExtensions(physDevice, stack)
-		// Enable all the queue families
-		val queuePropsBuff = physDevice.vkQueueFamilyProps
-		val numQueuesFamilies = queuePropsBuff.capacity()
-		val queueCreationInfoBuf = VkDeviceQueueCreateInfo.calloc(numQueuesFamilies, stack)
-		for (i in 0..<numQueuesFamilies)
-		{
-			val priorities = stack.callocFloat(queuePropsBuff.get(i).queueCount())
-			queueCreationInfoBuf.get(i)
+	val vkDevice: VkDevice
+	val samplerAnisotropy: Boolean
+
+	constructor (physDevice: GPUPhysical)
+	{
+		MemoryStack.stackPush().use { stack ->
+	//		Main.logDebug("REIFYING DEVICE ")
+			val reqExtensions = createReqExtensions(physDevice, stack)
+			// Enable all the queue families
+			val queuePropsBuff = physDevice.vkQueueFamilyProps
+			val numQueuesFamilies = queuePropsBuff.capacity()
+			val queueCreationInfoBuf = VkDeviceQueueCreateInfo.calloc(numQueuesFamilies, stack)
+			for (i in 0..<numQueuesFamilies)
+			{
+				val priorities = stack.callocFloat(queuePropsBuff.get(i).queueCount())
+				queueCreationInfoBuf.get(i)
+					.`sType$Default`()
+					.queueFamilyIndex(i)
+					.pQueuePriorities(priorities)
+			}
+
+
+			// Set up required features
+			val features13 = VkPhysicalDeviceVulkan13Features.calloc(stack)
 				.`sType$Default`()
-				.queueFamilyIndex(i)
-				.pQueuePriorities(priorities)
+				.dynamicRendering(true)
+				.synchronization2(true)
+
+			val features2 = VkPhysicalDeviceFeatures2.calloc(stack).`sType$Default`()
+			var features = features2.features()
+
+			val supportedFeatures = physDevice.vkPhysicalDeviceFeatures
+			samplerAnisotropy = supportedFeatures.samplerAnisotropy()
+			if (samplerAnisotropy)
+			{
+//				features.samplerAnisotropy(true)
+			}
+
+			features2.pNext(features13.address())
+
+			val deviceCreateInfo = VkDeviceCreateInfo.calloc(stack)
+				.`sType$Default`()
+				.pNext(features2.address())
+				.ppEnabledExtensionNames(reqExtensions)
+				.pQueueCreateInfos(queueCreationInfoBuf)
+
+			val pp = stack.mallocPointer(1)
+			vkCheck(
+				vkCreateDevice(physDevice.vkPhysicalDevice, deviceCreateInfo, null, pp),
+				"Failed to create device"
+			)
+			vkDevice = VkDevice(pp.get(0), physDevice.vkPhysicalDevice, deviceCreateInfo)
 		}
-
-
-		// Set up required features
-		val features13 = VkPhysicalDeviceVulkan13Features.calloc(stack)
-			.`sType$Default`()
-			.dynamicRendering(true)
-			.synchronization2(true)
-
-		val features2 = VkPhysicalDeviceFeatures2.calloc(stack).`sType$Default`()
-		features2.pNext(features13.address())
-
-		val deviceCreateInfo = VkDeviceCreateInfo.calloc(stack)
-			.`sType$Default`()
-			.pNext(features2.address())
-			.ppEnabledExtensionNames(reqExtensions)
-			.pQueueCreateInfos(queueCreationInfoBuf)
-
-		val pp = stack.mallocPointer(1)
-		vkCheck(
-			vkCreateDevice(physDevice.vkPhysicalDevice, deviceCreateInfo, null, pp),
-			"Failed to create device"
-		)
-		VkDevice(pp.get(0), physDevice.vkPhysicalDevice, deviceCreateInfo)
 	}
 
 

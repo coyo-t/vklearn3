@@ -42,7 +42,7 @@ class Image private constructor (
 				val tall = hp.get(JAVA_INT, 0)
 				val chans = cp.get(JAVA_INT, 0)
 				val outData = FUtil.createMemory(wide*tall*chans)
-				outData.copyFrom(MemorySegment.ofAddress(tryRead).reinterpret(outData.byteSize()))
+				outData.copyFrom(FUtil.createMemoryAt(tryRead, outData.byteSize()))
 				nstbi_image_free(tryRead)
 				return Image(
 					wide = wide,

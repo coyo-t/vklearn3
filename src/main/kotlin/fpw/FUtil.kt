@@ -12,14 +12,23 @@ import kotlin.use
 
 object FUtil
 {
+	private fun memToBuffer (m: MemorySegment)
+		= m.asByteBuffer().order(ByteOrder.nativeOrder())
+
 	fun createBuffer (sz: Long): ByteBuffer
 	{
-		return createMemory(sz).asByteBuffer().apply {
-			order(ByteOrder.nativeOrder())
-		}
+		return memToBuffer(createMemory(sz))
 	}
 
 	fun createBuffer (sz: Int) = createBuffer(sz.toLong())
+
+	fun createBufferAt (addr: Long, size: Long)
+		= memToBuffer(createMemoryAt(addr, size))
+
+	fun createMemoryAt (addr: Long, size: Long): MemorySegment
+	{
+		return MemorySegment.ofAddress(addr).reinterpret(size)
+	}
 
 	fun createMemory (sz: Long): MemorySegment
 	{

@@ -10,11 +10,13 @@ class ImageView (
 	device: GPUDevice,
 	vkImage: Long,
 	imageViewData: ImageViewData,
+	isDepthImage: Boolean,
 )
 {
 	val vkImage = vkImage
 	val aspectMask = imageViewData.aspectMask
 	val mipLevels = imageViewData.mipLevels
+	val isDepthImage = isDepthImage
 	val vkImageView = MemoryStack.stackPush().use { stack ->
 		val lp = stack.mallocLong(1)
 		val viewCreateInfo = VkImageViewCreateInfo.calloc(stack)

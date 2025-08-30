@@ -36,8 +36,14 @@ class Attachment: GPUClosable
 		val imageViewData = ImageViewData(
 			format = image.format,
 			aspectMask = aspectMask,
+
 		)
-		imageView = ImageView(vkCtx.device, image.vkImage, imageViewData)
+		imageView = ImageView(
+			vkCtx.device,
+			image.vkImage,
+			imageViewData,
+			isDepthImage = isDepthAttachment,
+		)
 	}
 
 	override fun close (context: GPUContext)

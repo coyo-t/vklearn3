@@ -17,7 +17,7 @@ class GPUContext(window: Window)
 	val device = GPUDevice(physDevice)
 	var surface = Surface(instance, physDevice, window)
 		private set
-	var swapChain = GPUSwapChain(
+	var swapChain = SwapChain(
 		window,
 		device,
 		surface,
@@ -41,7 +41,7 @@ class GPUContext(window: Window)
 		surface.cleanup(instance)
 		val engCfg = EngineConfig
 		surface = Surface(instance, physDevice, window)
-		swapChain = GPUSwapChain(window, device, surface, engCfg.preferredImageBufferingCount, engCfg.useVerticalSync)
+		swapChain = SwapChain(window, device, surface, engCfg.preferredImageBufferingCount, engCfg.useVerticalSync)
 	}
 
 	fun close()
