@@ -3,7 +3,6 @@ package fpw
 import fpw.ren.gpu.GPUMeshData
 import fpw.ren.gpu.GPUModelData
 import org.joml.Math.toRadians
-import kotlin.io.path.Path
 
 
 class Main: GameLogic
@@ -16,14 +15,14 @@ class Main: GameLogic
 		val meshData = GPUMeshData(
 			"mesh.cubezor",
 			positions = floatArrayOf(
-				-0.5f, 0.5f, 0.5f,
-				-0.5f, -0.5f, 0.5f,
-				0.5f, -0.5f, 0.5f,
-				0.5f, 0.5f, 0.5f,
-				-0.5f, 0.5f, -0.5f,
-				0.5f, 0.5f, -0.5f,
+				-0.5f, +0.5f, +0.5f,
+				-0.5f, -0.5f, +0.5f,
+				+0.5f, -0.5f, +0.5f,
+				+0.5f, +0.5f, +0.5f,
+				-0.5f, +0.5f, -0.5f,
+				+0.5f, +0.5f, -0.5f,
 				-0.5f, -0.5f, -0.5f,
-				0.5f, -0.5f, -0.5f,
+				+0.5f, -0.5f, -0.5f,
 			),
 			texCoords = floatArrayOf(
 				0.0f, 0.0f,
@@ -53,7 +52,10 @@ class Main: GameLogic
 		val modelData = GPUModelData(modelId, listOf(meshData))
 
 		thaCubeEntity = Entity("Cubezor", modelId, 0f, 0f, -2f)
-		context.scene.entities += thaCubeEntity
+		context.scene.entities.addAll(listOf(
+			thaCubeEntity,
+			Entity("another one lol", modelId, -0.5f, -0.5f, -3f),
+		))
 
 		return InitData(listOf(modelData))
 
@@ -71,7 +73,7 @@ class Main: GameLogic
 			val fdt = dt.toFloat()
 			rotation
 			.rotateX(toRadians(fdt * 45f))
-			.rotateY(toRadians(fdt * 10f))
+			.rotateY(toRadians(fdt * 60f))
 			updateModelMatrix()
 		}
 	}

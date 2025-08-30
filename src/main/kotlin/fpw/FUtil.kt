@@ -1,6 +1,7 @@
 package fpw
 
 import java.lang.foreign.Arena
+import java.lang.foreign.MemorySegment
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
@@ -13,10 +14,19 @@ object FUtil
 {
 	fun createBuffer (sz: Long): ByteBuffer
 	{
-		return Arena.ofAuto().allocate(sz).asByteBuffer().apply {
+		return createMemory(sz).asByteBuffer().apply {
 			order(ByteOrder.nativeOrder())
 		}
 	}
+
+	fun createBuffer (sz: Int) = createBuffer(sz.toLong())
+
+	fun createMemory (sz: Long): MemorySegment
+	{
+		return Arena.ofAuto().allocate(sz)
+	}
+
+	fun createMemory (sz: Int) = createMemory(sz.toLong())
 
 	fun getFileBytes (at: Path): ByteBuffer
 	{

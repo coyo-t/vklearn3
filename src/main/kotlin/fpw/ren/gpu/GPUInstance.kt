@@ -42,7 +42,7 @@ class GPUInstance (validate: Boolean)
 				supportsValidation = false
 				Main.logWarn("requested validation but no supported validation layers found :[")
 			}
-			Main.logDebug("gpu validation: $supportsValidation")
+//			Main.logDebug("gpu validation: $supportsValidation")
 
 			// Set required  layers
 			var requiredLayers: PointerBuffer? = null
@@ -52,7 +52,7 @@ class GPUInstance (validate: Boolean)
 				for (i in 0..<numValidationLayers)
 				{
 					val args = validationLayers[i]
-					Main.logDebug("using validation layer [$args]")
+//					Main.logDebug("using validation layer [$args]")
 					requiredLayers.put(i, stack.ASCII(args))
 				}
 			}
