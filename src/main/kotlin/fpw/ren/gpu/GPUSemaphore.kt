@@ -7,8 +7,7 @@ import org.lwjgl.vulkan.VK10.vkDestroySemaphore
 import org.lwjgl.vulkan.VkSemaphoreCreateInfo
 
 
-@JvmInline
-value class GPUSemaphore
+class GPUSemaphore
 private constructor (val vkSemaphore: Long): GPUClosable
 {
 	override fun close (context: GPUContext)

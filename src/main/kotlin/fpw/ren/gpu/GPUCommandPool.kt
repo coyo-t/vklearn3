@@ -5,8 +5,7 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkCommandPoolCreateInfo
 
-@JvmInline
-value class GPUCommandPool
+class GPUCommandPool
 private constructor (val vkCommandPool: Long)
 {
 	companion object

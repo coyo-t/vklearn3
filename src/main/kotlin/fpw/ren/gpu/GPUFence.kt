@@ -5,8 +5,8 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkFenceCreateInfo
 
-@JvmInline
-value class GPUFence
+
+class GPUFence
 private constructor (val vkFence: Long): GPUClosable
 {
 	companion object

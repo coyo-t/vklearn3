@@ -2,6 +2,7 @@ package fpw.ren
 
 import fpw.EngineContext
 import fpw.FUtil
+import fpw.ren.VertexFormatBuilder.Companion.buildVertexFormat
 import fpw.ren.gpu.*
 import fpw.ren.gpu.GPUtil.imageBarrier
 import org.joml.Matrix4f
@@ -246,20 +247,23 @@ class SceneRender (vkCtx: GPUContext): GPUClosable
 			}
 		}
 
+		val format = buildVertexFormat {
+			location3D()
+			texcoord2D()
+		}
+
 		private fun createPipeline (vkCtx: GPUContext, shaderModules: List<GPUShaderModule>): GPUPipeLine
 		{
-			GPUVertexBufferStruct().use { vtxBuffStruct ->
-				val buildInfo = GPUPipeLineBuildInfo(
-						shaderModules = shaderModules,
-						vi = vtxBuffStruct.vi,
-						colorFormat = vkCtx.surface.surfaceFormat.imageFormat,
-						depthFormat = VK_FORMAT_D16_UNORM,
-						pushConstRange = listOf(
-							PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, 0, 128)
-						)
+			val buildInfo = GPUPipeLineBuildInfo(
+					shaderModules = shaderModules,
+					vi = format.vi,
+					colorFormat = vkCtx.surface.surfaceFormat.imageFormat,
+					depthFormat = VK_FORMAT_D16_UNORM,
+					pushConstRange = listOf(
+						PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, 0, 128)
 					)
-				return GPUPipeLine(vkCtx, buildInfo)
-			}
+				)
+			return GPUPipeLine(vkCtx, buildInfo)
 		}
 
 		private fun createShaderModules(vkCtx: GPUContext): List<GPUShaderModule>
