@@ -5,6 +5,7 @@ import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
+import java.lang.foreign.Arena
 
 /*
 	UNORM is a float in the range of [0, 1].
