@@ -17,7 +17,6 @@ import kotlin.math.min
 
 class SwapChain
 {
-
 	val imageViews: List<ImageView>
 	val numImages: Int
 	val swapChainExtent: VkExtent2D

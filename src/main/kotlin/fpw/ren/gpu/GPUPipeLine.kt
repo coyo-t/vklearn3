@@ -1,6 +1,5 @@
 package fpw.ren.gpu
 
-import fpw.Main
 import fpw.ren.gpu.GPUtil.vkCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*

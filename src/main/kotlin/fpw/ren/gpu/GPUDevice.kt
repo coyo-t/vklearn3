@@ -13,7 +13,7 @@ class GPUDevice
 	val vkDevice: VkDevice
 	val samplerAnisotropy: Boolean
 
-	constructor (physDevice: GPUPhysical)
+	constructor (physDevice: GPUHardware)
 	{
 		MemoryStack.stackPush().use { stack ->
 	//		Main.logDebug("REIFYING DEVICE ")
@@ -66,13 +66,13 @@ class GPUDevice
 	}
 
 
-	private fun createReqExtensions(physDevice: GPUPhysical, stack: MemoryStack): PointerBuffer
+	private fun createReqExtensions(physDevice: GPUHardware, stack: MemoryStack): PointerBuffer
 	{
 		val deviceExtensions = getDeviceExtensions(physDevice)
-		val usePortability = (VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME in deviceExtensions) && GPUtil.OSType.isMacintosh
+		val usePortability = (VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME in deviceExtensions) && OSType.isMacintosh
 
 		val extsList = buildList {
-			addAll(GPUPhysical.REQUIRED_EXTENSIONS.map(stack::ASCII))
+			addAll(GPUHardware.REQUIRED_EXTENSIONS.map(stack::ASCII))
 			if (usePortability)
 			{
 				add(stack.ASCII(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME))
@@ -84,7 +84,7 @@ class GPUDevice
 		}
 	}
 
-	private fun getDeviceExtensions(physDevice: GPUPhysical): Set<String>
+	private fun getDeviceExtensions(physDevice: GPUHardware): Set<String>
 	{
 		MemoryStack.stackPush().use { stack ->
 			val numExtensionsBuf = stack.callocInt(1)

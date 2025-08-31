@@ -10,12 +10,12 @@ class GPUContext(window: Window)
 	val instance = GPUInstance(
 		validate = EngineConfig.useVulkanValidationLayers,
 	)
-	val physDevice = GPUPhysical.createPhysicalDevice(
+	val hardware = GPUHardware.createPhysicalDevice(
 		instance,
 		prefDeviceName = EngineConfig.preferredPhysicalDevice,
 	)
-	val device = GPUDevice(physDevice)
-	var surface = Surface(instance, physDevice, window)
+	val device = GPUDevice(hardware)
+	var surface = Surface(instance, hardware, window)
 		private set
 	var swapChain = SwapChain(
 		window,
@@ -40,7 +40,7 @@ class GPUContext(window: Window)
 		swapChain.cleanup(device)
 		surface.cleanup(instance)
 		val engCfg = EngineConfig
-		surface = Surface(instance, physDevice, window)
+		surface = Surface(instance, hardware, window)
 		swapChain = SwapChain(window, device, surface, engCfg.preferredImageBufferingCount, engCfg.useVerticalSync)
 	}
 
@@ -50,7 +50,7 @@ class GPUContext(window: Window)
 		swapChain.cleanup(device)
 		surface.cleanup(instance)
 		device.close()
-		physDevice.close()
+		hardware.close()
 		instance.close()
 	}
 }

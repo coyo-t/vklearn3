@@ -10,7 +10,7 @@ class GraphicsQueue(vkCtx: GPUContext, queueIndex: Int):
 	{
 		private fun getGraphicsQueueFamilyIndex(vkCtx: GPUContext): Int
 		{
-			val queuePropsBuff = vkCtx.physDevice.vkQueueFamilyProps
+			val queuePropsBuff = vkCtx.hardware.vkQueueFamilyProps
 			val uhh = queuePropsBuff.indexOfFirst { (it.queueFlags() and VK10.VK_QUEUE_GRAPHICS_BIT) != 0 }
 			require(uhh >= 0) {
 				"Failed to get graphics Queue family index"

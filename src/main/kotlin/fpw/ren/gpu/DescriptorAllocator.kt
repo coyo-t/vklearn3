@@ -11,13 +11,13 @@ class DescriptorAllocator
 	private val descPoolList = mutableListOf<DescPoolInfo>()
 	private val descSetInfoMap = mutableMapOf<String, DescSetInfo>()
 
-	constructor (physDevice: GPUPhysical, device: GPUDevice)
+	constructor (physDevice: GPUHardware, device: GPUDevice)
 	{
 //		Logger.debug("Creating descriptor allocator")
 		descPoolList.add(createDescPoolInfo(device, descLimits))
 	}
 
-	private fun createDescLimits(physDevice: GPUPhysical): MutableMap<Int, Int>
+	private fun createDescLimits(physDevice: GPUHardware): MutableMap<Int, Int>
 	{
 		val limits = physDevice.vkPhysicalDeviceProperties.properties().limits()
 		return mutableMapOf(

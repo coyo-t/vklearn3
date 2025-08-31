@@ -5,9 +5,9 @@ class GPUMesh(
 	val verticesBuffer: GPUBuffer,
 	val indicesBuffer: GPUBuffer,
 	val numIndices: Int
-): GPUClosable
+)
 {
-	override fun close (context: GPUContext)
+	fun close (context: GPUContext)
 	{
 		verticesBuffer.close(context)
 		indicesBuffer.close(context)

@@ -108,7 +108,7 @@ class GPUCommandBuffer
 
 	fun submitAndWait(vkCtx: GPUContext, queue: GPUCommandQueue)
 	{
-		val fence = GPUFence.Companion(vkCtx, true)
+		val fence = GPUFence.createzor(vkCtx, true)
 		fence.reset(vkCtx)
 		MemoryStack.stackPush().use { stack ->
 			val cmds = VkCommandBufferSubmitInfo.calloc(1, stack)
@@ -116,7 +116,7 @@ class GPUCommandBuffer
 				.commandBuffer(vkCommandBuffer)
 			queue.submit(cmds, null, null, fence)
 		}
-		fence.fenceWait(vkCtx)
+		fence.wait(vkCtx)
 		fence.close(vkCtx)
 	}
 

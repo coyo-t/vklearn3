@@ -14,13 +14,13 @@ class PresentQueue (vkCtx: GPUContext, queueIndex: Int):
 		{
 			var index = -1
 			MemoryStack.stackPush().use { stack ->
-				val queuePropsBuff = vkCtx.physDevice.vkQueueFamilyProps
+				val queuePropsBuff = vkCtx.hardware.vkQueueFamilyProps
 				val numQueuesFamilies: Int = queuePropsBuff.capacity()
 				val intBuff = stack.mallocInt(1)
 				for (i in 0..<numQueuesFamilies)
 				{
 					KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR(
-						vkCtx.physDevice.vkPhysicalDevice,
+						vkCtx.hardware.vkPhysicalDevice,
 						i, vkCtx.surface.vkSurface, intBuff
 					)
 					val supportsPresentation = intBuff.get(0) == VK10.VK_TRUE

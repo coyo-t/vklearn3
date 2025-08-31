@@ -13,7 +13,6 @@ class Main: GameLogic
 	{
 		val modelId = "Cubezor"
 		val meshData = GPUMeshData(
-			"mesh.cubezor",
 			positions = floatArrayOf(
 				-0.5f, +0.5f, +0.5f,
 				-0.5f, -0.5f, +0.5f,

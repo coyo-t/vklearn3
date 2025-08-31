@@ -8,7 +8,7 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK13.*
 
 
-class GPUPhysical
+class GPUHardware
 private constructor (vkPhysicalDevice: VkPhysicalDevice)
 {
 	val vkDeviceExtensions: VkExtensionProperties.Buffer
@@ -129,10 +129,10 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 			return pPhysicalDevices
 		}
 
-		fun createPhysicalDevice(instance: GPUInstance, prefDeviceName: String?): GPUPhysical
+		fun createPhysicalDevice(instance: GPUInstance, prefDeviceName: String?): GPUHardware
 		{
 //			Main.logDebug("Selecting physical devices")
-			var result: GPUPhysical? = null
+			var result: GPUHardware? = null
 			MemoryStack.stackPush().use { stack ->
 				// Get available devices
 				val pPhysicalDevices = getPhysicalDevices(instance, stack)
@@ -143,7 +143,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 					for (i in 0..<numDevices)
 					{
 						val vkPhysicalDevice = VkPhysicalDevice(pPhysicalDevices.get(i), instance.vkInstance)
-						val physDevice = GPUPhysical(vkPhysicalDevice)
+						val physDevice = GPUHardware(vkPhysicalDevice)
 
 						val deviceName = physDevice.deviceName
 						if (!physDevice.hasGraphicsQueueFamily())
@@ -180,7 +180,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 				result = if (result == null && !physDevices.isEmpty()) physDevices.removeFirst() else result
 
 				// Clean up non-selected devices
-				physDevices.forEach(GPUPhysical::close)
+				physDevices.forEach(GPUHardware::close)
 //				Main.logDebug("Selected device: [${result?.deviceName}]")
 				return requireNotNull(result) {
 					"No suitable physical devices found"

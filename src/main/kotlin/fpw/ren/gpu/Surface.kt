@@ -1,6 +1,5 @@
 package fpw.ren.gpu
 
-import fpw.Main
 import fpw.Window
 import fpw.ren.gpu.GPUtil.vkCheck
 import org.lwjgl.glfw.GLFWVulkan
@@ -19,7 +18,7 @@ class Surface
 	val surfaceFormat: SurfaceFormat
 	val vkSurface: Long
 
-	constructor (instance: GPUInstance, physDevice: GPUPhysical, window: Window)
+	constructor (instance: GPUInstance, physDevice: GPUHardware, window: Window)
 	{
 //		Main.logDebug("Creating Vulkan surface")
 		MemoryStack.stackPush().use { stack ->
@@ -41,7 +40,7 @@ class Surface
 		}
 	}
 
-	private fun calcSurfaceFormat(physDevice: GPUPhysical, vkSurface: Long): SurfaceFormat
+	private fun calcSurfaceFormat(physDevice: GPUHardware, vkSurface: Long): SurfaceFormat
 	{
 		var imageFormat: Int
 		var colorSpace: Int

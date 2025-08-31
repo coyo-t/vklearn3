@@ -30,7 +30,7 @@ class Render (engineContext: EngineContext)
 		GPUSemaphore(vkContext)
 	}
 	private var fences = List(EngineConfig.maxInFlightFrames) {
-		GPUFence(vkContext, signaled = true)
+		GPUFence.createzor(vkContext, signaled = true)
 	}
 	private var renderCompleteSemphs = List(vkContext.swapChain.numImages) {
 		GPUSemaphore(vkContext)
@@ -69,7 +69,7 @@ class Render (engineContext: EngineContext)
 
 	private fun waitForFence(currentFrame: Int)
 	{
-		fences[currentFrame].fenceWait(vkContext)
+		fences[currentFrame].wait(vkContext)
 	}
 
 	private fun recordingStart(cmdPool: GPUCommandPool, cmdBuffer: GPUCommandBuffer)

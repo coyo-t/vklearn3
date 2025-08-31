@@ -1,11 +1,10 @@
 package fpw.ren
 
-import fpw.ren.gpu.GPUVertexBufferStruct
+import fpw.ren.gpu.VertexFormat
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
-import java.lang.foreign.Arena
 
 /*
 	UNORM is a float in the range of [0, 1].
@@ -21,7 +20,7 @@ class VertexFormatBuilder
 
 	companion object
 	{
-		fun buildVertexFormat (vb: VertexFormatBuilder.()->Unit): GPUVertexBufferStruct
+		fun buildVertexFormat (vb: VertexFormatBuilder.()->Unit): VertexFormat
 		{
 			with (VertexFormatBuilder())
 			{
@@ -53,7 +52,7 @@ class VertexFormatBuilder
 					pVertexBindingDescriptions(vbl)
 					pVertexAttributeDescriptions(vip)
 				}
-				return GPUVertexBufferStruct(
+				return VertexFormat(
 					viAttrs = vip,
 					viBindings = vbl,
 					vi=vinfo,

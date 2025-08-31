@@ -60,7 +60,7 @@ class GPUInstance (validate: Boolean)
 			val instanceExtensions = getInstanceExtensions()
 			val usePortability = (
 				instanceExtensions.contains(PORTABILITY_EXTENSION) &&
-				GPUtil.OSType.isMacintosh
+				OSType.isMacintosh
 			)
 
 			// GLFW Extension

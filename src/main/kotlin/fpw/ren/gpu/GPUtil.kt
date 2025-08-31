@@ -13,39 +13,6 @@ import java.lang.foreign.ValueLayout.JAVA_INT
 
 object GPUtil
 {
-	enum class OSType
-	{
-		WINDOWZ,
-		LINUXZ,
-		MACINTOSHZ,
-		SOLARIZ,
-		DUDE_IDFK,
-		;
-
-		companion object
-		{
-			val isMacintosh
-				get() = get() == MACINTOSHZ
-
-			fun get (): OSType
-			{
-				val os = System.getProperty("os.name", "generic").lowercase()
-				if ((os.indexOf("mac") >= 0) || (os.indexOf("darwin") >= 0))
-				{
-					return MACINTOSHZ
-				}
-				else if (os.indexOf("win") >= 0)
-				{
-					return WINDOWZ
-				}
-				else if (os.indexOf("nux") >= 0)
-				{
-					return LINUXZ
-				}
-				return DUDE_IDFK
-			}
-		}
-	}
 
 	val SIZEOF_INT   = JAVA_INT.byteSize().toInt()
 	val SIZEOF_FLOAT = JAVA_FLOAT.byteSize().toInt()
@@ -54,22 +21,16 @@ object GPUtil
 	fun memoryTypeFromProperties(vkCtx: GPUContext, typeBits: Int, reqsMask: Int): Int
 	{
 		var typeBits = typeBits
-		var result = -1
-		val memoryTypes: VkMemoryType.Buffer = vkCtx.physDevice.vkMemoryProperties.memoryTypes()
+		val memoryTypes: VkMemoryType.Buffer = vkCtx.hardware.vkMemoryProperties.memoryTypes()
 		for (i in 0..<VK_MAX_MEMORY_TYPES)
 		{
 			if ((typeBits and 1) == 1 && (memoryTypes[i].propertyFlags() and reqsMask) == reqsMask)
 			{
-				result = i
-				break
+				return i
 			}
 			typeBits = typeBits shr 1
 		}
-		if (result < 0)
-		{
-			throw java.lang.RuntimeException("Failed to find memoryType")
-		}
-		return result
+		throw RuntimeException("failed to find memoryType")
 	}
 
 	fun imageBarrier(
@@ -112,55 +73,50 @@ object GPUtil
 		vkCmdPipelineBarrier2(cmdHandle, depInfo)
 	}
 
+
+	val ERROR_NAMETABLE = mapOf(
+		VK_SUCCESS to "SUCCESS??? THIS IS BOGUS!!!!!!",
+		VK_NOT_READY to "not ready",
+		VK_TIMEOUT to "timed out",
+		VK_EVENT_SET to "event set",
+		VK_EVENT_RESET to "event reset",
+		VK_INCOMPLETE to "incomplete",
+		VK_ERROR_OUT_OF_HOST_MEMORY to "host out of memory",
+		VK_ERROR_OUT_OF_DEVICE_MEMORY to "device out of memory",
+		VK_ERROR_INITIALIZATION_FAILED to "initialization failed",
+		VK_ERROR_DEVICE_LOST to "lost device",
+		VK_ERROR_MEMORY_MAP_FAILED to "memory mapping failed",
+		VK_ERROR_LAYER_NOT_PRESENT to "layer isn't present",
+		VK_ERROR_EXTENSION_NOT_PRESENT to "extension isn't present",
+		VK_ERROR_FEATURE_NOT_PRESENT to "feature isn't present",
+		VK_ERROR_INCOMPATIBLE_DRIVER to "driver's incompatible",
+		VK_ERROR_TOO_MANY_OBJECTS to "too many objects",
+		VK_ERROR_FORMAT_NOT_SUPPORTED to "unsupported format",
+		VK_ERROR_FRAGMENTED_POOL to "fragmented pool",
+		VK_ERROR_UNKNOWN to "unknown",
+	).withDefault { "unmapped??? #$it" }
+
 	fun vkCheck(err:Int, messageProvider:(Int)->String)
 	{
-		vkCheck(err, messageProvider(err))
+		if (err != VK_SUCCESS)
+		{
+			throwGpuCheck(err, messageProvider(err))
+		}
 	}
 
 	fun vkCheck(err: Int, errMsg: String?)
 	{
-		if (err == VK_SUCCESS) return
-		val errCode = when (err)
+		if (err != VK_SUCCESS)
 		{
-			VK_NOT_READY
-				-> "VK_NOT_READY"
-			VK_TIMEOUT
-				-> "VK_TIMEOUT"
-			VK_EVENT_SET
-				-> "VK_EVENT_SET"
-			VK_EVENT_RESET
-				-> "VK_EVENT_RESET"
-			VK_INCOMPLETE
-				-> "VK_INCOMPLETE"
-			VK_ERROR_OUT_OF_HOST_MEMORY
-				-> "VK_ERROR_OUT_OF_HOST_MEMORY"
-			VK_ERROR_OUT_OF_DEVICE_MEMORY
-				-> "VK_ERROR_OUT_OF_DEVICE_MEMORY"
-			VK_ERROR_INITIALIZATION_FAILED
-				-> "VK_ERROR_INITIALIZATION_FAILED"
-			VK_ERROR_DEVICE_LOST
-				-> "VK_ERROR_DEVICE_LOST"
-			VK_ERROR_MEMORY_MAP_FAILED
-				-> "VK_ERROR_MEMORY_MAP_FAILED"
-			VK_ERROR_LAYER_NOT_PRESENT
-				-> "VK_ERROR_LAYER_NOT_PRESENT"
-			VK_ERROR_EXTENSION_NOT_PRESENT
-				-> "VK_ERROR_EXTENSION_NOT_PRESENT"
-			VK_ERROR_FEATURE_NOT_PRESENT
-				-> "VK_ERROR_FEATURE_NOT_PRESENT"
-			VK_ERROR_INCOMPATIBLE_DRIVER
-				-> "VK_ERROR_INCOMPATIBLE_DRIVER"
-			VK_ERROR_TOO_MANY_OBJECTS
-				-> "VK_ERROR_TOO_MANY_OBJECTS"
-			VK_ERROR_FORMAT_NOT_SUPPORTED
-				-> "VK_ERROR_FORMAT_NOT_SUPPORTED"
-			VK_ERROR_FRAGMENTED_POOL
-				-> "VK_ERROR_FRAGMENTED_POOL"
-			VK_ERROR_UNKNOWN
-				-> "VK_ERROR_UNKNOWN"
-			else -> "Not mapped"
+			throwGpuCheck(err, errMsg)
 		}
-		throw RuntimeException("gpu check failed '$errMsg': $errCode [$err]")
+	}
+
+	fun throwGpuCheck (er:Int, ms:String?): Nothing
+	{
+		val errName = ERROR_NAMETABLE.getValue(er)
+		val msg = if (ms != null) " '$ms'" else ""
+		throw RuntimeException("gpu check failed$msg: #$er - $errName")
 	}
 
 	inline fun renderScoped (cmd: VkCommandBuffer, info: VkRenderingInfo, cm:()->Unit)
