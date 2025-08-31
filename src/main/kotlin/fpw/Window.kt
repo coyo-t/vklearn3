@@ -10,11 +10,11 @@ class Window private constructor(
 	val handle: Long,
 	wide:Int,
 	tall:Int,
-): AutoCloseable
+): AutoCloseable, DimensionsProvider
 {
-	var wide = wide
+	override var wide = wide
 		private set
-	var tall = tall
+	override var tall = tall
 		private set
 
 	lateinit var input: Inputterz

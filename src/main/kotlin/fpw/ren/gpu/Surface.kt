@@ -7,7 +7,7 @@ import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.KHRSurface
 import org.lwjgl.vulkan.KHRSurface.VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
-import org.lwjgl.vulkan.VK14.VK_FORMAT_B8G8R8A8_SRGB
+import org.lwjgl.vulkan.VK14.*
 import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR
 import org.lwjgl.vulkan.VkSurfaceFormatKHR
 

@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-import fpw.Window
+import fpw.DimensionsProvider
 import fpw.ren.gpu.GPUtil.vkCheck
 import fpw.ren.gpu.queuez.GPUCommandQueue
 import org.joml.Math.clamp
@@ -24,7 +24,7 @@ class SwapChain
 	val vkSwapChain: Long
 
 	constructor (
-		window: Window,
+		window: DimensionsProvider,
 		device: GPUDevice,
 		surface: Surface,
 		requestedImages: Int,
@@ -78,16 +78,10 @@ class SwapChain
 			result = min(requestedImages, maxImages)
 		}
 		result = max(result, minImages)
-//		Main.logDebug(
-//			"Requested [$requestedImages] images, got [$result] images. " +
-//			"Surface capabilities, " +
-//			"image range ($minImages..$maxImages)"
-//		)
-
 		return result
 	}
 
-	private fun calcSwapChainExtent(window: Window, surfCapabilities: VkSurfaceCapabilitiesKHR): VkExtent2D
+	private fun calcSwapChainExtent(window: DimensionsProvider, surfCapabilities: VkSurfaceCapabilitiesKHR): VkExtent2D
 	{
 		val result = VkExtent2D.calloc()
 		if (surfCapabilities.currentExtent().width() == -0x1)
