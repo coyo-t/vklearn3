@@ -2,8 +2,8 @@ package fpw.ren
 
 import fpw.Image
 import fpw.Main
-import fpw.ren.gpu.GPUCommandBuffer
-import fpw.ren.gpu.GPUCommandPool
+import fpw.ren.gpu.CommandBuffer
+import fpw.ren.gpu.CommandPool
 import fpw.ren.gpu.GPUContext
 import fpw.ren.gpu.queuez.GPUCommandQueue
 import org.lwjgl.vulkan.VK10.VK_FORMAT_R8G8B8A8_SRGB
@@ -49,7 +49,7 @@ class TextureCache
 		return textureMap[texturePath]!!
 	}
 
-	fun transitionTexts(vkCtx: GPUContext, cmdPool: GPUCommandPool, queue: GPUCommandQueue)
+	fun transitionTexts(vkCtx: GPUContext, cmdPool: CommandPool, queue: GPUCommandQueue)
 	{
 //		Logger.debug("Recording texture transitions")
 		val numTextures = textureMap.size
@@ -59,14 +59,12 @@ class TextureCache
 		{
 			addTexture(vkCtx, UUID.randomUUID().toString(), defaultTexturePath, VK_FORMAT_R8G8B8A8_SRGB)
 		}
-		val cmdBuf = GPUCommandBuffer(vkCtx, cmdPool, primary = true, oneTimeSubmit = true)
-		cmdBuf.record {
+		val cmdBuf = CommandBuffer(vkCtx, cmdPool, primary = true, oneTimeSubmit = true)
+		cmdBuf.recordSubmitAndWait(vkCtx, queue) {
 			textureMap.forEach { (k, v) -> v.recordTextureTransition(cmdBuf) }
 		}
-		cmdBuf.submitAndWait(vkCtx, queue)
 		cmdBuf.cleanup(vkCtx, cmdPool)
 		textureMap.forEach { (k, v) -> v.cleanupStgBuffer(vkCtx) }
-//		Logger.debug("Recorded texture transitions")
 	}
 
 }

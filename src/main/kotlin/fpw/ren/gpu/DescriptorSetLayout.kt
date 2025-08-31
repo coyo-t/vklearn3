@@ -54,7 +54,6 @@ class DescriptorSetLayout
 		return layoutInfos[0]
 	}
 
-	@JvmRecord
 	data class LayoutInfo(val descType: Int, val binding: Int, val descCount: Int, val stage: Int)
 
 }

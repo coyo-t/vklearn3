@@ -15,7 +15,7 @@ class DescriptorSetPool
 	val vkDescPool: Long
 	val descTypeCounts: MutableList<DescTypeCount>
 
-	constructor (device: GPUDevice, descTypeCounts: MutableList<DescTypeCount>)
+	constructor (device: LogicalDevice, descTypeCounts: MutableList<DescTypeCount>)
 	{
 		this.descTypeCounts = descTypeCounts
 		MemoryStack.stackPush().use { stack ->
@@ -45,13 +45,13 @@ class DescriptorSetPool
 		}
 	}
 
-	fun cleanup(device: GPUDevice)
+	fun cleanup(device: LogicalDevice)
 	{
 //		Logger.debug("Destroying descriptor pool")
 		vkDestroyDescriptorPool(device.vkDevice, vkDescPool, null)
 	}
 
-	fun freeDescriptorSet (device: GPUDevice, vkDescriptorSet: Long)
+	fun freeDescriptorSet (device: LogicalDevice, vkDescriptorSet: Long)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val longBuffer = stack.mallocLong(1)

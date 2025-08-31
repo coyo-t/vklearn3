@@ -8,7 +8,7 @@ import org.lwjgl.vulkan.VkBufferCopy
 class TransferBuffer(val from: GPUBuffer, val to: GPUBuffer)
 {
 
-	fun recordTransferCommand (cmd: GPUCommandBuffer)
+	fun recordTransferCommand (cmd: CommandBuffer)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val copyRegion = VkBufferCopy

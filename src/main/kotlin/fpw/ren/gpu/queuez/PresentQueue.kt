@@ -21,7 +21,7 @@ class PresentQueue (vkCtx: GPUContext, queueIndex: Int):
 				{
 					KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR(
 						vkCtx.hardware.vkPhysicalDevice,
-						i, vkCtx.surface.vkSurface, intBuff
+						i, vkCtx.displaySurface.vkSurface, intBuff
 					)
 					val supportsPresentation = intBuff.get(0) == VK10.VK_TRUE
 					if (supportsPresentation)

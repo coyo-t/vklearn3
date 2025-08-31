@@ -8,13 +8,13 @@ import org.lwjgl.vulkan.VkShaderModuleCreateInfo
 import java.nio.ByteBuffer
 
 
-class GPUShaderModule private constructor (
+class ShaderModule (
 	val handle: Long,
 	val shaderStage: Int,
-): GPUClosable
+)
 {
 
-	override fun close(context: GPUContext)
+	fun close(context: GPUContext)
 	{
 		vkDestroyShaderModule(context.vkDevice, handle, null)
 	}
@@ -22,12 +22,12 @@ class GPUShaderModule private constructor (
 
 	companion object
 	{
-		fun create (context: GPUContext, shaderStage: Int, spirv: ByteBuffer): GPUShaderModule
+		fun create (context: GPUContext, shaderStage: Int, spirv: ByteBuffer): ShaderModule
 		{
 			check(spirv.isDirect) {
 				"requires direct buffer"
 			}
-			return GPUShaderModule(
+			return ShaderModule(
 				handle = createShaderModule(context, spirv),
 				shaderStage = shaderStage,
 			)

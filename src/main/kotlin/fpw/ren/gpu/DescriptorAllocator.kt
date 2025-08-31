@@ -11,13 +11,12 @@ class DescriptorAllocator
 	private val descPoolList = mutableListOf<DescPoolInfo>()
 	private val descSetInfoMap = mutableMapOf<String, DescSetInfo>()
 
-	constructor (physDevice: GPUHardware, device: GPUDevice)
+	constructor (physDevice: HardwareDevice, device: LogicalDevice)
 	{
-//		Logger.debug("Creating descriptor allocator")
 		descPoolList.add(createDescPoolInfo(device, descLimits))
 	}
 
-	private fun createDescLimits(physDevice: GPUHardware): MutableMap<Int, Int>
+	private fun createDescLimits(physDevice: HardwareDevice): MutableMap<Int, Int>
 	{
 		val limits = physDevice.vkPhysicalDeviceProperties.properties().limits()
 		return mutableMapOf(
@@ -27,19 +26,18 @@ class DescriptorAllocator
 		)
 	}
 
-	private fun createDescPoolInfo (device: GPUDevice, descLimits: MutableMap<Int, Int>): DescPoolInfo
+	private fun createDescPoolInfo (device: LogicalDevice, descLimits: MutableMap<Int, Int>): DescPoolInfo
 	{
-		val descCount = mutableMapOf<Int, Int>()
+		val descCount = descLimits.toMutableMap()
 		val descTypeCounts = mutableListOf<DescriptorSetPool.DescTypeCount>()
 		descLimits.forEach { (k, v) ->
-			descCount[k] = v
 			descTypeCounts.add(DescriptorSetPool.DescTypeCount(k, v))
 		}
 		val descPool = DescriptorSetPool(device, descTypeCounts)
 		return DescPoolInfo(descCount, descPool)
 	}
 
-	fun addDescSets(device: GPUDevice, id: String, count: Int, descSetLayout: DescriptorSetLayout): List<DescriptorSet>
+	fun addDescSets(device: LogicalDevice, id: String, count: Int, descSetLayout: DescriptorSetLayout): List<DescriptorSet>
 	{
 		// Check if we have room for the sets in any descriptor pool
 		var targetPool: DescPoolInfo? = null
@@ -49,8 +47,7 @@ class DescriptorAllocator
 			for (layoutInfo in descSetLayout.layoutInfos)
 			{
 				val descType = layoutInfo.descType
-				val available =
-					descPoolInfo.descCount[descType] ?: throw RuntimeException("Unknown type [" + descType + "]")
+				val available = descPoolInfo.descCount[descType] ?: throw RuntimeException("Unknown type [$descType]")
 				val maxTotal = descLimits[descType]!!
 				if (count > maxTotal)
 				{
@@ -92,14 +89,14 @@ class DescriptorAllocator
 		return result
 	}
 
-	fun cleanup(device: GPUDevice)
+	fun cleanup(device: LogicalDevice)
 	{
 //		Logger.debug("Destroying descriptor allocator")
 		descSetInfoMap.clear()
 		descPoolList.forEach { it.descPool.cleanup(device) }
 	}
 
-	fun freeDescSet(device: GPUDevice, id: String?)
+	fun freeDescSet(device: LogicalDevice, id: String?)
 	{
 		val descSetInfo = descSetInfoMap[id]
 		if (descSetInfo == null)

@@ -8,7 +8,7 @@ import org.lwjgl.vulkan.VkMemoryAllocateInfo
 import org.lwjgl.vulkan.VkMemoryRequirements
 
 
-class GPUImage: GPUClosable
+class GPUImage
 {
 	val format: Int
 	val mipCount: Int
@@ -73,7 +73,7 @@ class GPUImage: GPUClosable
 		}
 	}
 
-	override fun close(context: GPUContext)
+	fun free(context: GPUContext)
 	{
 		val d = context.vkDevice
 		vkDestroyImage(d, vkImage, null)

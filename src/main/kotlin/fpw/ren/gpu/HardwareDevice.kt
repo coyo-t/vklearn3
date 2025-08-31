@@ -8,7 +8,7 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK13.*
 
 
-class GPUHardware
+class HardwareDevice
 private constructor (vkPhysicalDevice: VkPhysicalDevice)
 {
 	val vkDeviceExtensions: VkExtensionProperties.Buffer
@@ -53,9 +53,8 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 		}
 	}
 
-	fun close ()
+	fun free ()
 	{
-//		Main.logDebug("Destroying physical device [$deviceName]")
 		vkMemoryProperties.free()
 		vkPhysicalDeviceFeatures.free()
 		vkQueueFamilyProps.free()
@@ -129,10 +128,10 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 			return pPhysicalDevices
 		}
 
-		fun createPhysicalDevice(instance: GPUInstance, prefDeviceName: String?): GPUHardware
+		fun createPhysicalDevice(instance: GPUInstance, prefDeviceName: String?): HardwareDevice
 		{
 //			Main.logDebug("Selecting physical devices")
-			var result: GPUHardware? = null
+			var result: HardwareDevice? = null
 			MemoryStack.stackPush().use { stack ->
 				// Get available devices
 				val pPhysicalDevices = getPhysicalDevices(instance, stack)
@@ -143,20 +142,20 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 					for (i in 0..<numDevices)
 					{
 						val vkPhysicalDevice = VkPhysicalDevice(pPhysicalDevices.get(i), instance.vkInstance)
-						val physDevice = GPUHardware(vkPhysicalDevice)
+						val physDevice = HardwareDevice(vkPhysicalDevice)
 
 						val deviceName = physDevice.deviceName
 						if (!physDevice.hasGraphicsQueueFamily())
 						{
 							Main.logDebug("device [$deviceName] does not support graphics queue family")
-							physDevice.close()
+							physDevice.free()
 							continue
 						}
 
 						if (!physDevice.supportsExtensions(REQUIRED_EXTENSIONS))
 						{
 							Main.logDebug("device [$deviceName] does not support required extensions")
-							physDevice.close()
+							physDevice.free()
 							continue
 						}
 
@@ -180,7 +179,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 				result = if (result == null && !physDevices.isEmpty()) physDevices.removeFirst() else result
 
 				// Clean up non-selected devices
-				physDevices.forEach(GPUHardware::close)
+				physDevices.forEach(HardwareDevice::free)
 //				Main.logDebug("Selected device: [${result?.deviceName}]")
 				return requireNotNull(result) {
 					"No suitable physical devices found"

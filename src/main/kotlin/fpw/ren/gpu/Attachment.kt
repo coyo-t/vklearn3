@@ -4,7 +4,7 @@ import org.lwjgl.vulkan.VK14.*
 
 
 
-class Attachment: GPUClosable
+class Attachment
 {
 	val image: GPUImage
 	val imageView: ImageView
@@ -56,10 +56,10 @@ class Attachment: GPUClosable
 		)
 	}
 
-	override fun close (context: GPUContext)
+	fun close (context: GPUContext)
 	{
-		imageView.close(context.device)
-		image.close(context)
+		imageView.free(context.device)
+		image.free(context)
 	}
 
 }

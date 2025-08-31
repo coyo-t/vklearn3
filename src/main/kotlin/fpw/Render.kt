@@ -21,19 +21,19 @@ class Render (engineContext: EngineContext)
 	private val presentQueue = PresentQueue(vkContext, 0)
 
 	private val cmdPools = List(EngineConfig.maxInFlightFrames) {
-		GPUCommandPool(vkContext, graphQueue.queueFamilyIndex, false)
+		vkContext.createCommandPool(graphQueue.queueFamilyIndex, false)
 	}
 	private val cmdBuffers = cmdPools.map {
-		GPUCommandBuffer(vkContext, it, primary = true, oneTimeSubmit = true)
+		CommandBuffer(vkContext, it, primary = true, oneTimeSubmit = true)
 	}
 	private var imageAqSemphs = List(EngineConfig.maxInFlightFrames) {
-		GPUSemaphore(vkContext)
+		vkContext.createSemaphor()
 	}
 	private var fences = List(EngineConfig.maxInFlightFrames) {
-		GPUFence.createzor(vkContext, signaled = true)
+		vkContext.createFence(signaled = true)
 	}
 	private var renderCompleteSemphs = List(vkContext.swapChain.numImages) {
-		GPUSemaphore(vkContext)
+		vkContext.createSemaphor()
 	}
 	private val modelsCache = ModelsCache()
 
@@ -52,16 +52,16 @@ class Render (engineContext: EngineContext)
 	{
 		vkContext.device.waitIdle()
 
-		scnRender.close(vkContext)
+		scnRender.free(vkContext)
 
 		modelsCache.close(vkContext)
-		renderCompleteSemphs.forEach { it.close(vkContext) }
-		imageAqSemphs.forEach { it.close(vkContext) }
+		renderCompleteSemphs.forEach { it.free(vkContext) }
+		imageAqSemphs.forEach { it.free(vkContext) }
 		fences.forEach { it.close(vkContext) }
 		for ((cb, cp) in cmdBuffers.zip(cmdPools))
 		{
 			cb.cleanup(vkContext, cp)
-			cp.cleanup(vkContext)
+			cp.free(vkContext)
 		}
 
 		vkContext.close()
@@ -72,18 +72,18 @@ class Render (engineContext: EngineContext)
 		fences[currentFrame].wait(vkContext)
 	}
 
-	private fun recordingStart(cmdPool: GPUCommandPool, cmdBuffer: GPUCommandBuffer)
+	private fun recordingStart(cmdPool: CommandPool, cmdBuffer: CommandBuffer)
 	{
 		cmdPool.reset(vkContext)
 		cmdBuffer.beginRecording()
 	}
 
-	private fun recordingStop(cmdBuffer: GPUCommandBuffer)
+	private fun recordingStop(cmdBuffer: CommandBuffer)
 	{
 		cmdBuffer.endRecording()
 	}
 
-	private fun submit(cmdBuff: GPUCommandBuffer, currentFrame: Int, imageIndex: Int)
+	private fun submit(cmdBuff: CommandBuffer, currentFrame: Int, imageIndex: Int)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val fence = fences[currentFrame]
@@ -148,15 +148,15 @@ class Render (engineContext: EngineContext)
 
 		vkContext.resize(window)
 
-		renderCompleteSemphs.forEach { it.close(vkContext) }
-		imageAqSemphs.forEach { it.close(vkContext) }
+		renderCompleteSemphs.forEach { it.free(vkContext) }
+		imageAqSemphs.forEach { it.free(vkContext) }
 
 		imageAqSemphs = List(EngineConfig.maxInFlightFrames) {
-			GPUSemaphore(vkContext)
+			vkContext.createSemaphor()
 		}
 
 		renderCompleteSemphs = List(vkContext.swapChain.numImages) {
-			GPUSemaphore(vkContext)
+			vkContext.createSemaphor()
 		}
 
 		val extent = vkContext.swapChain.swapChainExtent

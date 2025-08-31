@@ -7,7 +7,7 @@ import org.lwjgl.vulkan.VkImageViewCreateInfo
 
 
 class ImageView (
-	device: GPUDevice,
+	device: LogicalDevice,
 	vkImage: Long,
 	imageViewData: ImageViewData,
 	isDepthImage: Boolean,
@@ -41,7 +41,7 @@ class ImageView (
 	}
 
 
-	fun close (device: GPUDevice)
+	fun free (device: LogicalDevice)
 	{
 		vkDestroyImageView(device.vkDevice, vkImageView, null)
 	}

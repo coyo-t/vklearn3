@@ -24,22 +24,21 @@ class SwapChain
 
 	constructor (
 		window: DimensionsProvider,
-		device: GPUDevice,
-		surface: Surface,
+		device: LogicalDevice,
+		displaySurface: DisplaySurface,
 		requestedImages: Int,
 		vsync: Boolean,
 	)
 	{
 		MemoryStack.stackPush().use { stack ->
-//			Main.logDebug("Creating Vulkan SwapChain")
-			val surfaceCaps = surface.surfaceCaps
+			val surfaceCaps = displaySurface.surfaceCaps
 			val reqImages = calcNumImages(surfaceCaps, requestedImages)
 			swapChainExtent = calcSwapChainExtent(window, surfaceCaps)
 
-			val surfaceFormat = surface.surfaceFormat
+			val surfaceFormat = displaySurface.surfaceFormat
 			val vkSwapchainCreateInfo = VkSwapchainCreateInfoKHR.calloc(stack)
 				.`sType$Default`()
-				.surface(surface.vkSurface)
+				.surface(displaySurface.vkSurface)
 				.minImageCount(reqImages)
 				.imageFormat(surfaceFormat.imageFormat)
 				.imageColorSpace(surfaceFormat.colorSpace)
@@ -99,7 +98,7 @@ class SwapChain
 		return result
 	}
 
-	private fun createImageViews(stack: MemoryStack, device: GPUDevice, swapChain: Long, format: Int): List<ImageView>
+	private fun createImageViews(stack: MemoryStack, device: LogicalDevice, swapChain: Long, format: Int): List<ImageView>
 	{
 		val ip = stack.mallocInt(1)
 		vkCheck(
@@ -123,7 +122,7 @@ class SwapChain
 		}
 	}
 
-	fun acquireNextImage(device: GPUDevice, imageAqSem: GPUSemaphore): Int
+	fun acquireNextImage(device: LogicalDevice, imageAqSem: Semaphore): Int
 	{
 		val imageIndex: Int
 		MemoryStack.stackPush().use { stack ->
@@ -149,16 +148,16 @@ class SwapChain
 		return imageIndex
 	}
 
-	fun cleanup(device: GPUDevice)
+	fun cleanup(device: LogicalDevice)
 	{
 //		Main.logDebug("Destroying Vulkan SwapChain")
 		swapChainExtent.free()
-		imageViews.forEach { it.close(device) }
+		imageViews.forEach { it.free(device) }
 		KHRSwapchain.vkDestroySwapchainKHR(device.vkDevice, vkSwapChain, null)
 	}
 
 
-	fun presentImage(queue: GPUCommandQueue, renderCompleteSem: GPUSemaphore, imageIndex: Int): Boolean
+	fun presentImage(queue: GPUCommandQueue, renderCompleteSem: Semaphore, imageIndex: Int): Boolean
 	{
 		var resize = false
 		MemoryStack.stackPush().use { stack ->

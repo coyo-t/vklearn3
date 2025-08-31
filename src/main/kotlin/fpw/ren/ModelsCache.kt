@@ -6,28 +6,28 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.VK14.*
 
 
-class ModelsCache: GPUClosable
+class ModelsCache
 {
 	val modelMap = mutableMapOf<String, GPUModel>()
 
 
-	override fun close (context: GPUContext)
+	fun close (context: GPUContext)
 	{
-		modelMap.forEach { (k, v) -> v.cleanup(context) }
+		modelMap.values.forEach { it.cleanup(context) }
 		modelMap.clear()
 	}
 
 	fun loadModels (
 		context: GPUContext,
 		models: List<GPUModelData>,
-		commandPool: GPUCommandPool,
+		commandPool: CommandPool,
 		queue: GPUCommandQueue,
 	)
 	{
 		val stagingBufferList = mutableListOf<GPUBuffer>()
 
-		val cmd = GPUCommandBuffer(context, commandPool, primary = true, oneTimeSubmit = true)
-		cmd.record {
+		val cmd = CommandBuffer(context, commandPool, primary = true, oneTimeSubmit = true)
+		cmd.recordSubmitAndWait(context, queue) {
 			for (modelData in models)
 			{
 				val vulkanModel = GPUModel(modelData.id)
@@ -51,10 +51,8 @@ class ModelsCache: GPUClosable
 				}
 			}
 		}
-
-		cmd.submitAndWait(context, queue)
 		cmd.cleanup(context, commandPool)
-		stagingBufferList.forEach { it.close(context) }
+		stagingBufferList.forEach { it.free(context) }
 	}
 
 	private fun createIndicesBuffers(context: GPUContext, meshData: GPUMeshData): TransferBuffer

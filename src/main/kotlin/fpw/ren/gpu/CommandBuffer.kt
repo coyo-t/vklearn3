@@ -7,16 +7,17 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 
 
-class GPUCommandBuffer
+class CommandBuffer
 {
-
 	val oneTimeSubmit: Boolean
 	val primary: Boolean
 	val vkCommandBuffer: VkCommandBuffer
+	var isRecording = false
+		private set
 
 	constructor (
 		vkCtx: GPUContext,
-		cmdPool: GPUCommandPool,
+		cmdPool: CommandPool,
 		primary: Boolean,
 		oneTimeSubmit: Boolean,
 	)
@@ -41,15 +42,27 @@ class GPUCommandBuffer
 		}
 	}
 
-	inline fun record (cb: GPUCommandBuffer.()->Unit)
+
+
+	inline fun record (cb: CommandBuffer.()->Unit)
 	{
 		beginRecording()
 		cb.invoke(this)
 		endRecording()
 	}
 
+	inline fun recordSubmitAndWait (ctc: GPUContext, queue: GPUCommandQueue, cb: CommandBuffer.()->Unit)
+	{
+		beginRecording()
+		cb.invoke(this)
+		endRecording()
+		submitAndWait(ctc, queue)
+	}
+
 	fun beginRecording (inheritanceInfo:InheritanceInfo?=null)
 	{
+//		check(!isRecording) { "already recording!" }
+//		isRecording = true
 		MemoryStack.stackPush().use { stack ->
 			val cmdBufInfo = VkCommandBufferBeginInfo.calloc(stack).`sType$Default`()
 			if (oneTimeSubmit)
@@ -84,7 +97,7 @@ class GPUCommandBuffer
 		}
 	}
 
-	fun cleanup(vkCtx: GPUContext, cmdPool: GPUCommandPool)
+	fun cleanup(vkCtx: GPUContext, cmdPool: CommandPool)
 	{
 //		Main.logTrace("Destroying command buffer")
 		vkFreeCommandBuffers(
@@ -95,6 +108,8 @@ class GPUCommandBuffer
 
 	fun endRecording()
 	{
+//		check(isRecording) { "not recording!" }
+//		isRecording = false
 		vkCheck(
 			vkEndCommandBuffer(vkCommandBuffer),
 			"end command buffer"
@@ -108,7 +123,7 @@ class GPUCommandBuffer
 
 	fun submitAndWait(vkCtx: GPUContext, queue: GPUCommandQueue)
 	{
-		val fence = GPUFence.createzor(vkCtx, true)
+		val fence = vkCtx.createFence(true)
 		fence.reset(vkCtx)
 		MemoryStack.stackPush().use { stack ->
 			val cmds = VkCommandBufferSubmitInfo.calloc(1, stack)

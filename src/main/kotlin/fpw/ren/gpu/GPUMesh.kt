@@ -7,9 +7,9 @@ class GPUMesh(
 	val numIndices: Int
 )
 {
-	fun close (context: GPUContext)
+	fun free (context: GPUContext)
 	{
-		verticesBuffer.close(context)
-		indicesBuffer.close(context)
+		verticesBuffer.free(context)
+		indicesBuffer.free(context)
 	}
 }

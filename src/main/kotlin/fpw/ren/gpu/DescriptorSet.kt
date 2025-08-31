@@ -14,7 +14,7 @@ class DescriptorSet
 {
 	val vkDescriptorSet: Long
 
-	constructor (device: GPUDevice, descPool: DescriptorSetPool, descSetLayout: DescriptorSetLayout)
+	constructor (device: LogicalDevice, descPool: DescriptorSetPool, descSetLayout: DescriptorSetLayout)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val pDescriptorSetLayout = stack.mallocLong(1)
@@ -33,7 +33,7 @@ class DescriptorSet
 		}
 	}
 
-	fun setBuffer(device: GPUDevice, buffer: GPUBuffer, range: Long, binding: Int, type: Int)
+	fun setBuffer(device: LogicalDevice, buffer: GPUBuffer, range: Long, binding: Int, type: Int)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val bufferInfo = VkDescriptorBufferInfo.calloc(1, stack)
@@ -54,7 +54,7 @@ class DescriptorSet
 	}
 
 	fun setImages (
-		device: GPUDevice,
+		device: LogicalDevice,
 		textureSampler: Sampler,
 		baseBinding: Int,
 		vararg imgViews: ImageView)
@@ -89,8 +89,8 @@ class DescriptorSet
 		}
 	}
 
-	fun setImagesArr(
-		device: GPUDevice,
+	fun setImagesArray(
+		device: LogicalDevice,
 		textureSampler: Sampler,
 		baseBinding: Int,
 		vararg imgViews: ImageView,

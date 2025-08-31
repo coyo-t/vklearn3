@@ -10,17 +10,17 @@ class GPUContext(window: Window)
 	val instance = GPUInstance(
 		validate = EngineConfig.useVulkanValidationLayers,
 	)
-	val hardware = GPUHardware.createPhysicalDevice(
+	val hardware = HardwareDevice.createPhysicalDevice(
 		instance,
 		prefDeviceName = EngineConfig.preferredPhysicalDevice,
 	)
-	val device = GPUDevice(hardware)
-	var surface = Surface(instance, hardware, window)
+	val device = LogicalDevice(hardware)
+	var displaySurface = DisplaySurface(instance, hardware, window)
 		private set
 	var swapChain = SwapChain(
 		window,
 		device,
-		surface,
+		displaySurface,
 		requestedImages = EngineConfig.preferredImageBufferingCount,
 		vsync = EngineConfig.useVerticalSync,
 	)
@@ -28,7 +28,7 @@ class GPUContext(window: Window)
 
 	val vkDevice get() = device.vkDevice
 
-	val pipelineCache = GPUPipeLineCache(device)
+	val pipelineCache = device.createPipelineCache()
 
 //	val instance = run {
 //		val cfg = EngineConfig
@@ -38,19 +38,19 @@ class GPUContext(window: Window)
 	fun resize (window: Window)
 	{
 		swapChain.cleanup(device)
-		surface.cleanup(instance)
+		displaySurface.free(instance)
 		val engCfg = EngineConfig
-		surface = Surface(instance, hardware, window)
-		swapChain = SwapChain(window, device, surface, engCfg.preferredImageBufferingCount, engCfg.useVerticalSync)
+		displaySurface = DisplaySurface(instance, hardware, window)
+		swapChain = SwapChain(window, device, displaySurface, engCfg.preferredImageBufferingCount, engCfg.useVerticalSync)
 	}
 
 	fun close()
 	{
-		pipelineCache.close(this)
+		pipelineCache.free(this)
 		swapChain.cleanup(device)
-		surface.cleanup(instance)
+		displaySurface.free(instance)
 		device.close()
-		hardware.close()
+		hardware.free()
 		instance.close()
 	}
 }

@@ -5,6 +5,3 @@ class PushConstantRange(
 	val offset:Int,
 	val size:Int,
 )
-{
-
-}

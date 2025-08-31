@@ -11,25 +11,22 @@ enum class OSType
 
 	companion object
 	{
-		val isMacintosh
-			get() = get() == MACINTOSHZ
-
-		fun get (): OSType
-		{
+		val osType by lazy {
 			val os = System.getProperty("os.name", "generic").lowercase()
-			if ((os.indexOf("mac") >= 0) || (os.indexOf("darwin") >= 0))
-			{
-				return MACINTOSHZ
+			when {
+				os.indexOf("mac") >= 0 || os.indexOf("darwin") >= 0
+					-> MACINTOSHZ
+				os.indexOf("win") >= 0
+					-> WINDOWZ
+				os.indexOf("nux") >= 0
+					-> LINUXZ
+				else
+					-> DUDE_IDFK
 			}
-			else if (os.indexOf("win") >= 0)
-			{
-				return WINDOWZ
-			}
-			else if (os.indexOf("nux") >= 0)
-			{
-				return LINUXZ
-			}
-			return DUDE_IDFK
 		}
+
+		val isMacintosh
+			get() = osType == MACINTOSHZ
+
 	}
 }

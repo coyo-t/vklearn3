@@ -2,7 +2,7 @@ package fpw.ren
 
 import fpw.EngineContext
 import fpw.FUtil
-import fpw.ren.VertexFormatBuilder.Companion.buildVertexFormat
+import fpw.TestCube
 import fpw.ren.gpu.*
 import fpw.ren.gpu.GPUtil.imageBarrier
 import org.joml.Matrix4f
@@ -13,11 +13,10 @@ import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
 import org.lwjgl.vulkan.VK10.vkCmdPushConstants
 import org.lwjgl.vulkan.VK13.*
-import java.util.function.Consumer
 import kotlin.io.path.Path
 
 
-class SceneRender (vkCtx: GPUContext): GPUClosable
+class SceneRender (vkCtx: GPUContext)
 {
 	private val clrValueColor = VkClearValue.calloc().color {
 		it.float32(0, 0.5f).float32(1, 0.7f).float32(2, 0.9f).float32(3, 1.0f)
@@ -75,7 +74,7 @@ class SceneRender (vkCtx: GPUContext): GPUClosable
 		}
 	}
 
-	override fun close (context: GPUContext)
+	fun free (context: GPUContext)
 	{
 		pipeline.cleanup(context)
 		renderInfo.forEach { it.free() }
@@ -89,7 +88,7 @@ class SceneRender (vkCtx: GPUContext): GPUClosable
 	fun render (
 		engineContext: EngineContext,
 		vkCtx: GPUContext,
-		cmdBuffer: GPUCommandBuffer,
+		cmdBuffer: CommandBuffer,
 		modelsCache: ModelsCache,
 		imageIndex: Int,
 	)
@@ -148,8 +147,8 @@ class SceneRender (vkCtx: GPUContext): GPUClosable
 				vkCmdSetViewport(cmdHandle, 0, viewport)
 
 				val scissor = VkRect2D.calloc(1, stack)
-					.extent(Consumer { it: VkExtent2D? -> it!!.width(width).height(height) })
-					.offset(Consumer { it: VkOffset2D? -> it!!.x(0).y(0) })
+					.extent { it.width(width).height(height) }
+					.offset { it.x(0).y(0) }
 				vkCmdSetScissor(cmdHandle, 0, scissor)
 
 				val offsets = stack.mallocLong(1).put(0, 0L)
@@ -211,6 +210,7 @@ class SceneRender (vkCtx: GPUContext): GPUClosable
 		attInfoDepth = createDepthAttachmentsInfo(vkCtx, attDepth, clrValueDepth)
 		renderInfo = createRenderInfo(vkCtx, attInfoColor, attInfoDepth)
 	}
+
 	companion object
 	{
 		private fun createDepthAttachments(vkCtx: GPUContext): List<Attachment>
@@ -247,33 +247,28 @@ class SceneRender (vkCtx: GPUContext): GPUClosable
 			}
 		}
 
-		val format = buildVertexFormat {
-			location3D()
-			texcoord2D()
-		}
-
-		private fun createPipeline (vkCtx: GPUContext, shaderModules: List<GPUShaderModule>): GPUPipeLine
+		private fun createPipeline (vkCtx: GPUContext, shaderModules: List<ShaderModule>): Pipeline
 		{
-			val buildInfo = GPUPipeLineBuildInfo(
+			val buildInfo = PipelineBuildInfo(
 					shaderModules = shaderModules,
-					vi = format.vi,
-					colorFormat = vkCtx.surface.surfaceFormat.imageFormat,
+					vi = TestCube.format.vi,
+					colorFormat = vkCtx.displaySurface.surfaceFormat.imageFormat,
 					depthFormat = VK_FORMAT_D16_UNORM,
 					pushConstRange = listOf(
 						PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, 0, 128)
 					)
 				)
-			return GPUPipeLine(vkCtx, buildInfo)
+			return Pipeline(vkCtx, buildInfo)
 		}
 
-		private fun createShaderModules(vkCtx: GPUContext): List<GPUShaderModule>
+		private fun createShaderModules(vkCtx: GPUContext): List<ShaderModule>
 		{
 			val srcs = ShaderAssetThinger.loadFromLuaScript(Path("resources/assets/shader/scene.lua"))
 			val v = ShaderAssetThinger.compileSPIRV(srcs.vertex, Shaderc.shaderc_glsl_vertex_shader)
 			val f = ShaderAssetThinger.compileSPIRV(srcs.fragment, Shaderc.shaderc_glsl_fragment_shader)
 			return listOf(
-				GPUShaderModule.create(vkCtx, VK_SHADER_STAGE_VERTEX_BIT, v),
-				GPUShaderModule.create(vkCtx, VK_SHADER_STAGE_FRAGMENT_BIT, f),
+				ShaderModule.create(vkCtx, VK_SHADER_STAGE_VERTEX_BIT, v),
+				ShaderModule.create(vkCtx, VK_SHADER_STAGE_FRAGMENT_BIT, f),
 			)
 		}
 	}

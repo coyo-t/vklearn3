@@ -31,6 +31,7 @@ class Sampler
 				.mipLodBias(0.0f)
 //			if (textureSamplerInfo.anisotropy && vkCtx.device.samplerAnisotropy)
 //			{
+//				val MAX_ANISOTROPY = 16
 //				samplerInfo
 //					.anisotropyEnable(true)
 //					.maxAnisotropy(MAX_ANISOTROPY.toFloat())
@@ -42,18 +43,9 @@ class Sampler
 		}
 	}
 
-	fun cleanup(vkCtx: GPUContext)
+	fun free(vkCtx: GPUContext)
 	{
 		vkDestroySampler(vkCtx.vkDevice, vkSampler, null)
 	}
-
-	companion object
-	{
-
-
-		private const val MAX_ANISOTROPY = 16
-
-	}
-
 }
 

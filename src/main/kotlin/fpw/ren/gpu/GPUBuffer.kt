@@ -19,7 +19,7 @@ import org.lwjgl.vulkan.VkMemoryAllocateInfo
 import org.lwjgl.vulkan.VkMemoryRequirements
 
 
-class GPUBuffer: GPUClosable
+class GPUBuffer
 {
 
 	val allocationSize: Long
@@ -36,7 +36,7 @@ class GPUBuffer: GPUClosable
 		mappedMemory = NULL
 		requestedSize = size
 		MemoryStack.stackPush().use { stack ->
-			val device: GPUDevice = vkCtx.device
+			val device: LogicalDevice = vkCtx.device
 			val bufferCreateInfo = VkBufferCreateInfo.calloc(stack)
 				.`sType$Default`()
 				.size(size)
@@ -62,7 +62,7 @@ class GPUBuffer: GPUClosable
 		}
 	}
 
-	override fun close(context: GPUContext)
+	fun free(context: GPUContext)
 	{
 		MemoryUtil.memFree(pb)
 		val vkDevice = context.vkDevice

@@ -11,7 +11,7 @@ import org.lwjgl.vulkan.VK10.vkDestroyPipeline
 import org.lwjgl.vulkan.VK14.*
 
 
-class GPUPipeLine (vkCtx: GPUContext, buildInfo: GPUPipeLineBuildInfo)
+class Pipeline (vkCtx: GPUContext, buildInfo: PipelineBuildInfo)
 {
 	val vkPipeline: Long
 	val vkPipelineLayout: Long

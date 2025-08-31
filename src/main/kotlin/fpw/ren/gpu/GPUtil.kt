@@ -96,7 +96,7 @@ object GPUtil
 		VK_ERROR_UNKNOWN to "unknown",
 	).withDefault { "unmapped??? #$it" }
 
-	fun vkCheck(err:Int, messageProvider:(Int)->String)
+	fun vkCheck(err:Int, messageProvider:(Int)->String?)
 	{
 		if (err != VK_SUCCESS)
 		{

@@ -56,6 +56,7 @@ class VertexFormatBuilder
 					viAttrs = vip,
 					viBindings = vbl,
 					vi=vinfo,
+					stride=stride,
 				)
 			}
 		}

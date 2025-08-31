@@ -55,19 +55,19 @@ class Texture
 	fun cleanup(vkCtx: GPUContext)
 	{
 		cleanupStgBuffer(vkCtx)
-		imageView.close(vkCtx.device)
-		image.close(vkCtx)
+		imageView.free(vkCtx.device)
+		image.free(vkCtx)
 	}
 
 	fun cleanupStgBuffer(vkCtx: GPUContext)
 	{
 		stgBuffer?.let {
-			it.close(vkCtx)
+			it.free(vkCtx)
 			stgBuffer = null
 		}
 	}
 
-	private fun recordCopyBuffer(stack: MemoryStack, cmd: GPUCommandBuffer, bufferData: GPUBuffer)
+	private fun recordCopyBuffer(stack: MemoryStack, cmd: CommandBuffer, bufferData: GPUBuffer)
 	{
 		val region = VkBufferImageCopy.calloc(1, stack)
 			.bufferOffset(0)
@@ -91,7 +91,7 @@ class Texture
 		)
 	}
 
-	fun recordTextureTransition (cmd: GPUCommandBuffer)
+	fun recordTextureTransition (cmd: CommandBuffer)
 	{
 		val staging = stgBuffer
 		if (staging != null && !recordedTransition)
@@ -112,7 +112,9 @@ class Texture
 				)
 				recordCopyBuffer(stack, cmd, staging)
 				imageBarrier(
-					stack, cmd.vkCommandBuffer, image.vkImage,
+					stack,
+					cmd.vkCommandBuffer,
+					image.vkImage,
 					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 					VK_PIPELINE_STAGE_TRANSFER_BIT.toLong(),
