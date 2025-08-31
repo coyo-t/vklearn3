@@ -2,8 +2,6 @@ package fpw.ren.gpu
 
 import fpw.Main
 import org.lwjgl.vulkan.VK10.*
-import java.util.*
-import java.util.function.Consumer
 
 
 class DescriptorAllocator
@@ -13,7 +11,7 @@ class DescriptorAllocator
 	private val descPoolList = mutableListOf<DescPoolInfo>()
 	private val descSetInfoMap = mutableMapOf<String, DescSetInfo>()
 
-	fun DescAllocator (physDevice: GPUPhysical, device: GPUDevice)
+	constructor (physDevice: GPUPhysical, device: GPUDevice)
 	{
 //		Logger.debug("Creating descriptor allocator")
 		descPoolList.add(createDescPoolInfo(device, descLimits))
@@ -22,11 +20,11 @@ class DescriptorAllocator
 	private fun createDescLimits(physDevice: GPUPhysical): MutableMap<Int, Int>
 	{
 		val limits = physDevice.vkPhysicalDeviceProperties.properties().limits()
-		return mapOf(
+		return mutableMapOf(
 			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER to limits.maxDescriptorSetUniformBuffers(),
 			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER to limits.maxDescriptorSetSamplers(),
 			VK_DESCRIPTOR_TYPE_STORAGE_BUFFER to limits.maxDescriptorSetStorageBuffers(),
-		).toMutableMap()
+		)
 	}
 
 	private fun createDescPoolInfo (device: GPUDevice, descLimits: MutableMap<Int, Int>): DescPoolInfo
@@ -41,7 +39,6 @@ class DescriptorAllocator
 		return DescPoolInfo(descCount, descPool)
 	}
 
-	@Synchronized
 	fun addDescSets(device: GPUDevice, id: String, count: Int, descSetLayout: DescriptorSetLayout): List<DescriptorSet>
 	{
 		// Check if we have room for the sets in any descriptor pool
@@ -79,9 +76,9 @@ class DescriptorAllocator
 			poolPos++
 		}
 
-		val result = List(count) {
+		val result = MutableList(count) {
 			DescriptorSet(device, targetPool.descPool, descSetLayout)
-		}.toMutableList()
+		}
 
 		descSetInfoMap[id] = DescSetInfo(result, poolPos)
 
@@ -95,7 +92,6 @@ class DescriptorAllocator
 		return result
 	}
 
-	@Synchronized
 	fun cleanup(device: GPUDevice)
 	{
 //		Logger.debug("Destroying descriptor allocator")
@@ -103,7 +99,6 @@ class DescriptorAllocator
 		descPoolList.forEach { it.descPool.cleanup(device) }
 	}
 
-	@Synchronized
 	fun freeDescSet(device: GPUDevice, id: String?)
 	{
 		val descSetInfo = descSetInfoMap[id]
@@ -121,8 +116,7 @@ class DescriptorAllocator
 		descSetInfo.descSets.forEach { descPoolInfo.descPool.freeDescriptorSet(device, it.vkDescriptorSet) }
 	}
 
-	@Synchronized
-	fun getDescSet(id: String?, pos: Int): DescriptorSet?
+	fun getDescSet(id: String, pos: Int): DescriptorSet?
 	{
 		val descSetInfo = descSetInfoMap[id]
 		if (descSetInfo != null)

@@ -54,7 +54,7 @@ class ModelsCache: GPUClosable
 					indicesBuffers.recordTransferCommand(cmd)
 
 					val vulkanMesh = GPUMesh(
-						meshData.id, verticesBuffers.to,
+						verticesBuffers.to,
 						indicesBuffers.to, meshData.indices.size
 					)
 					vulkanModel.vulkanMeshList.add(vulkanMesh)

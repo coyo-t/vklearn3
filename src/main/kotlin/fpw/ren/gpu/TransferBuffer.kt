@@ -16,7 +16,7 @@ class TransferBuffer(val from: GPUBuffer, val to: GPUBuffer)
 				.srcOffset(0)
 				.dstOffset(0)
 				.size(from.requestedSize)
-			vkCmdCopyBuffer(cmd.vkCommandBuffer, from.buffer, to.buffer, copyRegion)
+			vkCmdCopyBuffer(cmd.vkCommandBuffer, from.bufferStruct, to.bufferStruct, copyRegion)
 		}
 	}
 }

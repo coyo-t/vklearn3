@@ -37,7 +37,7 @@ class DescriptorSet
 	{
 		MemoryStack.stackPush().use { stack ->
 			val bufferInfo = VkDescriptorBufferInfo.calloc(1, stack)
-				.buffer(buffer.buffer)
+				.buffer(buffer.bufferStruct)
 				.offset(0)
 				.range(range)
 			val descrBuffer = VkWriteDescriptorSet.calloc(1, stack)

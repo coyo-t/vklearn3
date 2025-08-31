@@ -12,7 +12,6 @@ import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
 import org.lwjgl.vulkan.VK10.vkCmdPushConstants
 import org.lwjgl.vulkan.VK13.*
-import java.util.*
 import java.util.function.Consumer
 import kotlin.io.path.Path
 
@@ -168,9 +167,9 @@ class SceneRender (vkCtx: GPUContext): GPUClosable
 					for (j in 0..<numMeshes)
 					{
 						val vulkanMesh = vulkanMeshList[j]
-						vertexBuffer.put(0, vulkanMesh.verticesBuffer.buffer)
+						vertexBuffer.put(0, vulkanMesh.verticesBuffer.bufferStruct)
 						vkCmdBindVertexBuffers(cmdHandle, 0, vertexBuffer, offsets!!)
-						vkCmdBindIndexBuffer(cmdHandle, vulkanMesh.indicesBuffer.buffer, 0, VK_INDEX_TYPE_UINT32)
+						vkCmdBindIndexBuffer(cmdHandle, vulkanMesh.indicesBuffer.bufferStruct, 0, VK_INDEX_TYPE_UINT32)
 						vkCmdDrawIndexed(cmdHandle, vulkanMesh.numIndices, 1, 0, 0, 0)
 					}
 				}

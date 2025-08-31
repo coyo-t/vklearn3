@@ -23,8 +23,8 @@ class GPUBuffer: GPUClosable
 {
 
 	val allocationSize: Long
-	val buffer: Long
-	val memory: Long
+	val bufferStruct: Long
+	val bufferData: Long
 	val pb: PointerBuffer
 	val requestedSize: Long
 
@@ -44,10 +44,10 @@ class GPUBuffer: GPUClosable
 				.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
 			val lp = stack.mallocLong(1)
 			vkCheck(vkCreateBuffer(device.vkDevice, bufferCreateInfo, null, lp), "Failed to create buffer")
-			buffer = lp.get(0)
+			bufferStruct = lp.get(0)
 
 			val memReqs = VkMemoryRequirements.calloc(stack)
-			vkGetBufferMemoryRequirements(device.vkDevice, buffer, memReqs)
+			vkGetBufferMemoryRequirements(device.vkDevice, bufferStruct, memReqs)
 
 			val memAlloc = VkMemoryAllocateInfo.calloc(stack)
 				.`sType$Default`()
@@ -56,9 +56,9 @@ class GPUBuffer: GPUClosable
 
 			vkCheck(vkAllocateMemory(device.vkDevice, memAlloc, null, lp), "Failed to allocate memory")
 			allocationSize = memAlloc.allocationSize()
-			memory = lp.get(0)
+			bufferData = lp.get(0)
 			pb = MemoryUtil.memAllocPointer(1)
-			vkCheck(vkBindBufferMemory(device.vkDevice, buffer, memory, 0), "Failed to bind buffer memory")
+			vkCheck(vkBindBufferMemory(device.vkDevice, bufferStruct, bufferData, 0), "Failed to bind buffer memory")
 		}
 	}
 
@@ -66,15 +66,15 @@ class GPUBuffer: GPUClosable
 	{
 		MemoryUtil.memFree(pb)
 		val vkDevice = context.vkDevice
-		vkDestroyBuffer(vkDevice, buffer, null)
-		vkFreeMemory(vkDevice, memory, null)
+		vkDestroyBuffer(vkDevice, bufferStruct, null)
+		vkFreeMemory(vkDevice, bufferData, null)
 	}
 
 	fun map(vkCtx: GPUContext): Long
 	{
 		if (mappedMemory == NULL)
 		{
-			vkCheck(vkMapMemory(vkCtx.vkDevice, memory, 0, allocationSize, 0, pb), "Failed to map Buffer")
+			vkCheck(vkMapMemory(vkCtx.vkDevice, bufferData, 0, allocationSize, 0, pb), "Failed to map Buffer")
 			mappedMemory = pb.get(0)
 		}
 		return mappedMemory
@@ -84,7 +84,7 @@ class GPUBuffer: GPUClosable
 	{
 		if (mappedMemory != NULL)
 		{
-			vkUnmapMemory(vkCtx.vkDevice, memory)
+			vkUnmapMemory(vkCtx.vkDevice, bufferData)
 			mappedMemory = NULL
 		}
 	}

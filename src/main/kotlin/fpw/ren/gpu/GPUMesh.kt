@@ -2,7 +2,6 @@ package fpw.ren.gpu
 
 
 class GPUMesh(
-	val id: String,
 	val verticesBuffer: GPUBuffer,
 	val indicesBuffer: GPUBuffer,
 	val numIndices: Int

@@ -84,7 +84,7 @@ class Texture
 
 		vkCmdCopyBufferToImage(
 			cmd.vkCommandBuffer,
-			bufferData.buffer,
+			bufferData.bufferStruct,
 			image.vkImage,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			region,
