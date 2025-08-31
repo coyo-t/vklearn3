@@ -1,6 +1,7 @@
 package fpw
 
 import org.lwjgl.stb.STBImage.*
+import org.lwjgl.system.MemoryStack
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout.JAVA_INT
@@ -19,31 +20,34 @@ class Image private constructor (
 	{
 		val cbcb = Path("./resources/assets/").normalize().toAbsolutePath()
 
-		fun load (p: Path): Image
+		fun load (p: Path): Image?
 		{
 			val finp = cbcb/p
-			Arena.ofConfined().use { arena ->
-				val wp = arena.allocate(JAVA_INT)
-				val hp = arena.allocate(JAVA_INT)
-				val cp = arena.allocate(JAVA_INT)
-				val pp = arena.allocateFrom(finp.toString(), Charsets.US_ASCII)
+			MemoryStack.stackPush().use { arena ->
+				val wp = arena.mallocInt(1)
+				val hp = arena.mallocInt(1)
+				val cp = arena.mallocInt(1)
+				val pp = arena.ASCII(finp.toString())
 
-				val tryRead = nstbi_load(
-					pp.address(),
-					wp.address(),
-					hp.address(),
-					cp.address(),
+				val tryRead = stbi_load(
+					pp,
+					wp,
+					hp,
+					cp,
 					4,
 				)
-				check(tryRead != 0L) {
-					"couldnt load image @$finp: ${stbi_failure_reason()}"
+				if (tryRead == null)
+				{
+					Main.logError("couldnt load image @$finp: ${stbi_failure_reason()}")
+					return null
 				}
-				val wide = wp.get(JAVA_INT, 0)
-				val tall = hp.get(JAVA_INT, 0)
-				val chans = cp.get(JAVA_INT, 0)
+				val wide = wp[0]
+				val tall = hp[0]
+				val chans = cp[0]
 				val outData = FUtil.createMemory(wide*tall*chans)
-				outData.copyFrom(FUtil.createMemoryAt(tryRead, outData.byteSize()))
-				nstbi_image_free(tryRead)
+				val adr = MemorySegment.ofBuffer(tryRead).address()
+				outData.copyFrom(FUtil.createMemoryAt(adr, outData.byteSize()))
+				stbi_image_free(tryRead)
 				return Image(
 					wide = wide,
 					tall = tall,

@@ -1,19 +1,9 @@
 package fpw.ren
 
+import fpw.ren.gpu.*
+import fpw.ren.gpu.queuez.GPUCommandQueue
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.VK14.*
-import fpw.ren.gpu.GPUBuffer
-import fpw.ren.gpu.GPUClosable
-import fpw.ren.gpu.GPUCommandBuffer
-import fpw.ren.gpu.GPUCommandPool
-import fpw.ren.gpu.GPUCommandQueue
-import fpw.ren.gpu.GPUContext
-import fpw.ren.gpu.GPUMesh
-import fpw.ren.gpu.GPUMeshData
-import fpw.ren.gpu.GPUModel
-import fpw.ren.gpu.GPUModelData
-import fpw.ren.gpu.TransferBuffer
-import fpw.ren.gpu.GPUtil
 
 
 class ModelsCache: GPUClosable

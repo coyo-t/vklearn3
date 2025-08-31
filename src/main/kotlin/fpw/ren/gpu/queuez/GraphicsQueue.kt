@@ -1,5 +1,6 @@
-package fpw.ren.gpu
+package fpw.ren.gpu.queuez
 
+import fpw.ren.gpu.GPUContext
 import org.lwjgl.vulkan.VK10
 
 class GraphicsQueue(vkCtx: GPUContext, queueIndex: Int):
@@ -11,19 +12,6 @@ class GraphicsQueue(vkCtx: GPUContext, queueIndex: Int):
 		{
 			val queuePropsBuff = vkCtx.physDevice.vkQueueFamilyProps
 			val uhh = queuePropsBuff.indexOfFirst { (it.queueFlags() and VK10.VK_QUEUE_GRAPHICS_BIT) != 0 }
-//				var index = -1
-//				val numQueuesFamilies = queuePropsBuff.capacity()
-//				for (i in 0..<numQueuesFamilies)
-//				{
-//					val props = queuePropsBuff.get(i)
-//					val graphicsQueue = (props.queueFlags() and VK_QUEUE_GRAPHICS_BIT) != 0
-//					if (graphicsQueue)
-//					{
-//						index = i
-//						break
-//					}
-//				}
-
 			require(uhh >= 0) {
 				"Failed to get graphics Queue family index"
 			}

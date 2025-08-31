@@ -3,6 +3,8 @@ package fpw
 import fpw.ren.ModelsCache
 import fpw.ren.SceneRender
 import fpw.ren.gpu.*
+import fpw.ren.gpu.queuez.GraphicsQueue
+import fpw.ren.gpu.queuez.PresentQueue
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK13.VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT
 import org.lwjgl.vulkan.VK13.VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT

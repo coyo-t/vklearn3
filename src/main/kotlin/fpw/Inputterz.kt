@@ -2,6 +2,7 @@ package fpw
 
 import org.joml.Vector2f
 import org.lwjgl.glfw.GLFW
+import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWCharCallbackI
 import org.lwjgl.glfw.GLFWKeyCallbackI
 
@@ -24,18 +25,18 @@ class Inputterz (val window: Window) : GLFWKeyCallbackI
 
 	init
 	{
-		GLFW.glfwSetKeyCallback(window.handle, this)
+		glfwSetKeyCallback(window.handle, this)
 
-		GLFW.glfwSetCursorPosCallback(window.handle) { handle, xpos, ypos ->
+		glfwSetCursorPosCallback(window.handle) { handle, xpos, ypos ->
 			currentPos.x = xpos.toFloat()
 			currentPos.y = ypos.toFloat()
 		}
-		GLFW.glfwSetCursorEnterCallback(window.handle) { handle, entered ->
+		glfwSetCursorEnterCallback(window.handle) { handle, entered ->
 			inWindow = entered
 		}
-		GLFW.glfwSetMouseButtonCallback(window.handle) { handle, button, action, mode ->
-			this.isLeftButtonPressed = button == GLFW.GLFW_MOUSE_BUTTON_1 && action == GLFW.GLFW_PRESS
-			this.isRightButtonPressed = button == GLFW.GLFW_MOUSE_BUTTON_2 && action == GLFW.GLFW_PRESS
+		glfwSetMouseButtonCallback(window.handle) { handle, button, action, mode ->
+			this.isLeftButtonPressed = button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS
+			this.isRightButtonPressed = button == GLFW_MOUSE_BUTTON_2 && action == GLFW_PRESS
 		}
 
 	}
@@ -61,13 +62,13 @@ class Inputterz (val window: Window) : GLFWKeyCallbackI
 
 	override fun invoke (handle: Long, keyCode: Int, scanCode: Int, action: Int, mods: Int)
 	{
-		singlePressKeyMap[keyCode] = action == GLFW.GLFW_PRESS
+		singlePressKeyMap[keyCode] = action == GLFW_PRESS
 		callbacks.forEach { it.invoke(handle, keyCode, scanCode, action, mods) }
 	}
 
 	fun keyPressed(keyCode: Int): Boolean
 	{
-		return GLFW.glfwGetKey(window.handle, keyCode) == GLFW.GLFW_PRESS
+		return glfwGetKey(window.handle, keyCode) == GLFW_PRESS
 	}
 
 	fun keySinglePress(keyCode: Int): Boolean
@@ -82,6 +83,6 @@ class Inputterz (val window: Window) : GLFWKeyCallbackI
 
 	fun setCharCallBack (charCallback: GLFWCharCallbackI?)
 	{
-		GLFW.glfwSetCharCallback(window.handle, charCallback)
+		glfwSetCharCallback(window.handle, charCallback)
 	}
 }

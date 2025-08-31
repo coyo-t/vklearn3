@@ -4,8 +4,8 @@ import fpw.Image
 import fpw.Main
 import fpw.ren.gpu.GPUCommandBuffer
 import fpw.ren.gpu.GPUCommandPool
-import fpw.ren.gpu.GPUCommandQueue
 import fpw.ren.gpu.GPUContext
+import fpw.ren.gpu.queuez.GPUCommandQueue
 import org.lwjgl.vulkan.VK10.VK_FORMAT_R8G8B8A8_SRGB
 import java.util.*
 import kotlin.io.path.Path
@@ -26,7 +26,7 @@ class TextureCache
 	{
 		try
 		{
-			val srcImage = Image.load(Path(texturePath))
+			val srcImage = Image.load(Path(texturePath))!!
 			return addTexture(vkCtx, id, srcImage, format)
 		}
 		catch (e: Exception)

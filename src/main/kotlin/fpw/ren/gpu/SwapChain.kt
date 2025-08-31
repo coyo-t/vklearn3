@@ -2,13 +2,12 @@ package fpw.ren.gpu
 
 import fpw.Window
 import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.queuez.GPUCommandQueue
 import org.joml.Math.clamp
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.KHRSurface.VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR
-import org.lwjgl.vulkan.KHRSurface.VK_PRESENT_MODE_FIFO_KHR
-import org.lwjgl.vulkan.KHRSurface.VK_PRESENT_MODE_IMMEDIATE_KHR
+import org.lwjgl.vulkan.KHRSurface.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_ERROR_OUT_OF_DATE_KHR
 import org.lwjgl.vulkan.KHRSwapchain.VK_SUBOPTIMAL_KHR
 import org.lwjgl.vulkan.VK14.*

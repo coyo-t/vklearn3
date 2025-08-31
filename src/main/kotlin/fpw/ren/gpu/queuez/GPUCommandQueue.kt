@@ -1,5 +1,7 @@
-package fpw.ren.gpu
+package fpw.ren.gpu.queuez
 
+import fpw.ren.gpu.GPUContext
+import fpw.ren.gpu.GPUFence
 import fpw.ren.gpu.GPUtil.vkCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*

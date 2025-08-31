@@ -43,18 +43,6 @@ class Attachment: GPUClosable
 			}
 		}
 
-//		var dpm = false
-//		if ((usage and VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) != 0)
-//		{
-//			aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
-//		}
-//		if ((usage and VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) != 0)
-//		{
-//			aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT
-//			dpm = true
-//		}
-//		isDepthAttachment = dpm
-
 		val imageViewData = ImageViewData(
 			format = image.format,
 			aspectMask = aspectMask,

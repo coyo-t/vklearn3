@@ -8,6 +8,18 @@ import org.lwjgl.vulkan.VkVertexInputBindingDescription
 
 class GPUVertexBufferStruct: AutoCloseable
 {
+	companion object
+	{
+		const val NUMBER_OF_ATTRIBUTES = 2
+		const val POSITION_COMPONENTS = 3
+		const val TEXCO_COMPONENTS = 2
+
+		class Attribute(
+			val location:Int,
+			val format:Int,
+			val binding:Int=0,
+		)
+	}
 
 	val vi = VkPipelineVertexInputStateCreateInfo.calloc()
 	val viAttrs = VkVertexInputAttributeDescription.calloc(NUMBER_OF_ATTRIBUTES)
@@ -57,13 +69,7 @@ class GPUVertexBufferStruct: AutoCloseable
 	{
 		viBindings.free()
 		viAttrs.free()
-	}
-
-	companion object
-	{
-		const val NUMBER_OF_ATTRIBUTES = 2
-		const val POSITION_COMPONENTS = 3
-		const val TEXCO_COMPONENTS = 2
+		vi.free()
 	}
 
 }
