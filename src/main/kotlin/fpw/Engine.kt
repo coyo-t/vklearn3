@@ -7,24 +7,30 @@ class Engine (
 	private val gameLogic: GameLogic,
 ): AutoCloseable
 {
-	private val engineContext: EngineContext
-	private val render: Render
+	val window = Window.create(windowTitle, 1280, 720)
+
+	val entities = mutableListOf<Entity>()
+	val projection = Projection(
+		fov = 90f,
+		zNear = 0.001f,
+		zFar = 100f,
+		width = window.wide,
+		height = window.tall,
+	)
+
+	private val render = Render(this)
 
 	init
 	{
-		val window = Window.create(windowTitle, 1280, 720)
-		engineContext = EngineContext(window, Scene(window))
-		render = Render(engineContext)
-		val idat = gameLogic.init(engineContext)
-		render.init(idat)
+		render.init(gameLogic.init(this))
 	}
 
 	override fun close ()
 	{
 		gameLogic.close()
 		render.close()
-		engineContext.close()
-		engineContext.window.close()
+		window.close()
+//		engineContext.window.close()
 	}
 
 	fun run ()
@@ -60,7 +66,6 @@ class Engine (
 		var deltaUpdate = 0.0
 
 		var updateTime = initialTime
-		val window = engineContext.window
 		while (!window.shouldClose)
 		{
 			val now = System.currentTimeMillis()
@@ -68,7 +73,7 @@ class Engine (
 
 			GLFW.glfwPollEvents()
 			window.pollEvents()
-			gameLogic.input(engineContext, now - initialTime)
+			gameLogic.input(this, now - initialTime)
 			window.resetInput()
 
 			var ticks = minOf(deltaUpdate.toInt(), 10)
@@ -76,12 +81,12 @@ class Engine (
 			while (ticks >= 1)
 			{
 				val diffTimeMillis = now - updateTime
-				gameLogic.update(engineContext, diffTimeMillis)
+				gameLogic.update(this, diffTimeMillis)
 				updateTime = now
 				ticks--
 			}
 
-			render.render(engineContext)
+			render.render(this)
 
 			initialTime = now
 		}

@@ -9,7 +9,7 @@ class Main: GameLogic
 {
 	lateinit var thaCubeEntity: Entity
 
-	override fun init(context: EngineContext): InitData
+	override fun init(context: Engine): InitData
 	{
 		val modelId = "Cubezor"
 		val meshData = GPUMeshData(
@@ -51,7 +51,7 @@ class Main: GameLogic
 		val modelData = GPUModelData(modelId, listOf(meshData))
 
 		thaCubeEntity = Entity("Cubezor", modelId, 0f, 0f, -2f)
-		context.scene.entities.addAll(listOf(
+		context.entities.addAll(listOf(
 			thaCubeEntity,
 			Entity("another one lol", modelId, -0.5f, -0.5f, -3f),
 		))
@@ -60,11 +60,11 @@ class Main: GameLogic
 
 	}
 
-	override fun input(context: EngineContext, diffTimeMillis: Long)
+	override fun input(context: Engine, diffTimeMillis: Long)
 	{
 	}
 
-	override fun update(context: EngineContext, diffTimeMillis: Long)
+	override fun update(context: Engine, diffTimeMillis: Long)
 	{
 		val dt = diffTimeMillis / 1000.0
 		with (thaCubeEntity)

@@ -1,6 +1,6 @@
 package fpw.ren
 
-import fpw.EngineContext
+import fpw.Engine
 import fpw.FUtil
 import fpw.TestCube
 import fpw.ren.gpu.*
@@ -86,7 +86,7 @@ class SceneRender (vkCtx: GPUContext)
 	}
 
 	fun render (
-		engineContext: EngineContext,
+		engineContext: Engine,
 		vkCtx: GPUContext,
 		cmdBuffer: CommandBuffer,
 		modelsCache: ModelsCache,
@@ -154,8 +154,7 @@ class SceneRender (vkCtx: GPUContext)
 				val offsets = stack.mallocLong(1).put(0, 0L)
 				val vertexBuffer = stack.mallocLong(1)
 
-				val scene = engineContext.scene
-				val entities = scene.entities
+				val entities = engineContext.entities
 				val numEntities = entities.size
 				for (i in 0..<numEntities)
 				{
@@ -163,7 +162,7 @@ class SceneRender (vkCtx: GPUContext)
 					val model = modelsCache.modelMap[entity.modelId] ?: continue
 					val vulkanMeshList = model.vulkanMeshList
 					val numMeshes = vulkanMeshList.size
-					setPushConstants(cmdHandle, scene.projection.projectionMatrix, entity.modelMatrix)
+					setPushConstants(cmdHandle, engineContext.projection.projectionMatrix, entity.modelMatrix)
 					for (j in 0..<numMeshes)
 					{
 						val vulkanMesh = vulkanMeshList[j]

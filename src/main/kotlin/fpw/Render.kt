@@ -12,7 +12,7 @@ import org.lwjgl.vulkan.VkCommandBufferSubmitInfo
 import org.lwjgl.vulkan.VkSemaphoreSubmitInfo
 
 
-class Render (engineContext: EngineContext)
+class Render (engineContext: Engine)
 {
 	private val vkContext = GPUContext(engineContext.window)
 	private var currentFrame = 0
@@ -103,7 +103,7 @@ class Render (engineContext: EngineContext)
 		}
 	}
 
-	fun render (engineContext: EngineContext)
+	fun render (engineContext: Engine)
 	{
 		val swapChain = vkContext.swapChain
 
@@ -136,7 +136,7 @@ class Render (engineContext: EngineContext)
 		currentFrame = (currentFrame + 1) % EngineConfig.maxInFlightFrames
 	}
 
-	private fun resize (engCtx: EngineContext)
+	private fun resize (engCtx: Engine)
 	{
 		val window = engCtx.window
 		if (window.wide == 0 || window.tall == 0)
@@ -160,7 +160,7 @@ class Render (engineContext: EngineContext)
 		}
 
 		val extent = vkContext.swapChain.swapChainExtent
-		engCtx.scene.projection.resize(extent.width(), extent.height())
+		engCtx.projection.resize(extent.width(), extent.height())
 		scnRender.resize(vkContext)
 	}
 
