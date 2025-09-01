@@ -37,7 +37,6 @@ class Renderer (engineContext: Engine)
 	val pipelineCache = device.createPipelineCache()
 
 
-//	private val vkContext = GPUContext(engineContext.window)
 	private var currentFrame = 0
 
 	private val graphQueue = GraphicsQueue(this, 0)

@@ -3,7 +3,7 @@ package fpw
 
 object EngineConfig
 {
-	var updatesPerSecond = 30
+	var updatesPerSecond = 120
 		private set
 
 	var useVulkanValidationLayers = false

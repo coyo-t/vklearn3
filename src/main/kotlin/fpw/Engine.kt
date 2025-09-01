@@ -16,7 +16,13 @@ class Engine (val window: Window)
 
 	private val render = Renderer(this)
 
-	fun init ()
+	private fun addEntity (who: Entity, init:Entity.()->Unit)
+	{
+		init.invoke(who)
+		entities.add(who)
+	}
+
+	fun run ()
 	{
 		addEntity(Entity("tha cube", "Cubezor", 0f, 0f, -2f)) {
 			update = { milliTimeDiff ->
@@ -28,36 +34,10 @@ class Engine (val window: Window)
 				updateModelMatrix()
 			}
 		}
-
 		addEntity(Entity("another one lol", "Cubezor", -0.5f, -0.5f, -3f)) {
 
 		}
-
 		render.init()
-	}
-
-	private fun addEntity (who: Entity, init:Entity.()->Unit)
-	{
-		init.invoke(who)
-		entities.add(who)
-	}
-
-	fun update(diffTimeMillis: Long)
-	{
-		for (entity in entities)
-		{
-			entity.update?.invoke(entity, diffTimeMillis)
-		}
-	}
-
-	fun close ()
-	{
-		render.free()
-		window.free()
-	}
-
-	fun run ()
-	{
 		try
 		{
 			var initialTime = System.currentTimeMillis()
@@ -71,7 +51,6 @@ class Engine (val window: Window)
 
 				glfwPollEvents()
 				window.input.input()
-				//				gameLogic.input(this, now - initialTime)
 				window.input.resetInput()
 
 				var ticks = minOf(deltaUpdate.toInt(), 10)
@@ -79,7 +58,10 @@ class Engine (val window: Window)
 				while (ticks >= 1)
 				{
 					val diffTimeMillis = now - updateTime
-					update(diffTimeMillis)
+					for (entity in entities)
+					{
+						entity.update?.invoke(entity, diffTimeMillis)
+					}
 					updateTime = now
 					ticks--
 				}
@@ -89,15 +71,15 @@ class Engine (val window: Window)
 				initialTime = now
 			}
 		}
-		catch (sg: StopGame)
-		{
-			FUtil.logInfo("hard-stopping game")
-			when (val reason = sg.reason)
-			{
-				null -> FUtil.logInfo("no reason given")
-				else -> FUtil.logInfo("reason: \"$reason\"")
-			}
-		}
+//		catch (sg: StopGame)
+//		{
+//			FUtil.logInfo("hard-stopping game")
+//			when (val reason = sg.reason)
+//			{
+//				null -> FUtil.logInfo("no reason given")
+//				else -> FUtil.logInfo("reason: \"$reason\"")
+//			}
+//		}
 		catch (e: Exception)
 		{
 			FUtil.logError(e) { "EXCEPTION FUCK" }
@@ -106,6 +88,9 @@ class Engine (val window: Window)
 		{
 			FUtil.logError(t) { "SOMETHING THREW HARDER THAN ELI FUCK" }
 		}
+
+		render.free()
+		window.free()
 	}
 
 }

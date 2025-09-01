@@ -54,9 +54,7 @@ class CommandBuffer
 
 	inline fun recordSubmitAndWait (ctc: Renderer, queue: CommandQueue, cb: CommandBuffer.()->Unit)
 	{
-		beginRecording()
-		cb.invoke(this)
-		endRecording()
+		record(cb)
 		submitAndWait(ctc, queue)
 	}
 
@@ -100,7 +98,6 @@ class CommandBuffer
 
 	fun cleanup(vkCtx: Renderer, cmdPool: CommandPool)
 	{
-//		Main.logTrace("Destroying command buffer")
 		vkFreeCommandBuffers(
 			vkCtx.device.vkDevice, cmdPool.vkCommandPool,
 			vkCommandBuffer
@@ -109,8 +106,6 @@ class CommandBuffer
 
 	fun endRecording()
 	{
-//		check(isRecording) { "not recording!" }
-//		isRecording = false
 		gpuCheck(
 			vkEndCommandBuffer(vkCommandBuffer),
 			"end command buffer"

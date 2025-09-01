@@ -30,25 +30,26 @@ class Texture
 		height = srcImage.tall
 
 		stgBuffer = createStgBuffer(vkCtx, srcImage.data)
-		val imageData = GPUImage.Data(
-			wide=width,
-			tall=height,
-			usage=(
-				VK_IMAGE_USAGE_TRANSFER_SRC_BIT or
-				VK_IMAGE_USAGE_TRANSFER_DST_BIT or
-				VK_IMAGE_USAGE_SAMPLED_BIT
+		image = GPUImage(
+			vkCtx,
+			GPUImage.Data(
+				wide = width,
+				tall = height,
+				usage = (
+					VK_IMAGE_USAGE_TRANSFER_SRC_BIT or
+					VK_IMAGE_USAGE_TRANSFER_DST_BIT or
+					VK_IMAGE_USAGE_SAMPLED_BIT
+				),
+				format = imageFormat
 			),
-			format=imageFormat
-		)
-		image = GPUImage(vkCtx, imageData)
-		val imageViewData = ImageViewData(
-			format=image.format,
-			aspectMask=VK_IMAGE_ASPECT_COLOR_BIT,
 		)
 		imageView = ImageView(
 			vkCtx.device,
 			image.vkImage,
-			imageViewData,
+			ImageViewData(
+				format = image.format,
+				aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+			),
 			false,
 		)
 	}
