@@ -63,6 +63,7 @@ object ShaderAssetThinger
 			check(result.type() == Lua.LuaType.TABLE) {
 				"expecting a table, got ${result.type()}"
 			}
+
 			return Sources(
 				vertex = result["vertex"]!!.toString(),
 				fragment = result["fragment"]!!.toString(),

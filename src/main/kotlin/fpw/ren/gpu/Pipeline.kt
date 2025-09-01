@@ -69,10 +69,7 @@ class Pipeline (vkCtx: Renderer, buildInfo: Info)
 
 			val blendAttState = VkPipelineColorBlendAttachmentState.calloc(1, stack)
 				.colorWriteMask(
-					VK_COLOR_COMPONENT_R_BIT or
-					VK_COLOR_COMPONENT_G_BIT or
-					VK_COLOR_COMPONENT_B_BIT or
-					VK_COLOR_COMPONENT_A_BIT
+					GPUtil.CW_MASK_RGBA
 				)
 				.blendEnable(false)
 
