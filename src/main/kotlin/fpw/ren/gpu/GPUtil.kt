@@ -185,10 +185,4 @@ object GPUtil
 		throw RuntimeException("gpu check failed$msg: #$er - $errName")
 	}
 
-	inline fun renderScoped (cmd: VkCommandBuffer, info: VkRenderingInfo, cm:()->Unit)
-	{
-		vkCmdBeginRendering(cmd, info)
-		cm()
-		vkCmdEndRendering(cmd)
-	}
 }

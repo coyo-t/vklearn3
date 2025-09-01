@@ -245,62 +245,62 @@ class Renderer (engineContext: Engine)
 				),
 				VK_IMAGE_ASPECT_DEPTH_BIT,
 			)
-
-			GPUtil.renderScoped(cmdHandle, renderInfo[imageIndex]) {
-				val vp = engineContext.viewPoint?.apply {
-					updateModelMatrix()
-					viewpointMatrix.set(modelMatrix).invert()
-				}
-				vkCmdBindPipeline(cmdHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vkPipeline)
-				val swapChainExtent: VkExtent2D = swapChain.swapChainExtent
-				val width = swapChainExtent.width()
-				val height = swapChainExtent.height()
-				val viewport = VkViewport.calloc(1, stack)
-					.x(0f)
-					.y(height.toFloat())
-					.height(-height.toFloat())
-					.width(width.toFloat())
-					.minDepth(0.0f)
-					.maxDepth(1.0f)
-				vkCmdSetViewport(cmdHandle, 0, viewport)
-
-				val scissor = VkRect2D.calloc(1, stack)
-					.extent { it.width(width).height(height) }
-					.offset { it.x(0).y(0) }
-				vkCmdSetScissor(cmdHandle, 0, scissor)
-
-				val offsets = stack.mallocLong(1).put(0, 0L)
-				val vertexBuffer = stack.mallocLong(1)
-
-				val entities = engineContext.entities
-				val numEntities = entities.size
-				for (i in 0..<numEntities)
-				{
-					val entity = entities[i]
-					if (entity === vp)
-						continue
-					val entityModelId = entity.modelId ?: continue
-					val model = meshManager.modelMap[entityModelId] ?: continue
-					engineContext.lens.projectionMatrix.get(pushConstantsBuffer)
-					entity.updateModelMatrix()
-					viewpointMatrix.mul(entity.modelMatrix, mvMatrix)
-					mvMatrix.get(GPUtil.SIZEOF_MAT4, pushConstantsBuffer)
-					vkCmdPushConstants(
-						cmdHandle, pipeline.vkPipelineLayout,
-						VK_SHADER_STAGE_VERTEX_BIT, 0,
-						pushConstantsBuffer
-					)
-					vertexBuffer.put(0, model.verticesBuffer.bufferStruct)
-					vkCmdBindVertexBuffers(cmdHandle, 0, vertexBuffer, offsets!!)
-					vkCmdBindIndexBuffer(
-						cmdHandle,
-						model.indicesBuffer.bufferStruct,
-						0,
-						VK_INDEX_TYPE_UINT32
-					)
-					vkCmdDrawIndexed(cmdHandle, model.numIndices, 1, 0, 0, 0)
-				}
+			val renInf = renderInfo[imageIndex]
+			vkCmdBeginRendering(cmdHandle, renInf)
+			val vp = engineContext.viewPoint?.apply {
+				updateModelMatrix()
+				viewpointMatrix.set(modelMatrix).invert()
 			}
+			vkCmdBindPipeline(cmdHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vkPipeline)
+			val swapChainExtent: VkExtent2D = swapChain.swapChainExtent
+			val width = swapChainExtent.width()
+			val height = swapChainExtent.height()
+			val viewport = VkViewport.calloc(1, stack)
+				.x(0f)
+				.y(height.toFloat())
+				.height(-height.toFloat())
+				.width(width.toFloat())
+				.minDepth(0.0f)
+				.maxDepth(1.0f)
+			vkCmdSetViewport(cmdHandle, 0, viewport)
+
+			val scissor = VkRect2D.calloc(1, stack)
+				.extent { it.width(width).height(height) }
+				.offset { it.x(0).y(0) }
+			vkCmdSetScissor(cmdHandle, 0, scissor)
+
+			val offsets = stack.mallocLong(1).put(0, 0L)
+			val vertexBuffer = stack.mallocLong(1)
+
+			val entities = engineContext.entities
+			val numEntities = entities.size
+			for (i in 0..<numEntities)
+			{
+				val entity = entities[i]
+				if (entity === vp)
+					continue
+				val entityModelId = entity.modelId ?: continue
+				val model = meshManager.modelMap[entityModelId] ?: continue
+				engineContext.lens.projectionMatrix.get(pushConstantsBuffer)
+				entity.updateModelMatrix()
+				viewpointMatrix.mul(entity.modelMatrix, mvMatrix)
+				mvMatrix.get(GPUtil.SIZEOF_MAT4, pushConstantsBuffer)
+				vkCmdPushConstants(
+					cmdHandle, pipeline.vkPipelineLayout,
+					VK_SHADER_STAGE_VERTEX_BIT, 0,
+					pushConstantsBuffer
+				)
+				vertexBuffer.put(0, model.verticesBuffer.bufferStruct)
+				vkCmdBindVertexBuffers(cmdHandle, 0, vertexBuffer, offsets!!)
+				vkCmdBindIndexBuffer(
+					cmdHandle,
+					model.indicesBuffer.bufferStruct,
+					0,
+					VK_INDEX_TYPE_UINT32
+				)
+				vkCmdDrawIndexed(cmdHandle, model.numIndices, 1, 0, 0, 0)
+			}
+			vkCmdEndRendering(cmdHandle)
 			imageBarrier(
 				stack,
 				cmdHandle,
