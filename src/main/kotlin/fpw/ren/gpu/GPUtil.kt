@@ -14,7 +14,12 @@ import kotlin.io.path.Path
 
 object GPUtil
 {
-
+	const val CW_MASK_RGBA = (
+		VK_COLOR_COMPONENT_R_BIT or
+		VK_COLOR_COMPONENT_G_BIT or
+		VK_COLOR_COMPONENT_B_BIT or
+		VK_COLOR_COMPONENT_A_BIT
+	)
 	val SIZEOF_INT   = JAVA_INT.byteSize().toInt()
 	val SIZEOF_FLOAT = JAVA_FLOAT.byteSize().toInt()
 	val SIZEOF_MAT4 = SIZEOF_FLOAT*4*4

@@ -15,21 +15,23 @@ class Sampler
 	constructor (vkCtx: Renderer, textureSamplerInfo: Info)
 	{
 		MemoryStack.stackPush().use { stack ->
+			val filter = textureSamplerInfo.filter
+			val wrapping = textureSamplerInfo.wrapping
 			val samplerInfo = VkSamplerCreateInfo.calloc(stack)
 				.`sType$Default`()
-				.magFilter(textureSamplerInfo.filter.vkEnum)
-				.minFilter(textureSamplerInfo.filter.vkEnum)
-				.addressModeU(textureSamplerInfo.wrapping.vkEnum)
-				.addressModeV(textureSamplerInfo.wrapping.vkEnum)
-				.addressModeW(textureSamplerInfo.wrapping.vkEnum)
-				.borderColor(textureSamplerInfo.borderColor)
+				.magFilter(filter.vkEnum)
+				.minFilter(filter.vkEnum)
+				.addressModeU(wrapping.vkEnum)
+				.addressModeV(wrapping.vkEnum)
+				.addressModeW(wrapping.vkEnum)
+				.borderColor(0)
 				.unnormalizedCoordinates(false)
 				.compareEnable(false)
 				.compareOp(VK_COMPARE_OP_NEVER)
 				.mipmapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST)
-				.minLod(0.0f)
-				.maxLod(textureSamplerInfo.mipLevels.toFloat())
-				.mipLodBias(0.0f)
+				.minLod(0f)
+				.maxLod(0f)
+				.mipLodBias(0f)
 //			if (textureSamplerInfo.anisotropy && vkCtx.device.samplerAnisotropy)
 //			{
 //				val MAX_ANISOTROPY = 16
@@ -52,9 +54,6 @@ class Sampler
 	data class Info(
 		val wrapping: SamplerWrapping,
 		val filter: SamplerFilter,
-		val borderColor: Int,
-		val mipLevels: Int,
-		val anisotropicFiltering: Boolean
 	)
 }
 

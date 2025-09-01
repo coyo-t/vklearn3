@@ -5,6 +5,9 @@ import org.lwjgl.glfw.GLFW.glfwPollEvents
 
 class Engine (val window: Window)
 {
+	val testTexture = ResourceLocation.withDefaultNameSpace("image/cros.png")
+	val testShader = ResourceLocation.withDefaultNameSpace("shader/scene.lua")
+
 	val entities = mutableListOf<Entity>()
 	val projection = Projection(
 		fov = 90f,

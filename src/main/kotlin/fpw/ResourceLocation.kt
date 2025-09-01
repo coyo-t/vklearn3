@@ -28,7 +28,7 @@ private constructor (
 
 	companion object
 	{
-		const val DEFAULT_NAMESPACE = "fpw"
+		var DEFAULT_NAMESPACE = "fpw"
 
 		@JvmStatic
 		fun fromParts (ns:String, p:String): ResourceLocation
