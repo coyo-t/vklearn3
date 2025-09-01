@@ -1,11 +1,9 @@
 package fpw
 
+import org.joml.Math.toRadians
 import org.lwjgl.glfw.GLFW.glfwPollEvents
 
-class Engine (
-	val window: Window,
-	private val gameLogic: GameLogic,
-)
+class Engine (val window: Window)
 {
 	val entities = mutableListOf<Entity>()
 	val projection = Projection(
@@ -18,16 +16,44 @@ class Engine (
 
 	private val render = GameRenderer(this)
 
-	init
+	fun init ()
 	{
-		render.init(gameLogic.init(this))
+		addEntity(Entity("tha cube", "Cubezor", 0f, 0f, -2f)) {
+			update = { milliTimeDiff ->
+				val dt = milliTimeDiff / 1000.0
+				val fdt = dt.toFloat()
+				rotation
+				.rotateX(toRadians(fdt * 45f))
+				.rotateY(toRadians(fdt * 60f))
+				updateModelMatrix()
+			}
+		}
+
+		addEntity(Entity("another one lol", "Cubezor", -0.5f, -0.5f, -3f)) {
+
+		}
+
+		render.init()
+	}
+
+	private fun addEntity (who: Entity, init:Entity.()->Unit)
+	{
+		init.invoke(who)
+		entities.add(who)
+	}
+
+	fun update(diffTimeMillis: Long)
+	{
+		for (entity in entities)
+		{
+			entity.update?.invoke(entity, diffTimeMillis)
+		}
 	}
 
 	fun close ()
 	{
-		gameLogic.close()
-		render.close()
-		window.close()
+		render.free()
+		window.free()
 	}
 
 	fun run ()
@@ -44,16 +70,16 @@ class Engine (
 				deltaUpdate += ((now - initialTime) / timeU).toDouble()
 
 				glfwPollEvents()
-				window.pollEvents()
-				gameLogic.input(this, now - initialTime)
-				window.resetInput()
+				window.input.input()
+				//				gameLogic.input(this, now - initialTime)
+				window.input.resetInput()
 
 				var ticks = minOf(deltaUpdate.toInt(), 10)
 
 				while (ticks >= 1)
 				{
 					val diffTimeMillis = now - updateTime
-					gameLogic.update(this, diffTimeMillis)
+					update(diffTimeMillis)
 					updateTime = now
 					ticks--
 				}
@@ -65,20 +91,20 @@ class Engine (
 		}
 		catch (sg: StopGame)
 		{
-			Main.logInfo("hard-stopping game")
+			FUtil.logInfo("hard-stopping game")
 			when (val reason = sg.reason)
 			{
-				null -> Main.logInfo("no reason given")
-				else -> Main.logInfo("reason: \"$reason\"")
+				null -> FUtil.logInfo("no reason given")
+				else -> FUtil.logInfo("reason: \"$reason\"")
 			}
 		}
 		catch (e: Exception)
 		{
-			Main.logError(e) { "EXCEPTION FUCK" }
+			FUtil.logError(e) { "EXCEPTION FUCK" }
 		}
 		catch (t: Throwable)
 		{
-			Main.logError(t) { "SOMETHING THREW HARDER THAN ELI FUCK" }
+			FUtil.logError(t) { "SOMETHING THREW HARDER THAN ELI FUCK" }
 		}
 	}
 

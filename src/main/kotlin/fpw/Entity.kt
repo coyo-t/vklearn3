@@ -14,19 +14,14 @@ class Entity
 	val rotation = Quaternionf()
 	var scale = 1f
 
+	var update: (Entity.(dt:Long)->Unit)? = null
+
 	constructor (id: String, modelId: String, x:Float, y:Float, z:Float)
 	{
 		this.id = id
 		this.modelId = modelId
 		this.position.set(x,y,z)
 		updateModelMatrix()
-	}
-	fun resetRotation()
-	{
-		rotation.x = 0f
-		rotation.y = 0f
-		rotation.z = 0f
-		rotation.w = 1f
 	}
 
 	fun updateModelMatrix()

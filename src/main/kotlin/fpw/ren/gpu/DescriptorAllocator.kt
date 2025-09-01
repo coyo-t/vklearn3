@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-import fpw.Main
+import fpw.FUtil
 import org.lwjgl.vulkan.VK10.*
 
 
@@ -101,12 +101,12 @@ class DescriptorAllocator
 		val descSetInfo = descSetInfoMap[id]
 		if (descSetInfo == null)
 		{
-			Main.logInfo("Could not find descriptor set with id [{}]", id)
+			FUtil.logInfo("Could not find descriptor set with id [{}]", id)
 			return
 		}
 		if (descSetInfo.poolPos >= descPoolList.size)
 		{
-			Main.logInfo("Could not find descriptor pool associated to set with id [{}]", id)
+			FUtil.logInfo("Could not find descriptor pool associated to set with id [{}]", id)
 			return
 		}
 		val descPoolInfo = descPoolList[descSetInfo.poolPos]

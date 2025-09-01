@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-import fpw.Main
+import fpw.FUtil
 import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFWVulkan
@@ -40,7 +40,7 @@ class GPUInstance (validate: Boolean)
 			if (validate && numValidationLayers == 0)
 			{
 				supportsValidation = false
-				Main.logWarn("requested validation but no supported validation layers found :[")
+				FUtil.logWarn("requested validation but no supported validation layers found :[")
 			}
 //			Main.logDebug("gpu validation: $supportsValidation")
 
@@ -135,19 +135,19 @@ class GPUInstance (validate: Boolean)
 				val callbackData = VkDebugUtilsMessengerCallbackDataEXT.create(pCallbackData)
 				if ((messageSeverity and VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) != 0)
 				{
-					Main.logInfo(DBG_CALL_BACK_PREF, callbackData.pMessageString())
+					FUtil.logInfo(DBG_CALL_BACK_PREF, callbackData.pMessageString())
 				}
 				else if ((messageSeverity and VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) != 0)
 				{
-					Main.logWarn(DBG_CALL_BACK_PREF, callbackData.pMessageString())
+					FUtil.logWarn(DBG_CALL_BACK_PREF, callbackData.pMessageString())
 				}
 				else if ((messageSeverity and VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) != 0)
 				{
-					Main.logError(DBG_CALL_BACK_PREF, callbackData.pMessageString())
+					FUtil.logError(DBG_CALL_BACK_PREF, callbackData.pMessageString())
 				}
 				else
 				{
-					Main.logDebug(DBG_CALL_BACK_PREF, callbackData.pMessageString())
+					FUtil.logDebug(DBG_CALL_BACK_PREF, callbackData.pMessageString())
 				}
 				VK_FALSE
 			}

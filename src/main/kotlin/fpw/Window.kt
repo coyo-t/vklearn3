@@ -10,7 +10,7 @@ class Window private constructor(
 	val handle: Long,
 	wide:Int,
 	tall:Int,
-): AutoCloseable, DimensionsProvider
+): DimensionsProvider
 {
 	override var wide = wide
 		private set
@@ -61,21 +61,11 @@ class Window private constructor(
 		}
 	}
 
-	override fun close ()
+	fun free ()
 	{
 		glfwFreeCallbacks(handle)
 		glfwDestroyWindow(handle)
 		glfwTerminate()
-	}
-
-	fun pollEvents()
-	{
-		input.input()
-	}
-
-	fun resetInput()
-	{
-		input.resetInput()
 	}
 
 	var shouldClose: Boolean

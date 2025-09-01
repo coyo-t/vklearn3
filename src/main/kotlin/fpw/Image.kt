@@ -38,7 +38,7 @@ class Image private constructor (
 				)
 				if (tryRead == null)
 				{
-					Main.logError("couldnt load image @$finp: ${stbi_failure_reason()}")
+					FUtil.logError("couldnt load image @$finp: ${stbi_failure_reason()}")
 					return null
 				}
 				val wide = wp[0]

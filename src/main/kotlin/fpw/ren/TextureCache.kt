@@ -1,7 +1,7 @@
 package fpw.ren
 
+import fpw.FUtil
 import fpw.Image
-import fpw.Main
 import fpw.ren.gpu.CommandBuffer
 import fpw.ren.gpu.CommandPool
 import fpw.ren.gpu.GPUContext
@@ -31,7 +31,7 @@ class TextureCache
 		}
 		catch (e: Exception)
 		{
-			Main.logError(e) {"Could not load texture [$texturePath]" }
+			FUtil.logError(e) {"Could not load texture [$texturePath]" }
 			return null
 		}
 	}

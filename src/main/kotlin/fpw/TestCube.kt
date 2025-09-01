@@ -5,7 +5,6 @@ import java.nio.ByteBuffer
 
 object TestCube
 {
-
 	val format = buildVertexFormat {
 		location3D()
 		texcoord2D()

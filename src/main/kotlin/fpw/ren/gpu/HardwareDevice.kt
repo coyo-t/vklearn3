@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-import fpw.Main
+import fpw.FUtil
 import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
@@ -96,7 +96,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 		if (!result)
 		{
 			val uh = copyExtensions.iterator().next()
-			Main.logDebug("At least [$uh] extension is not supported by device [deviceName]")
+			FUtil.logDebug("At least [$uh] extension is not supported by device [deviceName]")
 		}
 		return result
 	}
@@ -147,14 +147,14 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 						val deviceName = physDevice.deviceName
 						if (!physDevice.hasGraphicsQueueFamily())
 						{
-							Main.logDebug("device [$deviceName] does not support graphics queue family")
+							FUtil.logDebug("device [$deviceName] does not support graphics queue family")
 							physDevice.free()
 							continue
 						}
 
 						if (!physDevice.supportsExtensions(REQUIRED_EXTENSIONS))
 						{
-							Main.logDebug("device [$deviceName] does not support required extensions")
+							FUtil.logDebug("device [$deviceName] does not support required extensions")
 							physDevice.free()
 							continue
 						}
