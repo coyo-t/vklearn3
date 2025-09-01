@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK14.*
 import org.lwjgl.vulkan.VkImageCreateInfo
@@ -39,7 +39,7 @@ class GPUImage
 				.usage(imageData.usage)
 			val device = vkCtx.device
 			val lp = stack.mallocLong(1)
-			vkCheck(
+			gpuCheck(
 				vkCreateImage(device.vkDevice, ici, null, lp),
 				"gpu image creation",
 			)
@@ -58,14 +58,14 @@ class GPUImage
 					)
 				)
 			// Allocate memory
-			vkCheck(
+			gpuCheck(
 				vkAllocateMemory(device.vkDevice, memAlloc, null, lp),
 				"image memory allocate"
 			)
 			vkMemory = lp.get(0)
 
 			// Bind memory
-			vkCheck(
+			gpuCheck(
 				vkBindImageMemory(device.vkDevice, vkImage, vkMemory, 0),
 				"image memory bind"
 			)

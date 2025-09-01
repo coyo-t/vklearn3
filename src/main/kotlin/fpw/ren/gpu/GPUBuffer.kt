@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
@@ -43,7 +43,7 @@ class GPUBuffer
 				.usage(usage)
 				.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
 			val lp = stack.mallocLong(1)
-			vkCheck(vkCreateBuffer(device.vkDevice, bufferCreateInfo, null, lp), "Failed to create buffer")
+			gpuCheck(vkCreateBuffer(device.vkDevice, bufferCreateInfo, null, lp), "Failed to create buffer")
 			bufferStruct = lp.get(0)
 
 			val memReqs = VkMemoryRequirements.calloc(stack)
@@ -54,11 +54,11 @@ class GPUBuffer
 				.allocationSize(memReqs.size())
 				.memoryTypeIndex(GPUtil.memoryTypeFromProperties(vkCtx, memReqs.memoryTypeBits(), reqMask))
 
-			vkCheck(vkAllocateMemory(device.vkDevice, memAlloc, null, lp), "Failed to allocate memory")
+			gpuCheck(vkAllocateMemory(device.vkDevice, memAlloc, null, lp), "Failed to allocate memory")
 			allocationSize = memAlloc.allocationSize()
 			bufferData = lp.get(0)
 			pb = MemoryUtil.memAllocPointer(1)
-			vkCheck(vkBindBufferMemory(device.vkDevice, bufferStruct, bufferData, 0), "Failed to bind buffer memory")
+			gpuCheck(vkBindBufferMemory(device.vkDevice, bufferStruct, bufferData, 0), "Failed to bind buffer memory")
 		}
 	}
 
@@ -74,7 +74,7 @@ class GPUBuffer
 	{
 		if (mappedMemory == NULL)
 		{
-			vkCheck(vkMapMemory(vkCtx.vkDevice, bufferData, 0, allocationSize, 0, pb), "Failed to map Buffer")
+			gpuCheck(vkMapMemory(vkCtx.vkDevice, bufferData, 0, allocationSize, 0, pb), "Failed to map Buffer")
 			mappedMemory = pb.get(0)
 		}
 		return mappedMemory

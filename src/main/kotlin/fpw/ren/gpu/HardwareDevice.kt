@@ -1,7 +1,7 @@
 package fpw.ren.gpu
 
 import fpw.Main
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
@@ -29,12 +29,12 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 			vkGetPhysicalDeviceProperties2(vkPhysicalDevice, vkPhysicalDeviceProperties)
 
 			// Get device extensions
-			vkCheck(
+			gpuCheck(
 				vkEnumerateDeviceExtensionProperties(vkPhysicalDevice, null as String?, intBuffer, null),
 				"Failed to get number of device extension properties"
 			)
 			vkDeviceExtensions = VkExtensionProperties.calloc(intBuffer.get(0))
-			vkCheck(
+			gpuCheck(
 				vkEnumerateDeviceExtensionProperties(vkPhysicalDevice, null as String?, intBuffer, vkDeviceExtensions),
 				"Failed to get extension properties"
 			)
@@ -112,7 +112,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 			val pPhysicalDevices: PointerBuffer
 			// Get number of physical devices
 			val intBuffer = stack.mallocInt(1)
-			vkCheck(
+			gpuCheck(
 				vkEnumeratePhysicalDevices(instance.vkInstance, intBuffer, null),
 				"Failed to get number of physical devices"
 			)
@@ -121,7 +121,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 
 			// Populate physical devices list pointer
 			pPhysicalDevices = stack.mallocPointer(numDevices)
-			vkCheck(
+			gpuCheck(
 				vkEnumeratePhysicalDevices(instance.vkInstance, intBuffer, pPhysicalDevices),
 				"Failed to get physical devices"
 			)

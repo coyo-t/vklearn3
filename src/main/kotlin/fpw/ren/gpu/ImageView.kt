@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkImageViewCreateInfo
@@ -33,7 +33,7 @@ class ImageView (
 					.layerCount(imageViewData.layerCount)
 			}
 
-		vkCheck(
+		gpuCheck(
 			vkCreateImageView(device.vkDevice, viewCreateInfo, null, lp),
 			"image view creation"
 		)

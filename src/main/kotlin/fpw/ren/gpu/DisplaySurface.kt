@@ -1,7 +1,7 @@
 package fpw.ren.gpu
 
 import fpw.Window
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.KHRSurface
@@ -28,7 +28,7 @@ class DisplaySurface
 			vkSurface = pSurface.get(0)
 
 			surfaceCaps = VkSurfaceCapabilitiesKHR.calloc()
-			vkCheck(
+			gpuCheck(
 				KHRSurface.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
 					physDevice.vkPhysicalDevice,
 					vkSurface, surfaceCaps
@@ -36,7 +36,7 @@ class DisplaySurface
 			)
 			surfaceFormat = run {
 				val ip = stack.mallocInt(1)
-				vkCheck(
+				gpuCheck(
 					vkGetPhysicalDeviceSurfaceFormatsKHR(
 						physDevice.vkPhysicalDevice,
 						vkSurface, ip, null
@@ -48,7 +48,7 @@ class DisplaySurface
 				}
 
 				val surfaceFormats = VkSurfaceFormatKHR.calloc(numFormats, stack)
-				vkCheck(
+				gpuCheck(
 					vkGetPhysicalDeviceSurfaceFormatsKHR(
 						physDevice.vkPhysicalDevice,
 						vkSurface, ip, surfaceFormats

@@ -1,7 +1,7 @@
 package fpw.ren.gpu
 
 import fpw.Main
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryStack
@@ -108,14 +108,14 @@ class GPUInstance (validate: Boolean)
 			}
 
 			val pInstance = stack.mallocPointer(1)
-			vkCheck(vkCreateInstance(instanceInfo, null, pInstance), "Error creating instance")
+			gpuCheck(vkCreateInstance(instanceInfo, null, pInstance), "Error creating instance")
 			vkInstance = VkInstance(pInstance[0], instanceInfo)
 
 			vkDebugHandle = VK_NULL_HANDLE
 			if (supportsValidation)
 			{
 				val longBuff = stack.mallocLong(1)
-				vkCheck(
+				gpuCheck(
 					vkCreateDebugUtilsMessengerEXT(vkInstance, debugUtils!!, null, longBuff),
 					"Error creating debug utils"
 				)

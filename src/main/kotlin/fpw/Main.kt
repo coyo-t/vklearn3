@@ -87,15 +87,22 @@ class Main: GameLogic
 		@JvmStatic
 		fun main (vararg args: String)
 		{
+			var engine: Engine? = null
 			try
 			{
-				Engine("MACHINE WITNESS", Main()).use {
-					it.run()
-				}
+				engine = Engine(
+					window=Window.create("MACHINE WITNESS", 1280, 720),
+					gameLogic=Main(),
+				)
+				engine.run()
 			}
 			catch (t: Throwable)
 			{
 				logError(t) { "KERSPLOSION??? :[" }
+			}
+			finally
+			{
+				engine?.close()
 			}
 		}
 
@@ -109,20 +116,15 @@ class Main: GameLogic
 			println("${ANSI_YELLOW}v_v $f${ANSI_RESET}".format(*args))
 		}
 
-		fun logError (f:String, vararg args:Any?)
-		{
-			println("${ANSI_RED}x_x $f${ANSI_RESET}".format(*args))
-		}
-
 		fun logDebug (f:String, vararg args:Any?)
 		{
 			println("${ANSI_BLUE}._.${ANSI_RESET} $f".format(*args))
 		}
 
-//		fun logTrace (f:String, vararg n: Any?)
-//		{
-//			println("${ANSI_PURPLE}-.-${ANSI_RESET} $f".format(*n))
-//		}
+		fun logError (f:String, vararg args:Any?)
+		{
+			println("${ANSI_RED}x_x $f${ANSI_RESET}".format(*args))
+		}
 
 		fun logError (t: Throwable, k:()->String)
 		{

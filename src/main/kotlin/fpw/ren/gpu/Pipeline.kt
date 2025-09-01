@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.VK_CULL_MODE_NONE
@@ -127,7 +127,7 @@ class Pipeline (vkCtx: GPUContext, buildInfo: PipelineBuildInfo)
 				.`sType$Default`()
 				.pPushConstantRanges(vpcr)
 
-			vkCheck(
+			gpuCheck(
 				vkCreatePipelineLayout(device.vkDevice, pPipelineLayoutCreateInfo, null, lp),
 				"Failed to create pipeline layout"
 			)
@@ -151,7 +151,7 @@ class Pipeline (vkCtx: GPUContext, buildInfo: PipelineBuildInfo)
 				createInfo.pDepthStencilState(ds)
 			}
 
-			vkCheck(
+			gpuCheck(
 				vkCreateGraphicsPipelines(
 					device.vkDevice,
 					vkCtx.pipelineCache.vkPipelineCache,

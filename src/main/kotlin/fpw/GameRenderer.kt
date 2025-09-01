@@ -12,7 +12,7 @@ import org.lwjgl.vulkan.VkCommandBufferSubmitInfo
 import org.lwjgl.vulkan.VkSemaphoreSubmitInfo
 
 
-class Render (engineContext: Engine)
+class GameRenderer (engineContext: Engine)
 {
 	private val vkContext = GPUContext(engineContext.window)
 	private var currentFrame = 0

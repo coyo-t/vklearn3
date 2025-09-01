@@ -1,12 +1,10 @@
 package fpw.ren.gpu
 
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
+import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkCommandPoolCreateInfo
-import org.lwjgl.vulkan.VkFenceCreateInfo
-import org.lwjgl.vulkan.VkPipelineCacheCreateInfo
-import org.lwjgl.vulkan.VkSemaphoreCreateInfo
+import java.nio.ByteBuffer
 
 
 fun GPUContext.createFence (signaled: Boolean): GPUFence
@@ -16,7 +14,7 @@ fun GPUContext.createFence (signaled: Boolean): GPUFence
 			.`sType$Default`()
 			.flags(if (signaled) VK_FENCE_CREATE_SIGNALED_BIT else 0)
 		val lp = stack.mallocLong(1)
-		vkCheck(vkCreateFence(vkDevice, fenceCreateInfo, null, lp), "Failed to create fence")
+		gpuCheck(vkCreateFence(vkDevice, fenceCreateInfo, null, lp), "Failed to create fence")
 		return GPUFence(lp[0])
 	}
 }
@@ -26,7 +24,7 @@ fun GPUContext.createSemaphor(): Semaphore
 	MemoryStack.stackPush().use { stack ->
 		val semaphoreCreateInfo = VkSemaphoreCreateInfo.calloc(stack).`sType$Default`()
 		val lp = stack.mallocLong(1)
-		vkCheck(
+		gpuCheck(
 			vkCreateSemaphore(vkDevice, semaphoreCreateInfo, null, lp),
 			"Failed to create semaphore"
 		)
@@ -50,7 +48,7 @@ fun GPUContext.createCommandPool (
 		}
 
 		val lp = stack.mallocLong(1)
-		vkCheck(
+		gpuCheck(
 			vkCreateCommandPool(device.vkDevice, cmdPoolInfo, null, lp),
 			"Failed to create command pool"
 		)
@@ -63,11 +61,40 @@ fun LogicalDevice.createPipelineCache(): PipelineCache
 	val outs = MemoryStack.stackPush().use { stack ->
 		val createInfo = VkPipelineCacheCreateInfo.calloc(stack).`sType$Default`()
 		val lp = stack.mallocLong(1)
-		vkCheck(
+		gpuCheck(
 			vkCreatePipelineCache(vkDevice, createInfo, null, lp),
 			"Error creating pipeline cache"
 		)
 		lp.get(0)
 	}
 	return PipelineCache(outs)
+}
+
+fun GPUContext.createShaderModule (shaderStage: Int, spirv: ByteBuffer): ShaderModule
+{
+	check(spirv.isDirect) {
+		"requires direct buffer"
+	}
+	return ShaderModule(
+		handle = this._createShaderModule(spirv),
+		shaderStage = shaderStage,
+	)
+}
+
+private fun GPUContext._createShaderModule(spirv: ByteBuffer): Long
+{
+	MemoryStack.stackPush().use { stack ->
+//				val pCode = stack.malloc(code.size).put(0, code)
+		val pCode = spirv
+		val moduleCreateInfo = VkShaderModuleCreateInfo.calloc(stack)
+			.`sType$Default`()
+			.pCode(pCode)
+
+		val lp = stack.mallocLong(1)
+		gpuCheck(
+			vkCreateShaderModule(vkDevice, moduleCreateInfo, null, lp),
+			"Failed to create shader module"
+		)
+		return lp.get(0)
+	}
 }

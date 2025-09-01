@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.vkCreateDescriptorSetLayout
 import org.lwjgl.vulkan.VK10.vkDestroyDescriptorSetLayout
@@ -35,7 +35,7 @@ class DescriptorSetLayout
 			.pBindings(layoutBindings)
 
 			val pSetLayout = stack.mallocLong(1)
-			vkCheck(
+			gpuCheck(
 				vkCreateDescriptorSetLayout(vkCtx.vkDevice, vkLayoutInfo, null, pSetLayout),
 				"Failed to create descriptor set layout"
 			)

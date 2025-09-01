@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkSamplerCreateInfo
@@ -38,7 +38,7 @@ class Sampler
 //			}
 
 			val lp = stack.mallocLong(1)
-			vkCheck(vkCreateSampler(vkCtx.vkDevice, samplerInfo, null, lp), "Failed to create sampler")
+			gpuCheck(vkCreateSampler(vkCtx.vkDevice, samplerInfo, null, lp), "Failed to create sampler")
 			vkSampler = lp.get(0)
 		}
 	}

@@ -2,18 +2,15 @@ package fpw.ren
 
 import fpw.Engine
 import fpw.FUtil
-import fpw.TestCube
 import fpw.ren.gpu.*
 import fpw.ren.gpu.GPUtil.imageBarrier
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.util.shaderc.Shaderc
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
 import org.lwjgl.vulkan.VK10.vkCmdPushConstants
 import org.lwjgl.vulkan.VK13.*
-import kotlin.io.path.Path
 
 
 class SceneRender (vkCtx: GPUContext)
@@ -24,13 +21,13 @@ class SceneRender (vkCtx: GPUContext)
 	private val clrValueDepth = VkClearValue.calloc().color {
 		it.float32(0, 1f)
 	}
-	var attDepth = createDepthAttachments(vkCtx)
+	var attDepth = GPUtil.createDepthAttachments(vkCtx)
 	var attInfoColor = createColorAttachmentsInfo(vkCtx, clrValueColor)
-	var attInfoDepth = createDepthAttachmentsInfo(vkCtx, attDepth, clrValueDepth)
+	var attInfoDepth = GPUtil.createDepthAttachmentsInfo(vkCtx, attDepth, clrValueDepth)
 	private var renderInfo = createRenderInfo(vkCtx, attInfoColor, attInfoDepth)
 	private val pipeline = run {
-		val shaderModules = createShaderModules(vkCtx)
-		createPipeline(vkCtx, shaderModules).also { shaderModules.forEach { it.close(vkCtx) } }
+		val shaderModules = GPUtil.createShaderModules(vkCtx)
+		GPUtil.createPipeline(vkCtx, shaderModules).also { shaderModules.forEach { it.free(vkCtx) } }
 	}
 	private val pushConstantsBuffer = FUtil.createBuffer(128)
 
@@ -204,72 +201,9 @@ class SceneRender (vkCtx: GPUContext)
 		attInfoColor.forEach { it.free() }
 		attDepth.forEach { it.close(vkCtx) }
 
-		attDepth = createDepthAttachments(vkCtx)
+		attDepth = GPUtil.createDepthAttachments(vkCtx)
 		attInfoColor = createColorAttachmentsInfo(vkCtx, clrValueColor)
-		attInfoDepth = createDepthAttachmentsInfo(vkCtx, attDepth, clrValueDepth)
+		attInfoDepth = GPUtil.createDepthAttachmentsInfo(vkCtx, attDepth, clrValueDepth)
 		renderInfo = createRenderInfo(vkCtx, attInfoColor, attInfoDepth)
 	}
-
-	companion object
-	{
-		private fun createDepthAttachments(vkCtx: GPUContext): List<Attachment>
-		{
-			val swapChain = vkCtx.swapChain
-			val numImages: Int = swapChain.numImages
-			val swapChainExtent: VkExtent2D = swapChain.swapChainExtent
-			return List(numImages) {
-				Attachment(
-					vkCtx,
-					swapChainExtent.width(),
-					swapChainExtent.height(),
-					VK_FORMAT_D16_UNORM,
-					VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-				)
-			}
-		}
-		private fun createDepthAttachmentsInfo(
-			vkCtx: GPUContext,
-			depthAttachments: List<Attachment>,
-			clearValue: VkClearValue
-		): List<VkRenderingAttachmentInfo>
-		{
-			val swapChain = vkCtx.swapChain
-			val numImages = swapChain.numImages
-			return List(numImages) {
-				VkRenderingAttachmentInfo.calloc()
-					.`sType$Default`()
-					.imageView(depthAttachments[it].imageView.vkImageView)
-					.imageLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-					.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
-					.storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)
-					.clearValue(clearValue)
-			}
-		}
-
-		private fun createPipeline (vkCtx: GPUContext, shaderModules: List<ShaderModule>): Pipeline
-		{
-			val buildInfo = PipelineBuildInfo(
-					shaderModules = shaderModules,
-					vi = TestCube.format.vi,
-					colorFormat = vkCtx.displaySurface.surfaceFormat.imageFormat,
-					depthFormat = VK_FORMAT_D16_UNORM,
-					pushConstRange = listOf(
-						PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, 0, 128)
-					)
-				)
-			return Pipeline(vkCtx, buildInfo)
-		}
-
-		private fun createShaderModules(vkCtx: GPUContext): List<ShaderModule>
-		{
-			val srcs = ShaderAssetThinger.loadFromLuaScript(Path("resources/assets/shader/scene.lua"))
-			val v = ShaderAssetThinger.compileSPIRV(srcs.vertex, Shaderc.shaderc_glsl_vertex_shader)
-			val f = ShaderAssetThinger.compileSPIRV(srcs.fragment, Shaderc.shaderc_glsl_fragment_shader)
-			return listOf(
-				ShaderModule.create(vkCtx, VK_SHADER_STAGE_VERTEX_BIT, v),
-				ShaderModule.create(vkCtx, VK_SHADER_STAGE_FRAGMENT_BIT, f),
-			)
-		}
-	}
-
 }

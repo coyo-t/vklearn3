@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import fpw.ren.gpu.queuez.GPUCommandQueue
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
@@ -34,7 +34,7 @@ class CommandBuffer
 				.level(if (primary) VK_COMMAND_BUFFER_LEVEL_PRIMARY else VK_COMMAND_BUFFER_LEVEL_SECONDARY)
 				.commandBufferCount(1)
 			val pb = stack.mallocPointer(1)
-			vkCheck(
+			gpuCheck(
 				vkAllocateCommandBuffers(vkDevice, cmdBufAllocateInfo, pb),
 				"allocate render command buffer"
 			)
@@ -90,7 +90,7 @@ class CommandBuffer
 					.pNext(renderingInfo)
 				cmdBufInfo.pInheritanceInfo(vkInheritanceInfo)
 			}
-			vkCheck(
+			gpuCheck(
 				vkBeginCommandBuffer(vkCommandBuffer, cmdBufInfo),
 				"begin command buffer",
 			)
@@ -110,7 +110,7 @@ class CommandBuffer
 	{
 //		check(isRecording) { "not recording!" }
 //		isRecording = false
-		vkCheck(
+		gpuCheck(
 			vkEndCommandBuffer(vkCommandBuffer),
 			"end command buffer"
 		)

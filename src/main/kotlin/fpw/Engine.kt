@@ -1,14 +1,12 @@
 package fpw
 
-import org.lwjgl.glfw.GLFW
+import org.lwjgl.glfw.GLFW.glfwPollEvents
 
 class Engine (
-	windowTitle: String,
+	val window: Window,
 	private val gameLogic: GameLogic,
-): AutoCloseable
+)
 {
-	val window = Window.create(windowTitle, 1280, 720)
-
 	val entities = mutableListOf<Entity>()
 	val projection = Projection(
 		fov = 90f,
@@ -18,26 +16,52 @@ class Engine (
 		height = window.tall,
 	)
 
-	private val render = Render(this)
+	private val render = GameRenderer(this)
 
 	init
 	{
 		render.init(gameLogic.init(this))
 	}
 
-	override fun close ()
+	fun close ()
 	{
 		gameLogic.close()
 		render.close()
 		window.close()
-//		engineContext.window.close()
 	}
 
 	fun run ()
 	{
 		try
 		{
-			spinning()
+			var initialTime = System.currentTimeMillis()
+			val timeU = 1000.0f / EngineConfig.updatesPerSecond
+			var deltaUpdate = 0.0
+			var updateTime = initialTime
+			while (!window.shouldClose)
+			{
+				val now = System.currentTimeMillis()
+				deltaUpdate += ((now - initialTime) / timeU).toDouble()
+
+				glfwPollEvents()
+				window.pollEvents()
+				gameLogic.input(this, now - initialTime)
+				window.resetInput()
+
+				var ticks = minOf(deltaUpdate.toInt(), 10)
+
+				while (ticks >= 1)
+				{
+					val diffTimeMillis = now - updateTime
+					gameLogic.update(this, diffTimeMillis)
+					updateTime = now
+					ticks--
+				}
+
+				render.render(this)
+
+				initialTime = now
+			}
 		}
 		catch (sg: StopGame)
 		{
@@ -56,39 +80,6 @@ class Engine (
 		{
 			Main.logError(t) { "SOMETHING THREW HARDER THAN ELI FUCK" }
 		}
-//		cleanup()
 	}
 
-	private fun spinning()
-	{
-		var initialTime = System.currentTimeMillis()
-		val timeU = 1000.0f / EngineConfig.updatesPerSecond
-		var deltaUpdate = 0.0
-
-		var updateTime = initialTime
-		while (!window.shouldClose)
-		{
-			val now = System.currentTimeMillis()
-			deltaUpdate += ((now - initialTime) / timeU).toDouble()
-
-			GLFW.glfwPollEvents()
-			window.pollEvents()
-			gameLogic.input(this, now - initialTime)
-			window.resetInput()
-
-			var ticks = minOf(deltaUpdate.toInt(), 10)
-
-			while (ticks >= 1)
-			{
-				val diffTimeMillis = now - updateTime
-				gameLogic.update(this, diffTimeMillis)
-				updateTime = now
-				ticks--
-			}
-
-			render.render(this)
-
-			initialTime = now
-		}
-	}
 }

@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkDescriptorBufferInfo
@@ -25,7 +25,7 @@ class DescriptorSet
 				.pSetLayouts(pDescriptorSetLayout)
 
 			val pDescriptorSet = stack.mallocLong(1)
-			vkCheck(
+			gpuCheck(
 				vkAllocateDescriptorSets(device.vkDevice, allocInfo, pDescriptorSet),
 				"Failed to create descriptor set"
 			)

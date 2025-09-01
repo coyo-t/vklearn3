@@ -1,14 +1,14 @@
 package fpw.ren.gpu
 
+import fpw.TestCube
+import fpw.ren.ShaderAssetThinger
 import org.lwjgl.system.MemoryStack
+import org.lwjgl.util.shaderc.Shaderc
+import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK13.*
-import org.lwjgl.vulkan.VkCommandBuffer
-import org.lwjgl.vulkan.VkDependencyInfo
-import org.lwjgl.vulkan.VkImageMemoryBarrier2
-import org.lwjgl.vulkan.VkMemoryType
-import org.lwjgl.vulkan.VkRenderingInfo
 import java.lang.foreign.ValueLayout.JAVA_FLOAT
 import java.lang.foreign.ValueLayout.JAVA_INT
+import kotlin.io.path.Path
 
 
 object GPUtil
@@ -96,7 +96,67 @@ object GPUtil
 		VK_ERROR_UNKNOWN to "unknown",
 	).withDefault { "unmapped??? #$it" }
 
-	fun vkCheck(err:Int, messageProvider:(Int)->String?)
+	fun createDepthAttachments (vkCtx: GPUContext): List<Attachment>
+	{
+		val swapChain = vkCtx.swapChain
+		val numImages: Int = swapChain.numImages
+		val swapChainExtent: VkExtent2D = swapChain.swapChainExtent
+		return List(numImages) {
+			Attachment(
+				vkCtx,
+				swapChainExtent.width(),
+				swapChainExtent.height(),
+				VK_FORMAT_D16_UNORM,
+				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+			)
+		}
+	}
+
+	fun createDepthAttachmentsInfo(
+		vkCtx: GPUContext,
+		depthAttachments: List<Attachment>,
+		clearValue: VkClearValue
+	): List<VkRenderingAttachmentInfo>
+	{
+		val swapChain = vkCtx.swapChain
+		val numImages = swapChain.numImages
+		return List(numImages) {
+			VkRenderingAttachmentInfo.calloc()
+				.`sType$Default`()
+				.imageView(depthAttachments[it].imageView.vkImageView)
+				.imageLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+				.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
+				.storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)
+				.clearValue(clearValue)
+		}
+	}
+
+	fun createPipeline (vkCtx: GPUContext, shaderModules: List<ShaderModule>): Pipeline
+	{
+		val buildInfo = PipelineBuildInfo(
+				shaderModules = shaderModules,
+				vi = TestCube.format.vi,
+				colorFormat = vkCtx.displaySurface.surfaceFormat.imageFormat,
+				depthFormat = VK_FORMAT_D16_UNORM,
+				pushConstRange = listOf(
+					PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, 0, 128)
+				)
+			)
+		return Pipeline(vkCtx, buildInfo)
+	}
+
+	fun createShaderModules(vkCtx: GPUContext): List<ShaderModule>
+	{
+		val srcs = ShaderAssetThinger.loadFromLuaScript(Path("resources/assets/shader/scene.lua"))
+		val v = ShaderAssetThinger.compileSPIRV(srcs.vertex, Shaderc.shaderc_glsl_vertex_shader)
+		val f = ShaderAssetThinger.compileSPIRV(srcs.fragment, Shaderc.shaderc_glsl_fragment_shader)
+		return listOf(
+			vkCtx.createShaderModule(VK_SHADER_STAGE_VERTEX_BIT, v),
+			vkCtx.createShaderModule(VK_SHADER_STAGE_FRAGMENT_BIT, f),
+		)
+	}
+
+	fun gpuCheck(err:Int, messageProvider:(Int)->String?)
 	{
 		if (err != VK_SUCCESS)
 		{
@@ -104,7 +164,7 @@ object GPUtil
 		}
 	}
 
-	fun vkCheck(err: Int, errMsg: String?)
+	fun gpuCheck(err: Int, errMsg: String?)
 	{
 		if (err != VK_SUCCESS)
 		{
@@ -112,7 +172,7 @@ object GPUtil
 		}
 	}
 
-	fun throwGpuCheck (er:Int, ms:String?): Nothing
+	private fun throwGpuCheck (er:Int, ms:String?): Nothing
 	{
 		val errName = ERROR_NAMETABLE.getValue(er)
 		val msg = if (ms != null) " '$ms'" else ""

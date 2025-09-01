@@ -1,7 +1,7 @@
 package fpw.ren.gpu
 
 import fpw.DimensionsProvider
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import fpw.ren.gpu.queuez.GPUCommandQueue
 import org.joml.Math.clamp
 import org.lwjgl.system.MemoryStack
@@ -55,7 +55,7 @@ class SwapChain
 			)
 
 			val lp = stack.mallocLong(1)
-			vkCheck(
+			gpuCheck(
 				KHRSwapchain.vkCreateSwapchainKHR(device.vkDevice, vkSwapchainCreateInfo, null, lp),
 				"Failed to create swap chain"
 			)
@@ -101,14 +101,14 @@ class SwapChain
 	private fun createImageViews(stack: MemoryStack, device: LogicalDevice, swapChain: Long, format: Int): List<ImageView>
 	{
 		val ip = stack.mallocInt(1)
-		vkCheck(
+		gpuCheck(
 			KHRSwapchain.vkGetSwapchainImagesKHR(device.vkDevice, swapChain, ip, null),
 			"Failed to get number of surface images"
 		)
 		val numImages = ip.get(0)
 
 		val swapChainImages = stack.mallocLong(numImages)
-		vkCheck(
+		gpuCheck(
 			KHRSwapchain.vkGetSwapchainImagesKHR(device.vkDevice, swapChain, ip, swapChainImages),
 			"Failed to get surface images"
 		)

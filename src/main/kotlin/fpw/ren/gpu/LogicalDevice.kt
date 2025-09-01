@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-import fpw.ren.gpu.GPUtil.vkCheck
+import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
@@ -57,7 +57,7 @@ class LogicalDevice
 				.pQueueCreateInfos(queueCreationInfoBuf)
 
 			val pp = stack.mallocPointer(1)
-			vkCheck(
+			gpuCheck(
 				vkCreateDevice(physDevice.vkPhysicalDevice, deviceCreateInfo, null, pp),
 				"Failed to create device"
 			)
