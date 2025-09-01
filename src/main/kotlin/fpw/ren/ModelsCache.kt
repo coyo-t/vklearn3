@@ -9,12 +9,12 @@ import org.lwjgl.vulkan.VK14.*
 
 class ModelsCache
 {
-	val modelMap = mutableMapOf<String, GPUModel>()
+	val modelMap = mutableMapOf<String, GPUMesh>()
 
 
 	fun close (context: Renderer)
 	{
-		modelMap.values.forEach { it.cleanup(context) }
+		modelMap.values.forEach { it.free(context) }
 		modelMap.clear()
 	}
 
@@ -31,8 +31,6 @@ class ModelsCache
 		cmd.recordSubmitAndWait(context, queue) {
 			for ((id, meshes) in models)
 			{
-				val vulkanModel = GPUModel(id)
-				modelMap[vulkanModel.id] = vulkanModel
 
 				// Transform meshes loading their data into GPU buffers
 				for (meshData in meshes)
@@ -48,7 +46,7 @@ class ModelsCache
 						verticesBuffers.to,
 						indicesBuffers.to, meshData.indices.size
 					)
-					vulkanModel.vulkanMeshList.add(vulkanMesh)
+					modelMap[id] = vulkanMesh
 				}
 			}
 		}

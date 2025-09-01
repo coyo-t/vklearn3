@@ -281,8 +281,6 @@ class Renderer (engineContext: Engine)
 					if (entityModelId.isEmpty())
 						continue
 					val model = modelsCache.modelMap[entityModelId] ?: continue
-					val vulkanMeshList = model.vulkanMeshList
-					val numMeshes = vulkanMeshList.size
 					engineContext.projection.projectionMatrix.get(pushConstantsBuffer)
 					entity.updateModelMatrix()
 					viewpointMatrix.mul(entity.modelMatrix, mvMatrix)
@@ -292,19 +290,15 @@ class Renderer (engineContext: Engine)
 						VK_SHADER_STAGE_VERTEX_BIT, 0,
 						pushConstantsBuffer
 					)
-					for (j in 0..<numMeshes)
-					{
-						val vulkanMesh = vulkanMeshList[j]
-						vertexBuffer.put(0, vulkanMesh.verticesBuffer.bufferStruct)
-						vkCmdBindVertexBuffers(cmdHandle, 0, vertexBuffer, offsets!!)
-						vkCmdBindIndexBuffer(
-							cmdHandle,
-							vulkanMesh.indicesBuffer.bufferStruct,
-							0,
-							VK_INDEX_TYPE_UINT32
-						)
-						vkCmdDrawIndexed(cmdHandle, vulkanMesh.numIndices, 1, 0, 0, 0)
-					}
+					vertexBuffer.put(0, model.verticesBuffer.bufferStruct)
+					vkCmdBindVertexBuffers(cmdHandle, 0, vertexBuffer, offsets!!)
+					vkCmdBindIndexBuffer(
+						cmdHandle,
+						model.indicesBuffer.bufferStruct,
+						0,
+						VK_INDEX_TYPE_UINT32
+					)
+					vkCmdDrawIndexed(cmdHandle, model.numIndices, 1, 0, 0, 0)
 				}
 			}
 			imageBarrier(

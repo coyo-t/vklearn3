@@ -3,6 +3,7 @@ package fpw
 import org.joml.Math.toRadians
 import org.lwjgl.glfw.GLFW.glfwPollEvents
 import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.sin
 
 class Engine (val window: Window)
@@ -10,7 +11,7 @@ class Engine (val window: Window)
 	val testTexture = ResourceLocation.withDefaultNameSpace("image/cros.png")
 	val testShader = ResourceLocation.withDefaultNameSpace("shader/scene.lua")
 
-	val entities = mutableListOf<Entity>()
+	val entities = mutableListOf<RenderEntity>()
 	val projection = Projection(
 		fov = 90f,
 		zNear = 0.001f,
@@ -19,12 +20,12 @@ class Engine (val window: Window)
 		height = window.tall,
 	)
 
-	var viewPoint: Entity? = null
+	var viewPoint: RenderEntity? = null
 
 	private val render = Renderer(this)
 
 
-	private fun <T: Entity> addEntity (who: T, init:T.()->Unit): T
+	private fun <T: RenderEntity> addEntity (who: T, init:T.()->Unit): T
 	{
 		init.invoke(who)
 		entities.add(who)
@@ -33,20 +34,27 @@ class Engine (val window: Window)
 
 	fun run ()
 	{
-		viewPoint = addEntity(Entity("camera", "", 0f, 0f, 0f)) {
-			update = {
-				position.set(0.5, 0.0, 0.0)
-				rotation.setAngleAxis(
-					toRadians(sin(window.time * PI) * 22.5),
-					0.0,
-					0.0,
-					1.0
-				)
-			}
+		viewPoint = addEntity(RenderEntity("camera", "")) {
+			location.set(0.5, 0.0, 0.0)
+//			update = {
+//				rotation.setAngleAxis(
+//					toRadians(sin(window.time * PI) * 22.5),
+//					0.0,
+//					0.0,
+//					1.0
+//				)
+//			}
 		}
 
-		addEntity(Entity("tha cube", "Cubezor", 0f, 0f, -2f)) {
+		addEntity(RenderEntity("tha cube", "Cubezor")) {
+			location.set(0.0, 0.0, -2.0)
 			update = { milliTimeDiff ->
+				location.set(
+					cos(window.time * PI*0.5) * 4.0,
+					sin(window.time * PI) * 2.0,
+					-2.0,
+				)
+
 				val dt = milliTimeDiff / 1000.0
 				val fdt = dt.toFloat()
 				rotation
@@ -54,8 +62,8 @@ class Engine (val window: Window)
 				.rotateY(toRadians(fdt * 60f))
 			}
 		}
-		addEntity(Entity("another one lol", "Cubezor", -0.5f, -0.5f, -3f)) {
-
+		addEntity(RenderEntity("another one lol", "Cubezor")) {
+			location.set(-0.5, -0.5, -3.0)
 		}
 		render.init()
 		try
