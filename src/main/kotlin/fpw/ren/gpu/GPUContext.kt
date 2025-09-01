@@ -24,27 +24,27 @@ class GPUContext(window: Window)
 		requestedImages = EngineConfig.preferredImageBufferingCount,
 		vsync = EngineConfig.useVerticalSync,
 	)
-	private set
+		private set
 
 	val vkDevice get() = device.vkDevice
 
 	val pipelineCache = device.createPipelineCache()
 
-//	val instance = run {
-//		val cfg = EngineConfig
-//		VKInstance(cfg.vkUseValidationLayers)
-//	}
-
 	fun resize (window: Window)
 	{
 		swapChain.cleanup(device)
 		displaySurface.free(instance)
-		val engCfg = EngineConfig
 		displaySurface = DisplaySurface(instance, hardware, window)
-		swapChain = SwapChain(window, device, displaySurface, engCfg.preferredImageBufferingCount, engCfg.useVerticalSync)
+		swapChain = SwapChain(
+			window,
+			device,
+			displaySurface,
+			EngineConfig.preferredImageBufferingCount,
+			EngineConfig.useVerticalSync,
+		)
 	}
 
-	fun close()
+	fun free()
 	{
 		pipelineCache.free(this)
 		swapChain.cleanup(device)

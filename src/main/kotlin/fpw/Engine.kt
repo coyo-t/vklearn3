@@ -14,7 +14,7 @@ class Engine (val window: Window)
 		height = window.tall,
 	)
 
-	private val render = GameRenderer(this)
+	private val render = Renderer(this)
 
 	fun init ()
 	{
