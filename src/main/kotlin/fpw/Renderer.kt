@@ -84,7 +84,7 @@ class Renderer (engineContext: Engine)
 	}
 	val pushConstantsBuffer = FUtil.createBuffer(128)
 
-	val descAllocator = DescriptorAllocator(hardware, device)
+//	val descAllocator = DescriptorAllocator(hardware, device)
 
 	val viewpointMatrix = Matrix4f()
 	val mvMatrix = Matrix4f()
@@ -157,7 +157,7 @@ class Renderer (engineContext: Engine)
 			cb.cleanup(this, cp)
 			cp.free(this)
 		}
-		descAllocator.free(device)
+//		descAllocator.free(device)
 		pipelineCache.free(this)
 		swapChain.cleanup(device)
 		displaySurface.free(instance)

@@ -3,8 +3,11 @@ package fpw.ren
 import fpw.Renderer
 import fpw.ren.gpu.*
 import fpw.ren.gpu.queuez.CommandQueue
+import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.VK14.*
+import org.lwjgl.vulkan.VkBufferCopy
+import kotlin.use
 
 
 class ModelsCache
@@ -31,20 +34,19 @@ class ModelsCache
 		cmd.recordSubmitAndWait(context, queue) {
 			for ((id, meshes) in models)
 			{
-
 				// Transform meshes loading their data into GPU buffers
 				for (meshData in meshes)
 				{
-					val verticesBuffers = createVerticesBuffers(context, meshData)
-					val indicesBuffers = createIndicesBuffers(context, meshData)
-					stagingBufferList.add(verticesBuffers.from)
-					stagingBufferList.add(indicesBuffers.from)
-					verticesBuffers.recordTransferCommand(cmd)
-					indicesBuffers.recordTransferCommand(cmd)
+					val (vsrc, vdst) = createVerticesBuffers(context, meshData)
+					val (isrc, idst) = createIndicesBuffers(context, meshData)
+					stagingBufferList.add(vsrc)
+					stagingBufferList.add(isrc)
+					recordTransferCommand(cmd, vsrc, vdst)
+					recordTransferCommand(cmd, isrc, idst)
 
 					val vulkanMesh = GPUMesh(
-						verticesBuffers.to,
-						indicesBuffers.to,
+						vdst,
+						idst,
 						meshData.indices.size,
 					)
 					modelMap[id] = vulkanMesh
@@ -55,7 +57,7 @@ class ModelsCache
 		stagingBufferList.forEach { it.free(context) }
 	}
 
-	private fun createIndicesBuffers(context: Renderer, meshData: Mesh): TransferBuffer
+	private fun createIndicesBuffers(context: Renderer, meshData: Mesh): Pair<GPUBuffer, GPUBuffer>
 	{
 		val indices = meshData.indices
 		val numIndices = indices.size
@@ -78,10 +80,10 @@ class ModelsCache
 			val data = MemoryUtil.memIntBuffer(mapped, srcBuffer.requestedSize.toInt())
 			data.put(indices)
 		}
-		return TransferBuffer(srcBuffer, dstBuffer)
+		return srcBuffer to dstBuffer
 	}
 
-	private fun createVerticesBuffers(context: Renderer, meshData: Mesh): TransferBuffer
+	private fun createVerticesBuffers(context: Renderer, meshData: Mesh): Pair<GPUBuffer, GPUBuffer>
 	{
 		val positions = meshData.positions
 		var texCoords = meshData.texCoords
@@ -94,19 +96,15 @@ class ModelsCache
 		val bufferSize = (numElements * GPUtil.SIZEOF_FLOAT).toLong()
 
 		val srcBuffer = GPUBuffer(
-			context, bufferSize,
+			context,
+			bufferSize,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			(
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or
-				VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-			)
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 		)
 		val dstBuffer = GPUBuffer(
-			context, bufferSize,
-			(
-				VK_BUFFER_USAGE_TRANSFER_DST_BIT or
-				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-			),
+			context,
+			bufferSize,
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT or VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		)
 
@@ -128,8 +126,18 @@ class ModelsCache
 				}
 			}
 		}
-		return TransferBuffer(srcBuffer, dstBuffer)
+		return srcBuffer to dstBuffer
 	}
 
-
+	fun recordTransferCommand (cmd: CommandBuffer, from: GPUBuffer, to: GPUBuffer)
+	{
+		MemoryStack.stackPush().use { stack ->
+			val copyRegion = VkBufferCopy
+				.calloc(1, stack)
+				.srcOffset(0)
+				.dstOffset(0)
+				.size(from.requestedSize)
+			vkCmdCopyBuffer(cmd.vkCommandBuffer, from.bufferStruct, to.bufferStruct, copyRegion)
+		}
+	}
 }

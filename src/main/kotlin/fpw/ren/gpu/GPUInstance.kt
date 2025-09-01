@@ -234,7 +234,7 @@ class GPUInstance (validate: Boolean)
 			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT or
 			0
 		)
-		const val DBG_CALL_BACK_PREF = "VkDebugUtilsCallback, {}"
+		const val DBG_CALL_BACK_PREF = "VkDebugUtilsCallback\n%s\n"
 		const val PORTABILITY_EXTENSION = "VK_KHR_portability_enumeration"
 		const val VALIDATION_LAYER = "VK_LAYER_KHRONOS_validation"
 

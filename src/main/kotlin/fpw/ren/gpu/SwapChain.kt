@@ -128,8 +128,12 @@ class SwapChain
 		MemoryStack.stackPush().use { stack ->
 			val ip = stack.mallocInt(1)
 			val err = KHRSwapchain.vkAcquireNextImageKHR(
-				device.vkDevice, vkSwapChain, 0L.inv(),
-				imageAqSem.vkSemaphore, MemoryUtil.NULL, ip
+				device.vkDevice,
+				vkSwapChain,
+				0L.inv(),
+				imageAqSem.vkSemaphore,
+				MemoryUtil.NULL,
+				ip,
 			)
 			if (err == VK_ERROR_OUT_OF_DATE_KHR)
 			{
