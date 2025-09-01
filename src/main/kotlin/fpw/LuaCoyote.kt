@@ -1,6 +1,5 @@
 package fpw
 import fpw.FUtil.ASSETS_PATH
-import fpw.ren.ShaderAssetThinger
 import party.iroiro.luajava.lua54.Lua54
 import party.iroiro.luajava.value.LuaValue
 import kotlin.io.path.div

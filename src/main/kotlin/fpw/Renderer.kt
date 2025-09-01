@@ -51,8 +51,8 @@ class Renderer (engineContext: Engine)
 	private val cmdPools = List(maxInFlightFrameCount) {
 		createCommandPool(graphicsQueue.queueFamilyIndex, false)
 	}
-	private val cmdBuffers = cmdPools.map {
-		CommandBuffer(this, it, oneTimeSubmit = true)
+	private val cmdBuffers = List(maxInFlightFrameCount) {
+		CommandBuffer(this, cmdPools[it], oneTimeSubmit = true)
 	}
 	private var imageAqSemphs = List(maxInFlightFrameCount) {
 		createSemaphor()
@@ -91,7 +91,6 @@ class Renderer (engineContext: Engine)
 
 	fun init (engine: Engine)
 	{
-
 		LuaCoyote().use { L ->
 			L.openLibraries()
 			val thing = (L.run(engine.testModel) as? LuaTableValue) ?: return@use
@@ -116,10 +115,9 @@ class Renderer (engineContext: Engine)
 				)
 			}?.toFloatArray()) ?: FloatArray(vertexCount * 2) { 0f }
 
-			val indicesTable = requireNotNull(thing["indices"] as? LuaTableValue) {
+			val indices = requireNotNull(thing["indices"] as? LuaTableValue) {
 				"I REQUIRE INDICES (for now -.-)"
-			}
-			val indices = indicesTable.map { (_, it) ->
+			}.map { (_, it) ->
 				it.toInteger().toInt()
 			}.toIntArray()
 
@@ -135,9 +133,6 @@ class Renderer (engineContext: Engine)
 				),
 			)
 		}
-
-
-
 	}
 
 	fun free()

@@ -11,7 +11,7 @@ import java.util.*
 import kotlin.io.path.Path
 
 
-class TextureCache
+class TextureManager
 {
 	private val textureMap = mutableMapOf<String, Texture>()
 

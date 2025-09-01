@@ -3,8 +3,8 @@ package fpw.ren.gpu
 import fpw.Renderer
 import org.lwjgl.vulkan.VK10.vkDestroyPipelineCache
 
-
-class PipelineCache (val vkPipelineCache: Long)
+@JvmInline
+value class PipelineCache (val vkPipelineCache: Long)
 {
 	fun free (context: Renderer)
 	{
