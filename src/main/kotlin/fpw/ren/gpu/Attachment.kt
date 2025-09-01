@@ -44,7 +44,7 @@ class Attachment
 			}
 		}
 
-		val imageViewData = ImageViewData(
+		val imageViewData = ImageView.Data(
 			format = image.format,
 			aspectMask = aspectMask,
 

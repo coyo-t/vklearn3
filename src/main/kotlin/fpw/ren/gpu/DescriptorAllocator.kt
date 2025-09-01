@@ -89,7 +89,7 @@ class DescriptorAllocator
 		return result
 	}
 
-	fun cleanup(device: LogicalDevice)
+	fun free(device: LogicalDevice)
 	{
 //		Logger.debug("Destroying descriptor allocator")
 		descSetInfoMap.clear()

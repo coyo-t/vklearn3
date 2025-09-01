@@ -113,7 +113,7 @@ class SwapChain
 			"Failed to get surface images"
 		)
 
-		val imageViewData = ImageViewData(
+		val imageViewData = ImageView.Data(
 			format = format,
 			aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 		)

@@ -78,6 +78,7 @@ class Renderer (engineContext: Engine)
 	}
 	val pushConstantsBuffer = FUtil.createBuffer(128)
 
+	val descAllocator = DescriptorAllocator(hardware, device)
 
 
 	fun init ()
@@ -148,7 +149,7 @@ class Renderer (engineContext: Engine)
 			cb.cleanup(this, cp)
 			cp.free(this)
 		}
-
+		descAllocator.free(device)
 		pipelineCache.free(this)
 		swapChain.cleanup(device)
 		displaySurface.free(instance)

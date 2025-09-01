@@ -46,7 +46,7 @@ class Texture
 		imageView = ImageView(
 			vkCtx.device,
 			image.vkImage,
-			ImageViewData(
+			ImageView.Data(
 				format = image.format,
 				aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 			),

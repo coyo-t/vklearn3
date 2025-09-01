@@ -9,7 +9,7 @@ import org.lwjgl.vulkan.VkImageViewCreateInfo
 class ImageView (
 	device: LogicalDevice,
 	vkImage: Long,
-	imageViewData: ImageViewData,
+	imageViewData: Data,
 	isDepthImage: Boolean,
 )
 {
@@ -46,4 +46,13 @@ class ImageView (
 		vkDestroyImageView(device.vkDevice, vkImageView, null)
 	}
 
+	data class Data(
+		val aspectMask: Int = 0,
+		val baseArrayLayer: Int = 0,
+		val format: Int = 0,
+		val layerCount: Int = 1,
+		val mipLevels: Int = 1,
+		val viewType: Int = VK_IMAGE_VIEW_TYPE_2D,
+	)
 }
+

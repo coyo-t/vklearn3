@@ -12,7 +12,7 @@ import org.lwjgl.vulkan.VK10.vkDestroyPipeline
 import org.lwjgl.vulkan.VK14.*
 
 
-class Pipeline (vkCtx: Renderer, buildInfo: PipelineBuildInfo)
+class Pipeline (vkCtx: Renderer, buildInfo: Info)
 {
 	val vkPipeline: Long
 	val vkPipelineLayout: Long
@@ -174,4 +174,11 @@ class Pipeline (vkCtx: Renderer, buildInfo: PipelineBuildInfo)
 		vkDestroyPipeline(vkDevice, vkPipeline, null)
 	}
 
+	class Info(
+		val colorFormat: Int,
+		val shaderModules: List<ShaderModule>,
+		val vi: VkPipelineVertexInputStateCreateInfo,
+		val depthFormat: Int = VK_FORMAT_UNDEFINED,
+		val pushConstRange: List<PushConstantRange> = emptyList(),
+	)
 }

@@ -134,7 +134,7 @@ object GPUtil
 
 	fun createPipeline (vkCtx: Renderer, shaderModules: List<ShaderModule>): Pipeline
 	{
-		val buildInfo = PipelineBuildInfo(
+		val buildInfo = Pipeline.Info(
 				shaderModules = shaderModules,
 				vi = TestCube.format.vi,
 				colorFormat = vkCtx.displaySurface.surfaceFormat.imageFormat,

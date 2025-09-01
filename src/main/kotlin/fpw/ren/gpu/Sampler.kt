@@ -12,16 +12,16 @@ class Sampler
 
 	val vkSampler: Long
 
-	constructor (vkCtx: Renderer, textureSamplerInfo: SamplerInfo)
+	constructor (vkCtx: Renderer, textureSamplerInfo: Info)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val samplerInfo = VkSamplerCreateInfo.calloc(stack)
 				.`sType$Default`()
-				.magFilter(VK_FILTER_NEAREST)
-				.minFilter(VK_FILTER_NEAREST)
-				.addressModeU(textureSamplerInfo.addressMode)
-				.addressModeV(textureSamplerInfo.addressMode)
-				.addressModeW(textureSamplerInfo.addressMode)
+				.magFilter(textureSamplerInfo.filter.vkEnum)
+				.minFilter(textureSamplerInfo.filter.vkEnum)
+				.addressModeU(textureSamplerInfo.wrapping.vkEnum)
+				.addressModeV(textureSamplerInfo.wrapping.vkEnum)
+				.addressModeW(textureSamplerInfo.wrapping.vkEnum)
 				.borderColor(textureSamplerInfo.borderColor)
 				.unnormalizedCoordinates(false)
 				.compareEnable(false)
@@ -48,5 +48,13 @@ class Sampler
 	{
 		vkDestroySampler(vkCtx.vkDevice, vkSampler, null)
 	}
+
+	data class Info(
+		val wrapping: SamplerWrapping,
+		val filter: SamplerFilter,
+		val borderColor: Int,
+		val mipLevels: Int,
+		val anisotropicFiltering: Boolean
+	)
 }
 
