@@ -25,29 +25,26 @@ class ModelsCache
 		context: Renderer,
 		commandPool: CommandPool,
 		queue: CommandQueue,
-		models: Pair<String, Mesh>
+		id: String,
+		meshData: Mesh,
 	)
 	{
 		val stagingBufferList = mutableListOf<GPUBuffer>()
 
 		val cmd = CommandBuffer(context, commandPool, oneTimeSubmit = true)
-		cmd.record {
-			val (id, meshData) = models
-			// Transform meshes loading their data into GPU buffers
-			val (vsrc, vdst) = createVerticesBuffers(context, meshData)
-			val (isrc, idst) = createIndicesBuffers(context, meshData)
-			stagingBufferList.add(vsrc)
-			stagingBufferList.add(isrc)
-			recordTransferCommand(cmd, vsrc, vdst)
-			recordTransferCommand(cmd, isrc, idst)
-
-			val vulkanMesh = GPUMesh(
-				vdst,
-				idst,
-				meshData.indices.size,
-			)
-			modelMap[id] = vulkanMesh
-		}
+		cmd.beginRecording()
+		val (vsrc, vdst) = createVerticesBuffers(context, meshData)
+		val (isrc, idst) = createIndicesBuffers(context, meshData)
+		stagingBufferList.add(vsrc)
+		stagingBufferList.add(isrc)
+		recordTransferCommand(cmd, vsrc, vdst)
+		recordTransferCommand(cmd, isrc, idst)
+		modelMap[id] = GPUMesh(
+			vdst,
+			idst,
+			meshData.indices.size,
+		)
+		cmd.endRecording()
 		cmd.submitAndWait(context, queue)
 		cmd.free(context, commandPool)
 		stagingBufferList.forEach { it.free(context) }

@@ -38,11 +38,9 @@ class TextureCache
 
 	fun cleanup(vkCtx: Renderer)
 	{
-		textureMap.forEach { (k, t) -> t.cleanup(vkCtx) }
+		textureMap.values.forEach { it.cleanup(vkCtx) }
 		textureMap.clear()
 	}
-
-	fun getAsList () = textureMap.values.toList()
 
 	fun getTexture(texturePath: String): Texture
 	{
@@ -59,12 +57,12 @@ class TextureCache
 		{
 			addTexture(vkCtx, UUID.randomUUID().toString(), defaultTexturePath, VK_FORMAT_R8G8B8A8_SRGB)
 		}
-		val cmdBuf = CommandBuffer(vkCtx, cmdPool, oneTimeSubmit = true)
-		cmdBuf.record {
-			textureMap.values.forEach { it.recordTextureTransition(cmdBuf) }
-		}
-		cmdBuf.submitAndWait(vkCtx, queue)
-		cmdBuf.free(vkCtx, cmdPool)
+		val c = CommandBuffer(vkCtx, cmdPool, oneTimeSubmit = true)
+		c.beginRecording()
+		textureMap.values.forEach { it.recordTextureTransition(c) }
+		c.endRecording()
+		c.submitAndWait(vkCtx, queue)
+		c.free(vkCtx, cmdPool)
 		textureMap.values.forEach { it.cleanupStgBuffer(vkCtx) }
 	}
 

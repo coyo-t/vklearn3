@@ -1,6 +1,7 @@
 package fpw.ren.gpu
 
 import fpw.Renderer
+import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.KHRSurface
 import org.lwjgl.vulkan.VK10
@@ -51,7 +52,7 @@ open class CommandQueue
 				submitInfo.pWaitSemaphoreInfos(waitSemaphores)
 			}
 			val fenceHandle = fence?.vkFence ?: VK10.VK_NULL_HANDLE
-			GPUtil.gpuCheck(VK13.vkQueueSubmit2(vkQueue, submitInfo, fenceHandle), "Failed to submit command to queue")
+			gpuCheck(VK13.vkQueueSubmit2(vkQueue, submitInfo, fenceHandle), "Failed to submit command to queue")
 		}
 	}
 

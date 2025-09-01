@@ -7,11 +7,17 @@ import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import kotlin.io.path.Path
+import kotlin.io.path.div
+import kotlin.io.println
 import kotlin.use
 
 
 object FUtil
 {
+	val RESOURCES_PATH = Path("./resources/").normalize().toAbsolutePath()
+	val ASSETS_PATH = RESOURCES_PATH/"assets/"
+
 	private fun memToBuffer (m: MemorySegment)
 		= m.asByteBuffer().order(ByteOrder.nativeOrder())
 

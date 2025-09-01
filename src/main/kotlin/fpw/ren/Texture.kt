@@ -4,18 +4,24 @@ import fpw.FUtil
 import fpw.Image
 import fpw.Renderer
 import fpw.ren.gpu.*
+import fpw.ren.gpu.GPUBuffer
 import fpw.ren.gpu.GPUtil.imageBarrier
 import org.lwjgl.system.MemoryStack
+import org.lwjgl.vulkan.VK10.VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+import org.lwjgl.vulkan.VK10.VK_IMAGE_ASPECT_COLOR_BIT
+import org.lwjgl.vulkan.VK10.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+import org.lwjgl.vulkan.VK10.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+import org.lwjgl.vulkan.VK10.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+import org.lwjgl.vulkan.VK10.vkCmdCopyBufferToImage
 import org.lwjgl.vulkan.VK14.*
-import org.lwjgl.vulkan.VkBufferImageCopy
-import java.lang.foreign.MemorySegment
+import org.lwjgl.vulkan.VkBufferImageCopy.calloc
 
 
 class Texture
 {
 
-	private val width: Int
-	private val height: Int
+	private val wide: Int
+	private val tall: Int
 	private val id: String
 	private val image: GPUImage
 	private val imageView: ImageView
@@ -26,15 +32,31 @@ class Texture
 	{
 		this.id = id
 		recordedTransition = false
-		width = srcImage.wide
-		height = srcImage.tall
+		wide = srcImage.wide
+		tall = srcImage.tall
 
-		stgBuffer = createStgBuffer(vkCtx, srcImage.data)
+		stgBuffer = run {
+			val size = srcImage.data.byteSize()
+			val stgBuffer = GPUBuffer(
+				vkCtx,
+				size,
+				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+				(
+					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or
+					VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+				)
+			)
+			stgBuffer.doMapped(vkCtx) {
+				val buffer = FUtil.createMemoryAt(it, stgBuffer.requestedSize)
+				buffer.copyFrom(srcImage.data)
+			}
+			stgBuffer
+		}
 		image = GPUImage(
 			vkCtx,
 			GPUImage.Data(
-				wide = width,
-				tall = height,
+				wide = wide,
+				tall = tall,
 				usage = (
 					VK_IMAGE_USAGE_TRANSFER_SRC_BIT or
 					VK_IMAGE_USAGE_TRANSFER_DST_BIT or
@@ -69,30 +91,6 @@ class Texture
 		}
 	}
 
-	private fun recordCopyBuffer(stack: MemoryStack, cmd: CommandBuffer, bufferData: GPUBuffer)
-	{
-		val region = VkBufferImageCopy.calloc(1, stack)
-			.bufferOffset(0)
-			.bufferRowLength(0)
-			.bufferImageHeight(0)
-			.imageSubresource {
-				it.aspectMask(VK_IMAGE_ASPECT_COLOR_BIT)
-					.mipLevel(0)
-					.baseArrayLayer(0)
-					.layerCount(1)
-			}
-			.imageOffset { it.x(0).y(0).z(0) }
-			.imageExtent { it.width(width).height(height).depth(1) }
-
-		vkCmdCopyBufferToImage(
-			cmd.vkCommandBuffer,
-			bufferData.bufferStruct,
-			image.vkImage,
-			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			region,
-		)
-	}
-
 	fun recordTextureTransition (cmd: CommandBuffer)
 	{
 		val staging = stgBuffer
@@ -112,7 +110,25 @@ class Texture
 					VK_ACCESS_TRANSFER_WRITE_BIT.toLong(),
 					VK_IMAGE_ASPECT_COLOR_BIT
 				)
-				recordCopyBuffer(stack, cmd, staging)
+				val region = calloc(1, stack)
+					.bufferOffset(0)
+					.bufferRowLength(0)
+					.bufferImageHeight(0)
+					.imageSubresource {
+						it.aspectMask(VK_IMAGE_ASPECT_COLOR_BIT)
+							.mipLevel(0)
+							.baseArrayLayer(0)
+							.layerCount(1)
+					}
+					.imageOffset { it.x(0).y(0).z(0) }
+					.imageExtent { it.width(wide).height(tall).depth(1) }
+				vkCmdCopyBufferToImage(
+					cmd.vkCommandBuffer,
+					staging.bufferStruct,
+					image.vkImage,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					region,
+				)
 				imageBarrier(
 					stack,
 					cmd.vkCommandBuffer,
@@ -127,25 +143,6 @@ class Texture
 				)
 			}
 		}
-	}
-
-	private fun createStgBuffer (vkCtx: Renderer, data: MemorySegment): GPUBuffer
-	{
-		val size = data.byteSize()
-		val stgBuffer = GPUBuffer(
-			vkCtx,
-			size,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			(
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or
-				VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-			)
-		)
-		stgBuffer.doMapped(vkCtx) {
-			val buffer = FUtil.createMemoryAt(it, stgBuffer.requestedSize)
-			buffer.copyFrom(data)
-		}
-		return stgBuffer
 	}
 
 }

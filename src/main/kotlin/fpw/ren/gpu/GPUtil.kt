@@ -187,14 +187,8 @@ object GPUtil
 
 	inline fun renderScoped (cmd: VkCommandBuffer, info: VkRenderingInfo, cm:()->Unit)
 	{
-		try
-		{
-			vkCmdBeginRendering(cmd, info)
-			cm()
-		}
-		finally
-		{
-			vkCmdEndRendering(cmd)
-		}
+		vkCmdBeginRendering(cmd, info)
+		cm()
+		vkCmdEndRendering(cmd)
 	}
 }

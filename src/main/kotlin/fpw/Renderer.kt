@@ -10,6 +10,7 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
 import org.lwjgl.vulkan.VK14.*
+import party.iroiro.luajava.value.LuaTableValue
 
 
 class Renderer (engineContext: Engine)
@@ -88,51 +89,55 @@ class Renderer (engineContext: Engine)
 	val viewpointMatrix = Matrix4f()
 	val mvMatrix = Matrix4f()
 
-	fun init ()
+	fun init (engine: Engine)
 	{
-		val meshData = Mesh(
-			positions = floatArrayOf(
-				-0.5f, +0.5f, +0.5f,
-				-0.5f, -0.5f, +0.5f,
-				+0.5f, -0.5f, +0.5f,
-				+0.5f, +0.5f, +0.5f,
-				-0.5f, +0.5f, -0.5f,
-				+0.5f, +0.5f, -0.5f,
-				-0.5f, -0.5f, -0.5f,
-				+0.5f, -0.5f, -0.5f,
-			),
-			texCoords = floatArrayOf(
-				0.0f, 0.0f,
-				0.5f, 0.0f,
-				1.0f, 0.0f,
-				1.0f, 0.5f,
-				1.0f, 1.0f,
-				0.5f, 1.0f,
-				0.0f, 1.0f,
-				0.0f, 0.5f,
-			),
-			indices = intArrayOf(
-				// Front face
-				0, 1, 3, 3, 1, 2,
-				// Top Face
-				4, 0, 3, 5, 4, 3,
-				// Right face
-				3, 2, 7, 5, 3, 7,
-				// Left face
-				6, 1, 0, 6, 0, 4,
-				// Bottom face
-				2, 1, 6, 2, 6, 7,
-				// Back face
-				7, 6, 4, 7, 4, 5,
-			)
-		)
 
-		meshManager.loadModels(
-			this,
-			cmdPools[0],
-			graphicsQueue,
-			"Cubezor" to meshData,
-		)
+		LuaCoyote().use { L ->
+			L.openLibraries()
+			val thing = (L.run(engine.testModel) as? LuaTableValue) ?: return@use
+			val verticesTable = requireNotNull(thing["points"] as? LuaTableValue) {
+				"model needs AT LEAST positions >:["
+			}
+			val vertexCount = verticesTable.length()
+			val vertices = verticesTable.flatMap { (_, it) ->
+				check(it is LuaTableValue)
+				listOf(
+					it[1].toNumber().toFloat(),
+					it[2].toNumber().toFloat(),
+					it[3].toNumber().toFloat(),
+				)
+			}.toFloatArray()
+
+			val uvs = ((thing["uvs"] as? LuaTableValue)?.flatMap { (_, it) ->
+				check(it is LuaTableValue)
+				listOf(
+					it[1].toNumber().toFloat(),
+					it[2].toNumber().toFloat(),
+				)
+			}?.toFloatArray()) ?: FloatArray(vertexCount * 2) { 0f }
+
+			val indicesTable = requireNotNull(thing["indices"] as? LuaTableValue) {
+				"I REQUIRE INDICES (for now -.-)"
+			}
+			val indices = indicesTable.map { (_, it) ->
+				it.toInteger().toInt()
+			}.toIntArray()
+
+			meshManager.loadModels(
+				this,
+				cmdPools[0],
+				graphicsQueue,
+				thing["temp_name"].toString(),
+				Mesh(
+					positions = vertices,
+					texCoords = uvs,
+					indices = indices
+				),
+			)
+		}
+
+
+
 	}
 
 	fun free()

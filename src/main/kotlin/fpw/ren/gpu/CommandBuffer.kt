@@ -28,7 +28,12 @@ class CommandBuffer
 			val cmdBufAllocateInfo = VkCommandBufferAllocateInfo.calloc(stack)
 				.`sType$Default`()
 				.commandPool(cmdPool.vkCommandPool)
-				.level(if (inherit == null) VK_COMMAND_BUFFER_LEVEL_PRIMARY else VK_COMMAND_BUFFER_LEVEL_SECONDARY)
+				.level(
+					if (inherit == null)
+						VK_COMMAND_BUFFER_LEVEL_PRIMARY
+					else
+						VK_COMMAND_BUFFER_LEVEL_SECONDARY
+				)
 				.commandBufferCount(1)
 			val pb = stack.mallocPointer(1)
 			gpuCheck(
@@ -39,13 +44,6 @@ class CommandBuffer
 		}
 	}
 
-
-	inline fun record (cb: CommandBuffer.()->Unit)
-	{
-		beginRecording()
-		cb.invoke(this)
-		endRecording()
-	}
 
 	fun beginRecording ()
 	{

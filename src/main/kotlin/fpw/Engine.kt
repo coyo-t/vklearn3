@@ -41,7 +41,7 @@ class Engine (val window: Window)
 		}
 
 		addEntity(RenderEntity("tha cube")) {
-			modelId = "Cubezor"
+			modelId = "test cube"
 			location.set(0.0, 0.0, -2.0)
 			update = { milliTimeDiff ->
 				location.set(
@@ -58,10 +58,10 @@ class Engine (val window: Window)
 			}
 		}
 		addEntity(RenderEntity("another one lol")) {
-			modelId = "Cubezor"
+			modelId = "test cube"
 			location.set(-0.5, -0.5, -3.0)
 		}
-		render.init()
+		render.init(this)
 		try
 		{
 			var initialTime = System.currentTimeMillis()

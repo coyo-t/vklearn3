@@ -57,8 +57,7 @@ object ShaderAssetThinger
 	{
 		try
 		{
-			val src = FUtil.getFileBytes(at)
-			L.run(src, "")
+			L.run(FUtil.getFileBytes(at), "")
 			val result = L.get()
 			check(result.type() == Lua.LuaType.TABLE) {
 				"expecting a table, got ${result.type()}"
