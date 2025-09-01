@@ -1,7 +1,7 @@
 package fpw.ren.gpu
 
 import fpw.ren.gpu.GPUtil.gpuCheck
-import fpw.ren.gpu.queuez.GPUCommandQueue
+import fpw.ren.gpu.queuez.CommandQueue
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
@@ -51,7 +51,7 @@ class CommandBuffer
 		endRecording()
 	}
 
-	inline fun recordSubmitAndWait (ctc: GPUContext, queue: GPUCommandQueue, cb: CommandBuffer.()->Unit)
+	inline fun recordSubmitAndWait (ctc: GPUContext, queue: CommandQueue, cb: CommandBuffer.()->Unit)
 	{
 		beginRecording()
 		cb.invoke(this)
@@ -121,7 +121,7 @@ class CommandBuffer
 		vkResetCommandBuffer(vkCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
 	}
 
-	fun submitAndWait(vkCtx: GPUContext, queue: GPUCommandQueue)
+	fun submitAndWait(vkCtx: GPUContext, queue: CommandQueue)
 	{
 		val fence = vkCtx.createFence(true)
 		fence.reset(vkCtx)

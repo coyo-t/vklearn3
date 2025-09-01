@@ -98,3 +98,34 @@ private fun GPUContext._createShaderModule(spirv: ByteBuffer): Long
 		return lp.get(0)
 	}
 }
+
+internal fun GPUContext.getGraphicsQueueFamilyIndex(): Int
+{
+	val queuePropsBuff = hardware.vkQueueFamilyProps
+	val uhh = queuePropsBuff.indexOfFirst { (it.queueFlags() and VK10.VK_QUEUE_GRAPHICS_BIT) != 0 }
+	require(uhh >= 0) {
+		"Failed to get graphics Queue family index"
+	}
+	return uhh
+}
+
+internal fun GPUContext.getPresentQueueFamilyIndex(): Int
+{
+	MemoryStack.stackPush().use { stack ->
+		val queuePropsBuff = hardware.vkQueueFamilyProps
+		val numQueuesFamilies: Int = queuePropsBuff.capacity()
+		val intBuff = stack.mallocInt(1)
+		for (i in 0..<numQueuesFamilies)
+		{
+			KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR(
+				hardware.vkPhysicalDevice,
+				i, displaySurface.vkSurface, intBuff
+			)
+			if (intBuff.get(0) == VK_TRUE)
+			{
+				return i
+			}
+		}
+	}
+	throw RuntimeException("Failed to get Presentation Queue family index")
+}

@@ -1,7 +1,7 @@
 package fpw.ren
 
 import fpw.ren.gpu.*
-import fpw.ren.gpu.queuez.GPUCommandQueue
+import fpw.ren.gpu.queuez.CommandQueue
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.VK14.*
 
@@ -21,7 +21,7 @@ class ModelsCache
 		context: GPUContext,
 		models: List<GPUModelData>,
 		commandPool: CommandPool,
-		queue: GPUCommandQueue,
+		queue: CommandQueue,
 	)
 	{
 		val stagingBufferList = mutableListOf<GPUBuffer>()

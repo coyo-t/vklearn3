@@ -9,7 +9,7 @@ import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VK13.vkQueueSubmit2
 
 
-sealed class GPUCommandQueue
+sealed class CommandQueue
 {
 	val queueFamilyIndex: Int
 	val vkQueue: VkQueue
@@ -19,7 +19,6 @@ sealed class GPUCommandQueue
 
 		this.queueFamilyIndex = queueFamilyIndex
 		MemoryStack.stackPush().use { stack ->
-//			Main.logDebug("Creating queue")
 			val pQueue = stack.mallocPointer(1)
 			vkGetDeviceQueue(vkCtx.device.vkDevice, queueFamilyIndex, queueIndex, pQueue)
 			val queue = pQueue.get(0)

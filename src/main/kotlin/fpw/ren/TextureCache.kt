@@ -5,7 +5,7 @@ import fpw.Image
 import fpw.ren.gpu.CommandBuffer
 import fpw.ren.gpu.CommandPool
 import fpw.ren.gpu.GPUContext
-import fpw.ren.gpu.queuez.GPUCommandQueue
+import fpw.ren.gpu.queuez.CommandQueue
 import org.lwjgl.vulkan.VK10.VK_FORMAT_R8G8B8A8_SRGB
 import java.util.*
 import kotlin.io.path.Path
@@ -49,7 +49,7 @@ class TextureCache
 		return textureMap[texturePath]!!
 	}
 
-	fun transitionTexts(vkCtx: GPUContext, cmdPool: CommandPool, queue: GPUCommandQueue)
+	fun transitionTexts(vkCtx: GPUContext, cmdPool: CommandPool, queue: CommandQueue)
 	{
 //		Logger.debug("Recording texture transitions")
 		val numTextures = textureMap.size

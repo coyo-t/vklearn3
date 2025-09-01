@@ -2,7 +2,7 @@ package fpw.ren.gpu
 
 import fpw.DimensionsProvider
 import fpw.ren.gpu.GPUtil.gpuCheck
-import fpw.ren.gpu.queuez.GPUCommandQueue
+import fpw.ren.gpu.queuez.CommandQueue
 import org.joml.Math.clamp
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
@@ -157,7 +157,7 @@ class SwapChain
 	}
 
 
-	fun presentImage(queue: GPUCommandQueue, renderCompleteSem: Semaphore, imageIndex: Int): Boolean
+	fun presentImage(queue: CommandQueue, renderCompleteSem: Semaphore, imageIndex: Int): Boolean
 	{
 		var resize = false
 		MemoryStack.stackPush().use { stack ->
