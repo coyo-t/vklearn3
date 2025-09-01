@@ -10,6 +10,8 @@ class Engine (val window: Window)
 {
 	val testTexture = ResourceLocation.withDefaultNameSpace("image/cros.png")
 	val testShader = ResourceLocation.withDefaultNameSpace("shader/scene.lua")
+	val testModel = ResourceLocation.withDefaultNameSpace("mesh/test cube.lua")
+	val updatesPerSecond = 120
 
 	val entities = mutableListOf<RenderEntity>()
 	val projection = Projection(
@@ -69,7 +71,7 @@ class Engine (val window: Window)
 		try
 		{
 			var initialTime = System.currentTimeMillis()
-			val timeU = 1000.0f / EngineConfig.updatesPerSecond
+			val timeU = 1000.0f / updatesPerSecond
 			var deltaUpdate = 0.0
 			var updateTime = initialTime
 			while (!window.shouldClose)

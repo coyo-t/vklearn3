@@ -22,7 +22,7 @@ class ModelsCache
 		context: Renderer,
 		commandPool: CommandPool,
 		queue: CommandQueue,
-		vararg models: Pair<String, List<GPUMeshData>>,
+		vararg models: Pair<String, List<Mesh>>,
 	)
 	{
 		val stagingBufferList = mutableListOf<GPUBuffer>()
@@ -44,7 +44,8 @@ class ModelsCache
 
 					val vulkanMesh = GPUMesh(
 						verticesBuffers.to,
-						indicesBuffers.to, meshData.indices.size
+						indicesBuffers.to,
+						meshData.indices.size,
 					)
 					modelMap[id] = vulkanMesh
 				}
@@ -54,7 +55,7 @@ class ModelsCache
 		stagingBufferList.forEach { it.free(context) }
 	}
 
-	private fun createIndicesBuffers(context: Renderer, meshData: GPUMeshData): TransferBuffer
+	private fun createIndicesBuffers(context: Renderer, meshData: Mesh): TransferBuffer
 	{
 		val indices = meshData.indices
 		val numIndices = indices.size
@@ -80,7 +81,7 @@ class ModelsCache
 		return TransferBuffer(srcBuffer, dstBuffer)
 	}
 
-	private fun createVerticesBuffers(context: Renderer, meshData: GPUMeshData): TransferBuffer
+	private fun createVerticesBuffers(context: Renderer, meshData: Mesh): TransferBuffer
 	{
 		val positions = meshData.positions
 		var texCoords = meshData.texCoords

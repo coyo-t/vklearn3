@@ -1,6 +1,5 @@
 package fpw.ren
 
-import fpw.EngineConfig
 import fpw.FUtil
 import fpw.LuaCoyote
 import org.lwjgl.util.shaderc.Shaderc.*
@@ -15,6 +14,8 @@ object ShaderAssetThinger
 		openLibraries()
 	}
 
+	var doGenerateShaderDebugSymbols = true
+
 	fun compileSPIRV (shaderCode: String, shaderType: Int): ByteBuffer
 	{
 		var compiler = 0L
@@ -24,7 +25,7 @@ object ShaderAssetThinger
 		{
 			compiler = shaderc_compiler_initialize()
 			options = shaderc_compile_options_initialize()
-			if (EngineConfig.doGenerateShaderDebugSymbols)
+			if (doGenerateShaderDebugSymbols)
 			{
 				shaderc_compile_options_set_generate_debug_info(options)
 				shaderc_compile_options_set_optimization_level(options, 0)

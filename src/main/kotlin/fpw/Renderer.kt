@@ -16,12 +16,18 @@ import org.lwjgl.vulkan.VK14.*
 
 class Renderer (engineContext: Engine)
 {
+	val maxInFlightFrameCount = 2
+	val preferredImageBufferingCount = 3
+	var useVerticalSync = false
+	var preferredPhysicalDevice: String? = null
+	var useValidationLayers = true
+
 	val instance = GPUInstance(
-		validate = EngineConfig.useVulkanValidationLayers,
+		validate = useValidationLayers,
 	)
 	val hardware = HardwareDevice.createPhysicalDevice(
 		instance,
-		prefDeviceName = EngineConfig.preferredPhysicalDevice,
+		prefDeviceName = preferredPhysicalDevice,
 	)
 	val device = LogicalDevice(hardware)
 	var displaySurface = DisplaySurface(instance, hardware, engineContext.window)
@@ -29,30 +35,29 @@ class Renderer (engineContext: Engine)
 		engineContext.window,
 		device,
 		displaySurface,
-		requestedImages = EngineConfig.preferredImageBufferingCount,
-		vsync = EngineConfig.useVerticalSync,
+		requestedImages = preferredImageBufferingCount,
+		vsync = useVerticalSync,
 	)
 
 	val vkDevice get() = device.vkDevice
 
 	val pipelineCache = device.createPipelineCache()
 
-
 	private var currentFrame = 0
 
-	private val graphQueue = GraphicsQueue(this, 0)
+	private val graphicsQueue = GraphicsQueue(this, 0)
 	private val presentQueue = PresentQueue(this, 0)
 
-	private val cmdPools = List(EngineConfig.maxInFlightFrames) {
-		createCommandPool(graphQueue.queueFamilyIndex, false)
+	private val cmdPools = List(maxInFlightFrameCount) {
+		createCommandPool(graphicsQueue.queueFamilyIndex, false)
 	}
 	private val cmdBuffers = cmdPools.map {
 		CommandBuffer(this, it, primary = true, oneTimeSubmit = true)
 	}
-	private var imageAqSemphs = List(EngineConfig.maxInFlightFrames) {
+	private var imageAqSemphs = List(maxInFlightFrameCount) {
 		createSemaphor()
 	}
-	private var fences = List(EngineConfig.maxInFlightFrames) {
+	private var fences = List(maxInFlightFrameCount) {
 		createFence(signaled = true)
 	}
 	private var renderCompleteSemphs = List(swapChain.numImages) {
@@ -86,7 +91,7 @@ class Renderer (engineContext: Engine)
 
 	fun init ()
 	{
-		val meshData = GPUMeshData(
+		val meshData = Mesh(
 			positions = floatArrayOf(
 				-0.5f, +0.5f, +0.5f,
 				-0.5f, -0.5f, +0.5f,
@@ -126,7 +131,7 @@ class Renderer (engineContext: Engine)
 		modelsCache.loadModels(
 			this,
 			cmdPools[0],
-			graphQueue,
+			graphicsQueue,
 			"Cubezor" to listOf(meshData),
 		)
 	}
@@ -177,7 +182,7 @@ class Renderer (engineContext: Engine)
 				.`sType$Default`()
 				.stageMask(VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)
 				.semaphore(renderCompleteSemphs[imageIndex].vkSemaphore)
-			graphQueue.submit(cmds, waitSemphs, signalSemphs, fence)
+			graphicsQueue.submit(cmds, waitSemphs, signalSemphs, fence)
 		}
 	}
 
@@ -324,7 +329,7 @@ class Renderer (engineContext: Engine)
 
 		doResize = swapChain.presentImage(presentQueue, renderCompleteSemphs[imageIndex], imageIndex)
 
-		currentFrame = (currentFrame + 1) % EngineConfig.maxInFlightFrames
+		currentFrame = (currentFrame + 1) % maxInFlightFrameCount
 	}
 
 	private fun resize (engCtx: Engine)
@@ -344,14 +349,14 @@ class Renderer (engineContext: Engine)
 			window,
 			device,
 			displaySurface,
-			EngineConfig.preferredImageBufferingCount,
-			EngineConfig.useVerticalSync,
+			preferredImageBufferingCount,
+			useVerticalSync,
 		)
 
 		renderCompleteSemphs.forEach { it.free(this) }
 		imageAqSemphs.forEach { it.free(this) }
 
-		imageAqSemphs = List(EngineConfig.maxInFlightFrames) {
+		imageAqSemphs = List(maxInFlightFrameCount) {
 			createSemaphor()
 		}
 

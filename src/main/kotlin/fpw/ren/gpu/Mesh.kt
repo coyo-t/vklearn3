@@ -1,6 +1,6 @@
 package fpw.ren.gpu
 
-class GPUMeshData (
+class Mesh (
 	val positions: FloatArray,
 	val texCoords: FloatArray,
 	val indices: IntArray,
