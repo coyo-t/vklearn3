@@ -3,8 +3,7 @@ package fpw
 import fpw.ren.ModelsCache
 import fpw.ren.gpu.*
 import fpw.ren.gpu.GPUtil.imageBarrier
-import fpw.ren.gpu.queuez.GraphicsQueue
-import fpw.ren.gpu.queuez.PresentQueue
+import fpw.ren.gpu.CommandQueue
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
@@ -45,14 +44,14 @@ class Renderer (engineContext: Engine)
 
 	private var currentFrame = 0
 
-	private val graphicsQueue = GraphicsQueue(this, 0)
-	private val presentQueue = PresentQueue(this, 0)
+	private val graphicsQueue = CommandQueue.createGraphics(this, 0)
+	private val presentQueue = CommandQueue.createPresentation(this, 0)
 
 	private val cmdPools = List(maxInFlightFrameCount) {
 		createCommandPool(graphicsQueue.queueFamilyIndex, false)
 	}
 	private val cmdBuffers = cmdPools.map {
-		CommandBuffer(this, it, primary = true, oneTimeSubmit = true)
+		CommandBuffer(this, it, oneTimeSubmit = true)
 	}
 	private var imageAqSemphs = List(maxInFlightFrameCount) {
 		createSemaphor()
@@ -132,7 +131,7 @@ class Renderer (engineContext: Engine)
 			this,
 			cmdPools[0],
 			graphicsQueue,
-			"Cubezor" to listOf(meshData),
+			"Cubezor" to meshData,
 		)
 	}
 
@@ -188,8 +187,6 @@ class Renderer (engineContext: Engine)
 
 	fun render (engineContext: Engine)
 	{
-		val swapChain = swapChain
-
 		fences[currentFrame].wait(this)
 
 		val cmdPool = cmdPools[currentFrame]

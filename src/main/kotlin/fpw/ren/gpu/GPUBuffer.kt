@@ -55,11 +55,17 @@ class GPUBuffer
 				.allocationSize(memReqs.size())
 				.memoryTypeIndex(GPUtil.memoryTypeFromProperties(vkCtx, memReqs.memoryTypeBits(), reqMask))
 
-			gpuCheck(vkAllocateMemory(device.vkDevice, memAlloc, null, lp), "Failed to allocate memory")
+			gpuCheck(
+				vkAllocateMemory(device.vkDevice, memAlloc, null, lp),
+				"Failed to allocate memory"
+			)
 			allocationSize = memAlloc.allocationSize()
 			bufferData = lp.get(0)
 			pb = MemoryUtil.memAllocPointer(1)
-			gpuCheck(vkBindBufferMemory(device.vkDevice, bufferStruct, bufferData, 0), "Failed to bind buffer memory")
+			gpuCheck(
+				vkBindBufferMemory(device.vkDevice, bufferStruct, bufferData, 0),
+				"Failed to bind buffer memory"
+			)
 		}
 	}
 
@@ -75,7 +81,10 @@ class GPUBuffer
 	{
 		if (mappedMemory == NULL)
 		{
-			gpuCheck(vkMapMemory(vkCtx.vkDevice, bufferData, 0, allocationSize, 0, pb), "Failed to map Buffer")
+			gpuCheck(
+				vkMapMemory(vkCtx.vkDevice, bufferData, 0, allocationSize, 0, pb),
+				"Failed to map Buffer"
+			)
 			mappedMemory = pb.get(0)
 		}
 		return mappedMemory

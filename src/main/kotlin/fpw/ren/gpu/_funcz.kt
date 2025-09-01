@@ -3,8 +3,11 @@ package fpw.ren.gpu
 import fpw.Renderer
 import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
+import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VK10.vkCreateShaderModule
+import org.lwjgl.vulkan.VkShaderModuleCreateInfo.calloc
 import java.nio.ByteBuffer
 
 
@@ -73,60 +76,20 @@ fun LogicalDevice.createPipelineCache(): PipelineCache
 
 fun Renderer.createShaderModule (shaderStage: Int, spirv: ByteBuffer): ShaderModule
 {
-	check(spirv.isDirect) {
-		"requires direct buffer"
-	}
 	return ShaderModule(
-		handle = this._createShaderModule(spirv),
+		handle = stackPush().use { stack ->
+			val moduleCreateInfo = calloc(stack)
+				.`sType$Default`()
+				.pCode(spirv)
+
+			val lp = stack.mallocLong(1)
+			gpuCheck(
+				vkCreateShaderModule(vkDevice, moduleCreateInfo, null, lp),
+				"Failed to create shader module"
+			)
+			lp.get(0)
+		},
 		shaderStage = shaderStage,
 	)
 }
 
-private fun Renderer._createShaderModule(spirv: ByteBuffer): Long
-{
-	MemoryStack.stackPush().use { stack ->
-//				val pCode = stack.malloc(code.size).put(0, code)
-		val pCode = spirv
-		val moduleCreateInfo = VkShaderModuleCreateInfo.calloc(stack)
-			.`sType$Default`()
-			.pCode(pCode)
-
-		val lp = stack.mallocLong(1)
-		gpuCheck(
-			vkCreateShaderModule(vkDevice, moduleCreateInfo, null, lp),
-			"Failed to create shader module"
-		)
-		return lp.get(0)
-	}
-}
-
-internal fun Renderer.getGraphicsQueueFamilyIndex(): Int
-{
-	val queuePropsBuff = hardware.vkQueueFamilyProps
-	val uhh = queuePropsBuff.indexOfFirst { (it.queueFlags() and VK_QUEUE_GRAPHICS_BIT) != 0 }
-	require(uhh >= 0) {
-		"Failed to get graphics Queue family index"
-	}
-	return uhh
-}
-
-internal fun Renderer.getPresentQueueFamilyIndex(): Int
-{
-	MemoryStack.stackPush().use { stack ->
-		val queuePropsBuff = hardware.vkQueueFamilyProps
-		val numQueuesFamilies: Int = queuePropsBuff.capacity()
-		val intBuff = stack.mallocInt(1)
-		for (i in 0..<numQueuesFamilies)
-		{
-			KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR(
-				hardware.vkPhysicalDevice,
-				i, displaySurface.vkSurface, intBuff
-			)
-			if (intBuff.get(0) == VK_TRUE)
-			{
-				return i
-			}
-		}
-	}
-	throw RuntimeException("Failed to get Presentation Queue family index")
-}

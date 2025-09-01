@@ -5,7 +5,7 @@ import fpw.Image
 import fpw.Renderer
 import fpw.ren.gpu.CommandBuffer
 import fpw.ren.gpu.CommandPool
-import fpw.ren.gpu.queuez.CommandQueue
+import fpw.ren.gpu.CommandQueue
 import org.lwjgl.vulkan.VK10.VK_FORMAT_R8G8B8A8_SRGB
 import java.util.*
 import kotlin.io.path.Path
@@ -59,7 +59,7 @@ class TextureCache
 		{
 			addTexture(vkCtx, UUID.randomUUID().toString(), defaultTexturePath, VK_FORMAT_R8G8B8A8_SRGB)
 		}
-		val cmdBuf = CommandBuffer(vkCtx, cmdPool, primary = true, oneTimeSubmit = true)
+		val cmdBuf = CommandBuffer(vkCtx, cmdPool, oneTimeSubmit = true)
 		cmdBuf.recordSubmitAndWait(vkCtx, queue) {
 			textureMap.forEach { (k, v) -> v.recordTextureTransition(cmdBuf) }
 		}

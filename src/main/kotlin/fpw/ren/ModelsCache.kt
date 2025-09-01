@@ -2,7 +2,7 @@ package fpw.ren
 
 import fpw.Renderer
 import fpw.ren.gpu.*
-import fpw.ren.gpu.queuez.CommandQueue
+import fpw.ren.gpu.CommandQueue
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.VK14.*
@@ -25,33 +25,28 @@ class ModelsCache
 		context: Renderer,
 		commandPool: CommandPool,
 		queue: CommandQueue,
-		vararg models: Pair<String, List<Mesh>>,
+		models: Pair<String, Mesh>
 	)
 	{
 		val stagingBufferList = mutableListOf<GPUBuffer>()
 
-		val cmd = CommandBuffer(context, commandPool, primary = true, oneTimeSubmit = true)
+		val cmd = CommandBuffer(context, commandPool, oneTimeSubmit = true)
 		cmd.recordSubmitAndWait(context, queue) {
-			for ((id, meshes) in models)
-			{
-				// Transform meshes loading their data into GPU buffers
-				for (meshData in meshes)
-				{
-					val (vsrc, vdst) = createVerticesBuffers(context, meshData)
-					val (isrc, idst) = createIndicesBuffers(context, meshData)
-					stagingBufferList.add(vsrc)
-					stagingBufferList.add(isrc)
-					recordTransferCommand(cmd, vsrc, vdst)
-					recordTransferCommand(cmd, isrc, idst)
+			val (id, meshData) = models
+			// Transform meshes loading their data into GPU buffers
+			val (vsrc, vdst) = createVerticesBuffers(context, meshData)
+			val (isrc, idst) = createIndicesBuffers(context, meshData)
+			stagingBufferList.add(vsrc)
+			stagingBufferList.add(isrc)
+			recordTransferCommand(cmd, vsrc, vdst)
+			recordTransferCommand(cmd, isrc, idst)
 
-					val vulkanMesh = GPUMesh(
-						vdst,
-						idst,
-						meshData.indices.size,
-					)
-					modelMap[id] = vulkanMesh
-				}
-			}
+			val vulkanMesh = GPUMesh(
+				vdst,
+				idst,
+				meshData.indices.size,
+			)
+			modelMap[id] = vulkanMesh
 		}
 		cmd.cleanup(context, commandPool)
 		stagingBufferList.forEach { it.free(context) }

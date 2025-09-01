@@ -2,7 +2,7 @@ package fpw.ren.gpu
 
 import fpw.Renderer
 import fpw.ren.gpu.GPUtil.gpuCheck
-import fpw.ren.gpu.queuez.CommandQueue
+import fpw.ren.gpu.CommandQueue
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
@@ -11,20 +11,15 @@ import org.lwjgl.vulkan.VK10.*
 class CommandBuffer
 {
 	val oneTimeSubmit: Boolean
-	val primary: Boolean
+	val primary = true
 	val vkCommandBuffer: VkCommandBuffer
-	var isRecording = false
-		private set
 
 	constructor (
 		vkCtx: Renderer,
 		cmdPool: CommandPool,
-		primary: Boolean,
 		oneTimeSubmit: Boolean,
 	)
 	{
-//		Main.logDebug("Creating command buffer")
-		this.primary = primary
 		this.oneTimeSubmit = oneTimeSubmit
 		val vkDevice = vkCtx.vkDevice
 
@@ -32,17 +27,16 @@ class CommandBuffer
 			val cmdBufAllocateInfo = VkCommandBufferAllocateInfo.calloc(stack)
 				.`sType$Default`()
 				.commandPool(cmdPool.vkCommandPool)
-				.level(if (primary) VK_COMMAND_BUFFER_LEVEL_PRIMARY else VK_COMMAND_BUFFER_LEVEL_SECONDARY)
+				.level(if (this.primary) VK_COMMAND_BUFFER_LEVEL_PRIMARY else VK_COMMAND_BUFFER_LEVEL_SECONDARY)
 				.commandBufferCount(1)
 			val pb = stack.mallocPointer(1)
 			gpuCheck(
 				vkAllocateCommandBuffers(vkDevice, cmdBufAllocateInfo, pb),
 				"allocate render command buffer"
 			)
-			vkCommandBuffer = VkCommandBuffer(pb.get(0), vkDevice)
+			vkCommandBuffer = VkCommandBuffer(pb[0], vkDevice)
 		}
 	}
-
 
 
 	inline fun record (cb: CommandBuffer.()->Unit)

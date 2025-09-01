@@ -1,7 +1,7 @@
 package fpw.ren.gpu
 
 import fpw.ren.gpu.GPUtil.gpuCheck
-import fpw.ren.gpu.queuez.CommandQueue
+import fpw.ren.gpu.CommandQueue
 import org.joml.Math.clamp
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
