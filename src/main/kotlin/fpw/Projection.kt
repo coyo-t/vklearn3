@@ -9,11 +9,8 @@ class Projection
 	val projectionMatrix = Matrix4f()
 
 	var fov = 0f
-		private set
 	var zNear = 0f
-		private set
 	var zFar = 0f
-		private set
 
 	constructor (fov: Float, zNear: Float, zFar: Float, width: Int, height: Int)
 	{

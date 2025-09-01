@@ -14,7 +14,7 @@ class Engine (val window: Window)
 	val updatesPerSecond = 120
 
 	val entities = mutableListOf<RenderEntity>()
-	val projection = Projection(
+	var lens = Projection(
 		fov = 90f,
 		zNear = 0.001f,
 		zFar = 100f,
@@ -36,19 +36,12 @@ class Engine (val window: Window)
 
 	fun run ()
 	{
-		viewPoint = addEntity(RenderEntity("camera", "")) {
+		viewPoint = addEntity(RenderEntity("camera")) {
 			location.set(0.5, 0.0, 0.0)
-//			update = {
-//				rotation.setAngleAxis(
-//					toRadians(sin(window.time * PI) * 22.5),
-//					0.0,
-//					0.0,
-//					1.0
-//				)
-//			}
 		}
 
-		addEntity(RenderEntity("tha cube", "Cubezor")) {
+		addEntity(RenderEntity("tha cube")) {
+			modelId = "Cubezor"
 			location.set(0.0, 0.0, -2.0)
 			update = { milliTimeDiff ->
 				location.set(
@@ -64,7 +57,8 @@ class Engine (val window: Window)
 				.rotateY(toRadians(fdt * 60f))
 			}
 		}
-		addEntity(RenderEntity("another one lol", "Cubezor")) {
+		addEntity(RenderEntity("another one lol")) {
+			modelId = "Cubezor"
 			location.set(-0.5, -0.5, -3.0)
 		}
 		render.init()
@@ -101,15 +95,6 @@ class Engine (val window: Window)
 				initialTime = now
 			}
 		}
-//		catch (sg: StopGame)
-//		{
-//			FUtil.logInfo("hard-stopping game")
-//			when (val reason = sg.reason)
-//			{
-//				null -> FUtil.logInfo("no reason given")
-//				else -> FUtil.logInfo("reason: \"$reason\"")
-//			}
-//		}
 		catch (e: Exception)
 		{
 			FUtil.logError(e) { "EXCEPTION FUCK" }

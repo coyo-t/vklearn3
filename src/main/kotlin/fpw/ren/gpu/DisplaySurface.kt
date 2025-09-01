@@ -14,7 +14,7 @@ import org.lwjgl.vulkan.VkSurfaceFormatKHR
 class DisplaySurface
 {
 	val surfaceCaps: VkSurfaceCapabilitiesKHR
-	val surfaceFormat: SurfaceFormat
+	val surfaceFormat: Format
 	val vkSurface: Long
 
 	constructor (instance: GPUInstance, physDevice: HardwareDevice, window: Window)
@@ -69,7 +69,7 @@ class DisplaySurface
 						break
 					}
 				}
-				SurfaceFormat(imageFormat, colorSpace)
+				Format(imageFormat, colorSpace)
 			}
 		}
 	}
@@ -79,5 +79,10 @@ class DisplaySurface
 		surfaceCaps.free()
 		KHRSurface.vkDestroySurfaceKHR(instance.vkInstance, vkSurface, null)
 	}
+
+	data class Format(
+		val imageFormat: Int,
+		val colorSpace: Int,
+	)
 
 }

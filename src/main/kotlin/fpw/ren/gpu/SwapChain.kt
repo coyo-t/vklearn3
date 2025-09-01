@@ -1,6 +1,5 @@
 package fpw.ren.gpu
 
-import fpw.DimensionsProvider
 import fpw.ren.gpu.GPUtil.gpuCheck
 import fpw.ren.gpu.queuez.CommandQueue
 import org.joml.Math.clamp
@@ -17,23 +16,29 @@ import kotlin.math.min
 
 class SwapChain
 {
+	var wide = 0
+	var tall = 0
+
 	val imageViews: List<ImageView>
 	val numImages: Int
 	val swapChainExtent: VkExtent2D
 	val vkSwapChain: Long
 
 	constructor (
-		window: DimensionsProvider,
+		wide: Int,
+		tall: Int,
 		device: LogicalDevice,
 		displaySurface: DisplaySurface,
 		requestedImages: Int,
 		vsync: Boolean,
 	)
 	{
+		this.wide = wide
+		this.tall = tall
 		MemoryStack.stackPush().use { stack ->
 			val surfaceCaps = displaySurface.surfaceCaps
 			val reqImages = calcNumImages(surfaceCaps, requestedImages)
-			swapChainExtent = calcSwapChainExtent(window, surfaceCaps)
+			swapChainExtent = calcSwapChainExtent(surfaceCaps)
 
 			val surfaceFormat = displaySurface.surfaceFormat
 			val vkSwapchainCreateInfo = VkSwapchainCreateInfoKHR.calloc(stack)
@@ -79,7 +84,7 @@ class SwapChain
 		return result
 	}
 
-	private fun calcSwapChainExtent(window: DimensionsProvider, surfCapabilities: VkSurfaceCapabilitiesKHR): VkExtent2D
+	private fun calcSwapChainExtent(surfCapabilities: VkSurfaceCapabilitiesKHR): VkExtent2D
 	{
 		val result = VkExtent2D.calloc()
 		if (surfCapabilities.currentExtent().width() == -0x1)
@@ -87,8 +92,8 @@ class SwapChain
 			// Surface size undefined. Set to the window size if within bounds
 			val minn = surfCapabilities.minImageExtent()
 			val maxx = surfCapabilities.maxImageExtent()
-			result.width(clamp(window.wide, minn.width(), maxx.width()))
-			result.height(clamp(window.tall, minn.height(), maxx.height()))
+			result.width(clamp(this.wide, minn.width(), maxx.width()))
+			result.height(clamp(this.tall, minn.height(), maxx.height()))
 		}
 		else
 		{
@@ -159,7 +164,6 @@ class SwapChain
 		imageViews.forEach { it.free(device) }
 		KHRSwapchain.vkDestroySwapchainKHR(device.vkDevice, vkSwapChain, null)
 	}
-
 
 	fun presentImage(queue: CommandQueue, renderCompleteSem: Semaphore, imageIndex: Int): Boolean
 	{

@@ -8,7 +8,7 @@ import org.joml.Vector3f
 open class RenderEntity
 {
 	val id: String
-	val modelId: String
+	var modelId: String? = null
 	val modelMatrix = Matrix4f()
 	val location = Vector3f()
 	val rotation = Quaternionf()
@@ -16,10 +16,9 @@ open class RenderEntity
 
 	var update: (RenderEntity.(dt:Long)->Unit)? = null
 
-	constructor (id: String, modelId: String)
+	constructor (id: String)
 	{
 		this.id = id
-		this.modelId = modelId
 	}
 
 	fun updateModelMatrix()

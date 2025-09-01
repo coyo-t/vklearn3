@@ -10,7 +10,6 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
-import org.lwjgl.vulkan.VK10.vkCmdBindVertexBuffers
 import org.lwjgl.vulkan.VK14.*
 
 
@@ -32,7 +31,8 @@ class Renderer (engineContext: Engine)
 	val device = LogicalDevice(hardware)
 	var displaySurface = DisplaySurface(instance, hardware, engineContext.window)
 	var swapChain = SwapChain(
-		engineContext.window,
+		engineContext.window.wide,
+		engineContext.window.tall,
 		device,
 		displaySurface,
 		requestedImages = preferredImageBufferingCount,
@@ -63,7 +63,7 @@ class Renderer (engineContext: Engine)
 	private var renderCompleteSemphs = List(swapChain.numImages) {
 		createSemaphor()
 	}
-	private val modelsCache = ModelsCache()
+	private val meshManager = ModelsCache()
 	private var doResize = false
 
 	val clrValueColor = VkClearValue.calloc().color {
@@ -128,7 +128,7 @@ class Renderer (engineContext: Engine)
 			)
 		)
 
-		modelsCache.loadModels(
+		meshManager.loadModels(
 			this,
 			cmdPools[0],
 			graphicsQueue,
@@ -148,7 +148,7 @@ class Renderer (engineContext: Engine)
 		clrValueColor.free()
 		clrValueDepth.free()
 
-		modelsCache.close(this)
+		meshManager.close(this)
 		renderCompleteSemphs.forEach { it.free(this) }
 		imageAqSemphs.forEach { it.free(this) }
 		fences.forEach { it.close(this) }
@@ -282,11 +282,9 @@ class Renderer (engineContext: Engine)
 					val entity = entities[i]
 					if (entity === vp)
 						continue
-					val entityModelId = entity.modelId
-					if (entityModelId.isEmpty())
-						continue
-					val model = modelsCache.modelMap[entityModelId] ?: continue
-					engineContext.projection.projectionMatrix.get(pushConstantsBuffer)
+					val entityModelId = entity.modelId ?: continue
+					val model = meshManager.modelMap[entityModelId] ?: continue
+					engineContext.lens.projectionMatrix.get(pushConstantsBuffer)
 					entity.updateModelMatrix()
 					viewpointMatrix.mul(entity.modelMatrix, mvMatrix)
 					mvMatrix.get(GPUtil.SIZEOF_MAT4, pushConstantsBuffer)
@@ -346,7 +344,8 @@ class Renderer (engineContext: Engine)
 		displaySurface.free(instance)
 		displaySurface = DisplaySurface(instance, hardware, window)
 		swapChain = SwapChain(
-			window,
+			window.wide,
+			window.tall,
 			device,
 			displaySurface,
 			preferredImageBufferingCount,
@@ -365,7 +364,7 @@ class Renderer (engineContext: Engine)
 		}
 
 		val extent = swapChain.swapChainExtent
-		engCtx.projection.resize(extent.width(), extent.height())
+		engCtx.lens.resize(extent.width(), extent.height())
 
 		renderInfo.forEach { it.free() }
 		attInfoDepth.forEach { it.free() }
