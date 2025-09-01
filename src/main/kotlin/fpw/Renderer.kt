@@ -5,6 +5,7 @@ import fpw.ren.gpu.*
 import fpw.ren.gpu.GPUtil.imageBarrier
 import fpw.ren.gpu.queuez.GraphicsQueue
 import fpw.ren.gpu.queuez.PresentQueue
+import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
@@ -80,6 +81,8 @@ class Renderer (engineContext: Engine)
 
 	val descAllocator = DescriptorAllocator(hardware, device)
 
+	val viewpointMatrix = Matrix4f()
+	val mvMatrix = Matrix4f()
 
 	fun init ()
 	{
@@ -242,6 +245,10 @@ class Renderer (engineContext: Engine)
 			)
 
 			GPUtil.renderScoped(cmdHandle, renderInfo[imageIndex]) {
+				val vp = engineContext.viewPoint?.apply {
+					updateModelMatrix()
+					viewpointMatrix.set(modelMatrix).invert()
+				}
 				vkCmdBindPipeline(cmdHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vkPipeline)
 				val swapChainExtent: VkExtent2D = swapChain.swapChainExtent
 				val width = swapChainExtent.width()
@@ -268,11 +275,18 @@ class Renderer (engineContext: Engine)
 				for (i in 0..<numEntities)
 				{
 					val entity = entities[i]
-					val model = modelsCache.modelMap[entity.modelId] ?: continue
+					if (entity === vp)
+						continue
+					val entityModelId = entity.modelId
+					if (entityModelId.isEmpty())
+						continue
+					val model = modelsCache.modelMap[entityModelId] ?: continue
 					val vulkanMeshList = model.vulkanMeshList
 					val numMeshes = vulkanMeshList.size
 					engineContext.projection.projectionMatrix.get(pushConstantsBuffer)
-					entity.modelMatrix.get(GPUtil.SIZEOF_MAT4, pushConstantsBuffer)
+					entity.updateModelMatrix()
+					viewpointMatrix.mul(entity.modelMatrix, mvMatrix)
+					mvMatrix.get(GPUtil.SIZEOF_MAT4, pushConstantsBuffer)
 					vkCmdPushConstants(
 						cmdHandle, pipeline.vkPipelineLayout,
 						VK_SHADER_STAGE_VERTEX_BIT, 0,

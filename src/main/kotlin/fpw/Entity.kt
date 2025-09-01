@@ -5,7 +5,7 @@ import org.joml.Quaternionf
 import org.joml.Vector3f
 
 
-class Entity
+open class Entity
 {
 	val id: String
 	val modelId: String
@@ -21,7 +21,6 @@ class Entity
 		this.id = id
 		this.modelId = modelId
 		this.position.set(x,y,z)
-		updateModelMatrix()
 	}
 
 	fun updateModelMatrix()

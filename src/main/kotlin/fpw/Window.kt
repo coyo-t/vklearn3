@@ -20,6 +20,10 @@ class Window private constructor(
 	lateinit var input: Inputterz
 		private set
 
+	var time: Double
+		get() = glfwGetTime()
+		set(v) = glfwSetTime(v)
+
 	companion object
 	{
 		fun create (title: String, initialWide:Int, initialTall: Int): Window

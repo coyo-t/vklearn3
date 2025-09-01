@@ -2,6 +2,8 @@ package fpw
 
 import org.joml.Math.toRadians
 import org.lwjgl.glfw.GLFW.glfwPollEvents
+import kotlin.math.PI
+import kotlin.math.sin
 
 class Engine (val window: Window)
 {
@@ -17,16 +19,32 @@ class Engine (val window: Window)
 		height = window.tall,
 	)
 
+	var viewPoint: Entity? = null
+
 	private val render = Renderer(this)
 
-	private fun addEntity (who: Entity, init:Entity.()->Unit)
+
+	private fun <T: Entity> addEntity (who: T, init:T.()->Unit): T
 	{
 		init.invoke(who)
 		entities.add(who)
+		return who
 	}
 
 	fun run ()
 	{
+		viewPoint = addEntity(Entity("camera", "", 0f, 0f, 0f)) {
+			update = {
+				position.set(0.5, 0.0, 0.0)
+				rotation.setAngleAxis(
+					toRadians(sin(window.time * PI) * 22.5),
+					0.0,
+					0.0,
+					1.0
+				)
+			}
+		}
+
 		addEntity(Entity("tha cube", "Cubezor", 0f, 0f, -2f)) {
 			update = { milliTimeDiff ->
 				val dt = milliTimeDiff / 1000.0
@@ -34,7 +52,6 @@ class Engine (val window: Window)
 				rotation
 				.rotateX(toRadians(fdt * 45f))
 				.rotateY(toRadians(fdt * 60f))
-				updateModelMatrix()
 			}
 		}
 		addEntity(Entity("another one lol", "Cubezor", -0.5f, -0.5f, -3f)) {
