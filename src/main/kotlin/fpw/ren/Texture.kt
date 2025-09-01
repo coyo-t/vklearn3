@@ -2,6 +2,7 @@ package fpw.ren
 
 import fpw.FUtil
 import fpw.Image
+import fpw.Renderer
 import fpw.ren.gpu.*
 import fpw.ren.gpu.GPUtil.imageBarrier
 import org.lwjgl.system.MemoryStack
@@ -21,7 +22,7 @@ class Texture
 	private var recordedTransition: Boolean
 	private var stgBuffer: GPUBuffer?
 
-	constructor (vkCtx: GPUContext, id: String, srcImage: Image, imageFormat: Int)
+	constructor (vkCtx: Renderer, id: String, srcImage: Image, imageFormat: Int)
 	{
 		this.id = id
 		recordedTransition = false
@@ -52,14 +53,14 @@ class Texture
 		)
 	}
 
-	fun cleanup(vkCtx: GPUContext)
+	fun cleanup(vkCtx: Renderer)
 	{
 		cleanupStgBuffer(vkCtx)
 		imageView.free(vkCtx.device)
 		image.free(vkCtx)
 	}
 
-	fun cleanupStgBuffer(vkCtx: GPUContext)
+	fun cleanupStgBuffer(vkCtx: Renderer)
 	{
 		stgBuffer?.let {
 			it.free(vkCtx)
@@ -127,7 +128,7 @@ class Texture
 		}
 	}
 
-	private fun createStgBuffer (vkCtx: GPUContext, data: MemorySegment): GPUBuffer
+	private fun createStgBuffer (vkCtx: Renderer, data: MemorySegment): GPUBuffer
 	{
 		val size = data.byteSize()
 		val stgBuffer = GPUBuffer(

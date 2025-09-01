@@ -1,5 +1,6 @@
 package fpw.ren.gpu
 
+import fpw.Renderer
 import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
@@ -31,7 +32,7 @@ class GPUBuffer
 	var mappedMemory: Long
 		private set
 
-	constructor (vkCtx: GPUContext, size: Long, usage: Int, reqMask: Int)
+	constructor (vkCtx: Renderer, size: Long, usage: Int, reqMask: Int)
 	{
 		mappedMemory = NULL
 		requestedSize = size
@@ -62,7 +63,7 @@ class GPUBuffer
 		}
 	}
 
-	fun free(context: GPUContext)
+	fun free(context: Renderer)
 	{
 		MemoryUtil.memFree(pb)
 		val vkDevice = context.vkDevice
@@ -70,7 +71,7 @@ class GPUBuffer
 		vkFreeMemory(vkDevice, bufferData, null)
 	}
 
-	fun map(vkCtx: GPUContext): Long
+	fun map(vkCtx: Renderer): Long
 	{
 		if (mappedMemory == NULL)
 		{
@@ -80,7 +81,7 @@ class GPUBuffer
 		return mappedMemory
 	}
 
-	fun unMap(vkCtx: GPUContext)
+	fun unMap(vkCtx: Renderer)
 	{
 		if (mappedMemory != NULL)
 		{
@@ -89,7 +90,7 @@ class GPUBuffer
 		}
 	}
 
-	inline fun doMapped (context: GPUContext, cb: (Long)->Unit)
+	inline fun doMapped (context: Renderer, cb: (Long)->Unit)
 	{
 		cb.invoke(map(context))
 		unMap(context)

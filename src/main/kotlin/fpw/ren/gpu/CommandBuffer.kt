@@ -1,5 +1,6 @@
 package fpw.ren.gpu
 
+import fpw.Renderer
 import fpw.ren.gpu.GPUtil.gpuCheck
 import fpw.ren.gpu.queuez.CommandQueue
 import org.lwjgl.system.MemoryStack
@@ -16,7 +17,7 @@ class CommandBuffer
 		private set
 
 	constructor (
-		vkCtx: GPUContext,
+		vkCtx: Renderer,
 		cmdPool: CommandPool,
 		primary: Boolean,
 		oneTimeSubmit: Boolean,
@@ -51,7 +52,7 @@ class CommandBuffer
 		endRecording()
 	}
 
-	inline fun recordSubmitAndWait (ctc: GPUContext, queue: CommandQueue, cb: CommandBuffer.()->Unit)
+	inline fun recordSubmitAndWait (ctc: Renderer, queue: CommandQueue, cb: CommandBuffer.()->Unit)
 	{
 		beginRecording()
 		cb.invoke(this)
@@ -97,7 +98,7 @@ class CommandBuffer
 		}
 	}
 
-	fun cleanup(vkCtx: GPUContext, cmdPool: CommandPool)
+	fun cleanup(vkCtx: Renderer, cmdPool: CommandPool)
 	{
 //		Main.logTrace("Destroying command buffer")
 		vkFreeCommandBuffers(
@@ -121,7 +122,7 @@ class CommandBuffer
 		vkResetCommandBuffer(vkCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
 	}
 
-	fun submitAndWait(vkCtx: GPUContext, queue: CommandQueue)
+	fun submitAndWait(vkCtx: Renderer, queue: CommandQueue)
 	{
 		val fence = vkCtx.createFence(true)
 		fence.reset(vkCtx)

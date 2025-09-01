@@ -1,6 +1,6 @@
 package fpw.ren.gpu.queuez
 
-import fpw.ren.gpu.GPUContext
+import fpw.Renderer
 import fpw.ren.gpu.GPUFence
 import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
@@ -14,7 +14,7 @@ sealed class CommandQueue
 	val queueFamilyIndex: Int
 	val vkQueue: VkQueue
 
-	constructor (vkCtx: GPUContext, queueFamilyIndex: Int, queueIndex: Int)
+	constructor (vkCtx: Renderer, queueFamilyIndex: Int, queueIndex: Int)
 	{
 
 		this.queueFamilyIndex = queueFamilyIndex

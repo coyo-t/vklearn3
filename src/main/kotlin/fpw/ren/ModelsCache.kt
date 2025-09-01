@@ -1,5 +1,6 @@
 package fpw.ren
 
+import fpw.Renderer
 import fpw.ren.gpu.*
 import fpw.ren.gpu.queuez.CommandQueue
 import org.lwjgl.system.MemoryUtil
@@ -11,30 +12,30 @@ class ModelsCache
 	val modelMap = mutableMapOf<String, GPUModel>()
 
 
-	fun close (context: GPUContext)
+	fun close (context: Renderer)
 	{
 		modelMap.values.forEach { it.cleanup(context) }
 		modelMap.clear()
 	}
 
 	fun loadModels (
-		context: GPUContext,
-		models: List<GPUModelData>,
+		context: Renderer,
 		commandPool: CommandPool,
 		queue: CommandQueue,
+		vararg models: Pair<String, List<GPUMeshData>>,
 	)
 	{
 		val stagingBufferList = mutableListOf<GPUBuffer>()
 
 		val cmd = CommandBuffer(context, commandPool, primary = true, oneTimeSubmit = true)
 		cmd.recordSubmitAndWait(context, queue) {
-			for (modelData in models)
+			for ((id, meshes) in models)
 			{
-				val vulkanModel = GPUModel(modelData.id)
+				val vulkanModel = GPUModel(id)
 				modelMap[vulkanModel.id] = vulkanModel
 
 				// Transform meshes loading their data into GPU buffers
-				for (meshData in modelData.meshes)
+				for (meshData in meshes)
 				{
 					val verticesBuffers = createVerticesBuffers(context, meshData)
 					val indicesBuffers = createIndicesBuffers(context, meshData)
@@ -55,7 +56,7 @@ class ModelsCache
 		stagingBufferList.forEach { it.free(context) }
 	}
 
-	private fun createIndicesBuffers(context: GPUContext, meshData: GPUMeshData): TransferBuffer
+	private fun createIndicesBuffers(context: Renderer, meshData: GPUMeshData): TransferBuffer
 	{
 		val indices = meshData.indices
 		val numIndices = indices.size
@@ -81,7 +82,7 @@ class ModelsCache
 		return TransferBuffer(srcBuffer, dstBuffer)
 	}
 
-	private fun createVerticesBuffers(context: GPUContext, meshData: GPUMeshData): TransferBuffer
+	private fun createVerticesBuffers(context: Renderer, meshData: GPUMeshData): TransferBuffer
 	{
 		val positions = meshData.positions
 		var texCoords = meshData.texCoords

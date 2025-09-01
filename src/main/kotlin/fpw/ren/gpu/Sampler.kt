@@ -1,5 +1,6 @@
 package fpw.ren.gpu
 
+import fpw.Renderer
 import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
@@ -11,7 +12,7 @@ class Sampler
 
 	val vkSampler: Long
 
-	constructor (vkCtx: GPUContext, textureSamplerInfo: SamplerInfo)
+	constructor (vkCtx: Renderer, textureSamplerInfo: SamplerInfo)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val samplerInfo = VkSamplerCreateInfo.calloc(stack)
@@ -43,7 +44,7 @@ class Sampler
 		}
 	}
 
-	fun free(vkCtx: GPUContext)
+	fun free(vkCtx: Renderer)
 	{
 		vkDestroySampler(vkCtx.vkDevice, vkSampler, null)
 	}

@@ -1,5 +1,7 @@
 package fpw.ren.gpu
 
+import fpw.Renderer
+
 
 class GPUMesh(
 	val verticesBuffer: GPUBuffer,
@@ -7,7 +9,7 @@ class GPUMesh(
 	val numIndices: Int
 )
 {
-	fun free (context: GPUContext)
+	fun free (context: Renderer)
 	{
 		verticesBuffer.free(context)
 		indicesBuffer.free(context)

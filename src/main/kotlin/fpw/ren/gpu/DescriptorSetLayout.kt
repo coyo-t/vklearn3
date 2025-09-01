@@ -1,5 +1,6 @@
 package fpw.ren.gpu
 
+import fpw.Renderer
 import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.vkCreateDescriptorSetLayout
@@ -13,7 +14,7 @@ class DescriptorSetLayout
 	val layoutInfos: List<LayoutInfo>
 	val vkDescLayout: Long
 
-	constructor (vkCtx: GPUContext, vararg layoutInfos: LayoutInfo)
+	constructor (vkCtx: Renderer, vararg layoutInfos: LayoutInfo)
 	{
 		this.layoutInfos = layoutInfos.toList()
 		MemoryStack.stackPush().use { stack ->
@@ -43,7 +44,7 @@ class DescriptorSetLayout
 		}
 	}
 
-	fun cleanup(vkCtx: GPUContext)
+	fun cleanup(vkCtx: Renderer)
 	{
 //		Logger.debug("Destroying descriptor set layout")
 		vkDestroyDescriptorSetLayout(vkCtx.vkDevice, vkDescLayout, null)

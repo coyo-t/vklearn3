@@ -1,7 +1,7 @@
 package fpw.ren.gpu.queuez
 
-import fpw.ren.gpu.GPUContext
+import fpw.Renderer
 import fpw.ren.gpu.getPresentQueueFamilyIndex
 
-class PresentQueue (vkCtx: GPUContext, queueIndex: Int):
+class PresentQueue (vkCtx: Renderer, queueIndex: Int):
 	CommandQueue(vkCtx, vkCtx.getPresentQueueFamilyIndex(), queueIndex)

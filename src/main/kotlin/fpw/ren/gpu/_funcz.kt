@@ -1,5 +1,6 @@
 package fpw.ren.gpu
 
+import fpw.Renderer
 import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
@@ -7,7 +8,7 @@ import org.lwjgl.vulkan.VK10.*
 import java.nio.ByteBuffer
 
 
-fun GPUContext.createFence (signaled: Boolean): GPUFence
+fun Renderer.createFence (signaled: Boolean): GPUFence
 {
 	MemoryStack.stackPush().use { stack ->
 		val fenceCreateInfo = VkFenceCreateInfo.calloc(stack)
@@ -19,7 +20,7 @@ fun GPUContext.createFence (signaled: Boolean): GPUFence
 	}
 }
 
-fun GPUContext.createSemaphor(): Semaphore
+fun Renderer.createSemaphor(): Semaphore
 {
 	MemoryStack.stackPush().use { stack ->
 		val semaphoreCreateInfo = VkSemaphoreCreateInfo.calloc(stack).`sType$Default`()
@@ -33,7 +34,7 @@ fun GPUContext.createSemaphor(): Semaphore
 }
 
 
-fun GPUContext.createCommandPool (
+fun Renderer.createCommandPool (
 	queueFamilyIndex: Int,
 	supportReset: Boolean,
 ): CommandPool
@@ -70,7 +71,7 @@ fun LogicalDevice.createPipelineCache(): PipelineCache
 	return PipelineCache(outs)
 }
 
-fun GPUContext.createShaderModule (shaderStage: Int, spirv: ByteBuffer): ShaderModule
+fun Renderer.createShaderModule (shaderStage: Int, spirv: ByteBuffer): ShaderModule
 {
 	check(spirv.isDirect) {
 		"requires direct buffer"
@@ -81,7 +82,7 @@ fun GPUContext.createShaderModule (shaderStage: Int, spirv: ByteBuffer): ShaderM
 	)
 }
 
-private fun GPUContext._createShaderModule(spirv: ByteBuffer): Long
+private fun Renderer._createShaderModule(spirv: ByteBuffer): Long
 {
 	MemoryStack.stackPush().use { stack ->
 //				val pCode = stack.malloc(code.size).put(0, code)
@@ -99,7 +100,7 @@ private fun GPUContext._createShaderModule(spirv: ByteBuffer): Long
 	}
 }
 
-internal fun GPUContext.getGraphicsQueueFamilyIndex(): Int
+internal fun Renderer.getGraphicsQueueFamilyIndex(): Int
 {
 	val queuePropsBuff = hardware.vkQueueFamilyProps
 	val uhh = queuePropsBuff.indexOfFirst { (it.queueFlags() and VK10.VK_QUEUE_GRAPHICS_BIT) != 0 }
@@ -109,7 +110,7 @@ internal fun GPUContext.getGraphicsQueueFamilyIndex(): Int
 	return uhh
 }
 
-internal fun GPUContext.getPresentQueueFamilyIndex(): Int
+internal fun Renderer.getPresentQueueFamilyIndex(): Int
 {
 	MemoryStack.stackPush().use { stack ->
 		val queuePropsBuff = hardware.vkQueueFamilyProps

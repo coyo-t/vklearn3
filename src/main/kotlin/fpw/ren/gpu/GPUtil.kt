@@ -1,5 +1,6 @@
 package fpw.ren.gpu
 
+import fpw.Renderer
 import fpw.TestCube
 import fpw.ren.ShaderAssetThinger
 import org.lwjgl.system.MemoryStack
@@ -18,7 +19,7 @@ object GPUtil
 	val SIZEOF_FLOAT = JAVA_FLOAT.byteSize().toInt()
 	val SIZEOF_MAT4 = SIZEOF_FLOAT*4*4
 
-	fun memoryTypeFromProperties(vkCtx: GPUContext, typeBits: Int, reqsMask: Int): Int
+	fun memoryTypeFromProperties(vkCtx: Renderer, typeBits: Int, reqsMask: Int): Int
 	{
 		var typeBits = typeBits
 		val memoryTypes: VkMemoryType.Buffer = vkCtx.hardware.vkMemoryProperties.memoryTypes()
@@ -96,7 +97,7 @@ object GPUtil
 		VK_ERROR_UNKNOWN to "unknown",
 	).withDefault { "unmapped??? #$it" }
 
-	fun createDepthAttachments (vkCtx: GPUContext): List<Attachment>
+	fun createDepthAttachments (vkCtx: Renderer): List<Attachment>
 	{
 		val swapChain = vkCtx.swapChain
 		val numImages: Int = swapChain.numImages
@@ -113,7 +114,7 @@ object GPUtil
 	}
 
 	fun createDepthAttachmentsInfo(
-		vkCtx: GPUContext,
+		vkCtx: Renderer,
 		depthAttachments: List<Attachment>,
 		clearValue: VkClearValue
 	): List<VkRenderingAttachmentInfo>
@@ -131,7 +132,7 @@ object GPUtil
 		}
 	}
 
-	fun createPipeline (vkCtx: GPUContext, shaderModules: List<ShaderModule>): Pipeline
+	fun createPipeline (vkCtx: Renderer, shaderModules: List<ShaderModule>): Pipeline
 	{
 		val buildInfo = PipelineBuildInfo(
 				shaderModules = shaderModules,
@@ -145,7 +146,7 @@ object GPUtil
 		return Pipeline(vkCtx, buildInfo)
 	}
 
-	fun createShaderModules(vkCtx: GPUContext): List<ShaderModule>
+	fun createShaderModules(vkCtx: Renderer): List<ShaderModule>
 	{
 		val srcs = ShaderAssetThinger.loadFromLuaScript(Path("resources/assets/shader/scene.lua"))
 		val v = ShaderAssetThinger.compileSPIRV(srcs.vertex, Shaderc.shaderc_glsl_vertex_shader)

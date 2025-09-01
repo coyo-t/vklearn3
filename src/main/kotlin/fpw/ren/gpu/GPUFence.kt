@@ -1,21 +1,22 @@
 package fpw.ren.gpu
 
+import fpw.Renderer
 import org.lwjgl.vulkan.VK10.*
 
 
 class GPUFence(val vkFence: Long)
 {
-	fun close (context: GPUContext)
+	fun close (context: Renderer)
 	{
 		vkDestroyFence(context.vkDevice, vkFence, null)
 	}
 
-	fun wait(vkCtx: GPUContext)
+	fun wait(vkCtx: Renderer)
 	{
 		vkWaitForFences(vkCtx.vkDevice, vkFence, true, Long.MAX_VALUE)
 	}
 
-	fun reset(vkCtx: GPUContext)
+	fun reset(vkCtx: Renderer)
 	{
 		vkResetFences(vkCtx.vkDevice, vkFence)
 	}

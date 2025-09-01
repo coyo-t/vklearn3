@@ -1,5 +1,6 @@
 package fpw.ren.gpu
 
+import fpw.Renderer
 import org.lwjgl.vulkan.VK14.*
 
 
@@ -24,7 +25,7 @@ class Attachment
 		)
 	}
 
-	constructor (vkCtx: GPUContext, width: Int, height: Int, format: Int, usage: Int)
+	constructor (vkCtx: Renderer, width: Int, height: Int, format: Int, usage: Int)
 	{
 		val imageData = GPUImage.Data(
 			wide = width,
@@ -56,7 +57,7 @@ class Attachment
 		)
 	}
 
-	fun close (context: GPUContext)
+	fun close (context: Renderer)
 	{
 		imageView.free(context.device)
 		image.free(context)

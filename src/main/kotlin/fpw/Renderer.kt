@@ -15,26 +15,48 @@ import org.lwjgl.vulkan.VK14.*
 
 class Renderer (engineContext: Engine)
 {
-	private val vkContext = GPUContext(engineContext.window)
+	val instance = GPUInstance(
+		validate = EngineConfig.useVulkanValidationLayers,
+	)
+	val hardware = HardwareDevice.createPhysicalDevice(
+		instance,
+		prefDeviceName = EngineConfig.preferredPhysicalDevice,
+	)
+	val device = LogicalDevice(hardware)
+	var displaySurface = DisplaySurface(instance, hardware, engineContext.window)
+	var swapChain = SwapChain(
+		engineContext.window,
+		device,
+		displaySurface,
+		requestedImages = EngineConfig.preferredImageBufferingCount,
+		vsync = EngineConfig.useVerticalSync,
+	)
+
+	val vkDevice get() = device.vkDevice
+
+	val pipelineCache = device.createPipelineCache()
+
+
+//	private val vkContext = GPUContext(engineContext.window)
 	private var currentFrame = 0
 
-	private val graphQueue = GraphicsQueue(vkContext, 0)
-	private val presentQueue = PresentQueue(vkContext, 0)
+	private val graphQueue = GraphicsQueue(this, 0)
+	private val presentQueue = PresentQueue(this, 0)
 
 	private val cmdPools = List(EngineConfig.maxInFlightFrames) {
-		vkContext.createCommandPool(graphQueue.queueFamilyIndex, false)
+		createCommandPool(graphQueue.queueFamilyIndex, false)
 	}
 	private val cmdBuffers = cmdPools.map {
-		CommandBuffer(vkContext, it, primary = true, oneTimeSubmit = true)
+		CommandBuffer(this, it, primary = true, oneTimeSubmit = true)
 	}
 	private var imageAqSemphs = List(EngineConfig.maxInFlightFrames) {
-		vkContext.createSemaphor()
+		createSemaphor()
 	}
 	private var fences = List(EngineConfig.maxInFlightFrames) {
-		vkContext.createFence(signaled = true)
+		createFence(signaled = true)
 	}
-	private var renderCompleteSemphs = List(vkContext.swapChain.numImages) {
-		vkContext.createSemaphor()
+	private var renderCompleteSemphs = List(swapChain.numImages) {
+		createSemaphor()
 	}
 	private val modelsCache = ModelsCache()
 	private var doResize = false
@@ -45,14 +67,14 @@ class Renderer (engineContext: Engine)
 	val clrValueDepth = VkClearValue.calloc().color {
 		it.float32(0, 1f)
 	}
-	var attDepth = GPUtil.createDepthAttachments(vkContext)
-	var attInfoColor = createColorAttachmentsInfo(vkContext, clrValueColor)
-	var attInfoDepth = GPUtil.createDepthAttachmentsInfo(vkContext, attDepth, clrValueDepth)
-	var renderInfo = createRenderInfo(vkContext, attInfoColor, attInfoDepth)
+	var attDepth = GPUtil.createDepthAttachments(this)
+	var attInfoColor = createColorAttachmentsInfo(clrValueColor)
+	var attInfoDepth = GPUtil.createDepthAttachmentsInfo(this, attDepth, clrValueDepth)
+	var renderInfo = createRenderInfo(attInfoColor, attInfoDepth)
 	val pipeline = run {
-		val shaderModules = GPUtil.createShaderModules(vkContext)
-		GPUtil.createPipeline(vkContext, shaderModules).also {
-			shaderModules.forEach { it.free(vkContext) }
+		val shaderModules = GPUtil.createShaderModules(this)
+		GPUtil.createPipeline(this, shaderModules).also {
+			shaderModules.forEach { it.free(this) }
 		}
 	}
 	val pushConstantsBuffer = FUtil.createBuffer(128)
@@ -97,41 +119,50 @@ class Renderer (engineContext: Engine)
 				7, 6, 4, 7, 4, 5,
 			)
 		)
-		val modelData = GPUModelData("Cubezor", listOf(meshData))
 
-		modelsCache.loadModels(vkContext, listOf(modelData), cmdPools[0], graphQueue)
+		modelsCache.loadModels(
+			this,
+			cmdPools[0],
+			graphQueue,
+			"Cubezor" to listOf(meshData),
+		)
 	}
 
 	fun free()
 	{
-		vkContext.device.waitIdle()
+		device.waitIdle()
 
-		pipeline.cleanup(vkContext)
+		pipeline.cleanup(this)
 		renderInfo.forEach { it.free() }
 		attInfoColor.forEach { it.free() }
 		attInfoDepth.forEach { it.free() }
-		attDepth.forEach { it.close(vkContext) }
+		attDepth.forEach { it.close(this) }
 		clrValueColor.free()
 		clrValueDepth.free()
 
-		modelsCache.close(vkContext)
-		renderCompleteSemphs.forEach { it.free(vkContext) }
-		imageAqSemphs.forEach { it.free(vkContext) }
-		fences.forEach { it.close(vkContext) }
+		modelsCache.close(this)
+		renderCompleteSemphs.forEach { it.free(this) }
+		imageAqSemphs.forEach { it.free(this) }
+		fences.forEach { it.close(this) }
 		for ((cb, cp) in cmdBuffers.zip(cmdPools))
 		{
-			cb.cleanup(vkContext, cp)
-			cp.free(vkContext)
+			cb.cleanup(this, cp)
+			cp.free(this)
 		}
 
-		vkContext.free()
+		pipelineCache.free(this)
+		swapChain.cleanup(device)
+		displaySurface.free(instance)
+		device.close()
+		hardware.free()
+		instance.close()
 	}
 
 	private fun submit(cmdBuff: CommandBuffer, currentFrame: Int, imageIndex: Int)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val fence = fences[currentFrame]
-			fence.reset(vkContext)
+			fence.reset(this)
 			val cmds = VkCommandBufferSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
 				.commandBuffer(cmdBuff.vkCommandBuffer)
@@ -149,14 +180,14 @@ class Renderer (engineContext: Engine)
 
 	fun render (engineContext: Engine)
 	{
-		val swapChain = vkContext.swapChain
+		val swapChain = swapChain
 
-		fences[currentFrame].wait(vkContext)
+		fences[currentFrame].wait(this)
 
 		val cmdPool = cmdPools[currentFrame]
 		val cmdBuffer = cmdBuffers[currentFrame]
 
-		cmdPool.reset(vkContext)
+		cmdPool.reset(this)
 		cmdBuffer.beginRecording()
 
 		if (doResize)
@@ -164,7 +195,7 @@ class Renderer (engineContext: Engine)
 			resize(engineContext)
 			return
 		}
-		val imageIndex = swapChain.acquireNextImage(vkContext.device, imageAqSemphs[currentFrame])
+		val imageIndex = swapChain.acquireNextImage(device, imageAqSemphs[currentFrame])
 		if (imageIndex < 0)
 		{
 			resize(engineContext)
@@ -172,7 +203,7 @@ class Renderer (engineContext: Engine)
 		}
 		// scene render
 		MemoryStack.stackPush().use { stack ->
-			val swapChain = vkContext.swapChain
+			val swapChain = swapChain
 			val swapChainImage = swapChain.imageViews[imageIndex].vkImage
 			val cmdHandle = cmdBuffer.vkCommandBuffer
 
@@ -296,40 +327,48 @@ class Renderer (engineContext: Engine)
 			return
 		}
 		doResize = false
-		vkContext.device.waitIdle()
+		device.waitIdle()
 
-		vkContext.resize(window)
+		swapChain.cleanup(device)
+		displaySurface.free(instance)
+		displaySurface = DisplaySurface(instance, hardware, window)
+		swapChain = SwapChain(
+			window,
+			device,
+			displaySurface,
+			EngineConfig.preferredImageBufferingCount,
+			EngineConfig.useVerticalSync,
+		)
 
-		renderCompleteSemphs.forEach { it.free(vkContext) }
-		imageAqSemphs.forEach { it.free(vkContext) }
+		renderCompleteSemphs.forEach { it.free(this) }
+		imageAqSemphs.forEach { it.free(this) }
 
 		imageAqSemphs = List(EngineConfig.maxInFlightFrames) {
-			vkContext.createSemaphor()
+			createSemaphor()
 		}
 
-		renderCompleteSemphs = List(vkContext.swapChain.numImages) {
-			vkContext.createSemaphor()
+		renderCompleteSemphs = List(swapChain.numImages) {
+			createSemaphor()
 		}
 
-		val extent = vkContext.swapChain.swapChainExtent
+		val extent = swapChain.swapChainExtent
 		engCtx.projection.resize(extent.width(), extent.height())
 
 		renderInfo.forEach { it.free() }
 		attInfoDepth.forEach { it.free() }
 		attInfoColor.forEach { it.free() }
-		attDepth.forEach { it.close(vkContext) }
-		attDepth = GPUtil.createDepthAttachments(vkContext)
-		attInfoColor = createColorAttachmentsInfo(vkContext, clrValueColor)
-		attInfoDepth = GPUtil.createDepthAttachmentsInfo(vkContext, attDepth, clrValueDepth)
-		renderInfo = createRenderInfo(vkContext, attInfoColor, attInfoDepth)
+		attDepth.forEach { it.close(this) }
+		attDepth = GPUtil.createDepthAttachments(this)
+		attInfoColor = createColorAttachmentsInfo(clrValueColor)
+		attInfoDepth = GPUtil.createDepthAttachmentsInfo(this, attDepth, clrValueDepth)
+		renderInfo = createRenderInfo(attInfoColor, attInfoDepth)
 	}
 
 	fun createColorAttachmentsInfo(
-		vkCtx: GPUContext,
 		clearValue: VkClearValue
 	): List<VkRenderingAttachmentInfo.Buffer>
 	{
-		val swapChain = vkCtx.swapChain
+		val swapChain = swapChain
 		return List(swapChain.numImages) {
 			VkRenderingAttachmentInfo.calloc(1)
 				.`sType$Default`()
@@ -342,18 +381,15 @@ class Renderer (engineContext: Engine)
 	}
 
 	fun createRenderInfo(
-		vkCtx: GPUContext,
 		colorAttachments: List<VkRenderingAttachmentInfo.Buffer>,
 		depthAttachments: List<VkRenderingAttachmentInfo>,
 	): List<VkRenderingInfo>
 	{
-		val swapChain = vkCtx.swapChain
-		val numImages = swapChain.numImages
 
 		MemoryStack.stackPush().use { stack ->
-			val extent = swapChain.swapChainExtent
+			val extent = this.swapChain.swapChainExtent
 			val renderArea = VkRect2D.calloc(stack).extent(extent)
-			return List(numImages) {
+			return List(swapChain.numImages) {
 				VkRenderingInfo.calloc()
 					.`sType$Default`()
 					.renderArea(renderArea)

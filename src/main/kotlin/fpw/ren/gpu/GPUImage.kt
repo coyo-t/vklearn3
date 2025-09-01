@@ -1,5 +1,6 @@
 package fpw.ren.gpu
 
+import fpw.Renderer
 import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK14.*
@@ -15,7 +16,7 @@ class GPUImage
 	val vkImage: Long
 	val vkMemory: Long
 
-	constructor (vkCtx: GPUContext, imageData: Data)
+	constructor (vkCtx: Renderer, imageData: Data)
 	{
 		MemoryStack.stackPush().use { stack ->
 			this.format = imageData.format
@@ -73,7 +74,7 @@ class GPUImage
 		}
 	}
 
-	fun free(context: GPUContext)
+	fun free(context: Renderer)
 	{
 		val d = context.vkDevice
 		vkDestroyImage(d, vkImage, null)

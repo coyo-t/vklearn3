@@ -1,5 +1,6 @@
 package fpw.ren.gpu
 
+import fpw.Renderer
 import fpw.ren.gpu.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
@@ -11,7 +12,7 @@ import org.lwjgl.vulkan.VK10.vkDestroyPipeline
 import org.lwjgl.vulkan.VK14.*
 
 
-class Pipeline (vkCtx: GPUContext, buildInfo: PipelineBuildInfo)
+class Pipeline (vkCtx: Renderer, buildInfo: PipelineBuildInfo)
 {
 	val vkPipeline: Long
 	val vkPipelineLayout: Long
@@ -165,7 +166,7 @@ class Pipeline (vkCtx: GPUContext, buildInfo: PipelineBuildInfo)
 		}
 	}
 
-	fun cleanup(vkCtx: GPUContext)
+	fun cleanup(vkCtx: Renderer)
 	{
 //		Main.logDebug("Destroying pipeline")
 		val vkDevice = vkCtx.vkDevice

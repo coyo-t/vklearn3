@@ -1,11 +1,12 @@
 package fpw.ren.gpu
 
+import fpw.Renderer
 import org.lwjgl.vulkan.VK10.vkDestroyPipelineCache
 
 
 class PipelineCache (val vkPipelineCache: Long)
 {
-	fun free (context: GPUContext)
+	fun free (context: Renderer)
 	{
 		vkDestroyPipelineCache(context.vkDevice, vkPipelineCache, null)
 	}
