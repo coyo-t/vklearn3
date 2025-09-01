@@ -100,11 +100,11 @@ class Pipeline (vkCtx: Renderer, buildInfo: Info)
 				vpcr = VkPushConstantRange.calloc(numPushConstants, stack)
 				for (i in 0..<numPushConstants)
 				{
-					val pushConstRange = pushConstRanges[i]
+					val (stage, offset, size) = pushConstRanges[i]
 					vpcr[i]
-						.stageFlags(pushConstRange.stage)
-						.offset(pushConstRange.offset)
-						.size(pushConstRange.size)
+						.stageFlags(stage)
+						.offset(offset)
+						.size(size)
 				}
 			}
 			else
@@ -176,6 +176,6 @@ class Pipeline (vkCtx: Renderer, buildInfo: Info)
 		val shaderModules: List<ShaderModule>,
 		val vi: VkPipelineVertexInputStateCreateInfo,
 		val depthFormat: Int = VK_FORMAT_UNDEFINED,
-		val pushConstRange: List<PushConstantRange> = emptyList(),
+		val pushConstRange: List<Triple<Int, Int, Int>> = emptyList(),
 	)
 }

@@ -145,7 +145,7 @@ object GPUtil
 				colorFormat = vkCtx.displaySurface.surfaceFormat.imageFormat,
 				depthFormat = VK_FORMAT_D16_UNORM,
 				pushConstRange = listOf(
-					PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, 0, 128)
+					Triple(VK_SHADER_STAGE_VERTEX_BIT, 0, 128)
 				)
 			)
 		return Pipeline(vkCtx, buildInfo)
