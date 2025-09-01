@@ -60,11 +60,12 @@ class TextureCache
 			addTexture(vkCtx, UUID.randomUUID().toString(), defaultTexturePath, VK_FORMAT_R8G8B8A8_SRGB)
 		}
 		val cmdBuf = CommandBuffer(vkCtx, cmdPool, oneTimeSubmit = true)
-		cmdBuf.recordSubmitAndWait(vkCtx, queue) {
-			textureMap.forEach { (k, v) -> v.recordTextureTransition(cmdBuf) }
+		cmdBuf.record {
+			textureMap.values.forEach { it.recordTextureTransition(cmdBuf) }
 		}
-		cmdBuf.cleanup(vkCtx, cmdPool)
-		textureMap.forEach { (k, v) -> v.cleanupStgBuffer(vkCtx) }
+		cmdBuf.submitAndWait(vkCtx, queue)
+		cmdBuf.free(vkCtx, cmdPool)
+		textureMap.values.forEach { it.cleanupStgBuffer(vkCtx) }
 	}
 
 }

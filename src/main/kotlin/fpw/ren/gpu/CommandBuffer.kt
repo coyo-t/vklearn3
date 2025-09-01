@@ -2,7 +2,6 @@ package fpw.ren.gpu
 
 import fpw.Renderer
 import fpw.ren.gpu.GPUtil.gpuCheck
-import fpw.ren.gpu.CommandQueue
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
@@ -11,23 +10,25 @@ import org.lwjgl.vulkan.VK10.*
 class CommandBuffer
 {
 	val oneTimeSubmit: Boolean
-	val primary = true
 	val vkCommandBuffer: VkCommandBuffer
+	var inheritanceInfo: InheritanceInfo?
 
 	constructor (
 		vkCtx: Renderer,
 		cmdPool: CommandPool,
 		oneTimeSubmit: Boolean,
+		inherit:InheritanceInfo?=null
 	)
 	{
 		this.oneTimeSubmit = oneTimeSubmit
 		val vkDevice = vkCtx.vkDevice
+		inheritanceInfo = inherit
 
 		MemoryStack.stackPush().use { stack ->
 			val cmdBufAllocateInfo = VkCommandBufferAllocateInfo.calloc(stack)
 				.`sType$Default`()
 				.commandPool(cmdPool.vkCommandPool)
-				.level(if (this.primary) VK_COMMAND_BUFFER_LEVEL_PRIMARY else VK_COMMAND_BUFFER_LEVEL_SECONDARY)
+				.level(if (inherit == null) VK_COMMAND_BUFFER_LEVEL_PRIMARY else VK_COMMAND_BUFFER_LEVEL_SECONDARY)
 				.commandBufferCount(1)
 			val pb = stack.mallocPointer(1)
 			gpuCheck(
@@ -46,38 +47,28 @@ class CommandBuffer
 		endRecording()
 	}
 
-	inline fun recordSubmitAndWait (ctc: Renderer, queue: CommandQueue, cb: CommandBuffer.()->Unit)
+	fun beginRecording ()
 	{
-		record(cb)
-		submitAndWait(ctc, queue)
-	}
-
-	fun beginRecording (inheritanceInfo:InheritanceInfo?=null)
-	{
-//		check(!isRecording) { "already recording!" }
-//		isRecording = true
 		MemoryStack.stackPush().use { stack ->
 			val cmdBufInfo = VkCommandBufferBeginInfo.calloc(stack).`sType$Default`()
 			if (oneTimeSubmit)
 			{
 				cmdBufInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
 			}
-			if (!primary)
+			val inherit = inheritanceInfo
+			if (inherit != null)
 			{
-				requireNotNull(inheritanceInfo) {
-					"Secondary buffers must declare inheritance info"
-				}
-				val numColorFormats = inheritanceInfo.colorFormats.size
-				val pColorFormats = stack.callocInt(inheritanceInfo.colorFormats.size)
+				val numColorFormats = inherit.colorFormats.size
+				val pColorFormats = stack.callocInt(inherit.colorFormats.size)
 				for (i in 0..<numColorFormats)
 				{
-					pColorFormats.put(0, inheritanceInfo.colorFormats[i])
+					pColorFormats.put(0, inherit.colorFormats[i])
 				}
 				val renderingInfo = VkCommandBufferInheritanceRenderingInfo.calloc(stack)
 					.`sType$Default`()
-					.depthAttachmentFormat(inheritanceInfo.depthFormat)
+					.depthAttachmentFormat(inherit.depthFormat)
 					.pColorAttachmentFormats(pColorFormats)
-					.rasterizationSamples(inheritanceInfo.rasterizationSamples)
+					.rasterizationSamples(inherit.rasterizationSamples)
 				val vkInheritanceInfo = VkCommandBufferInheritanceInfo.calloc(stack)
 					.`sType$Default`()
 					.pNext(renderingInfo)
@@ -90,7 +81,7 @@ class CommandBuffer
 		}
 	}
 
-	fun cleanup(vkCtx: Renderer, cmdPool: CommandPool)
+	fun free(vkCtx: Renderer, cmdPool: CommandPool)
 	{
 		vkFreeCommandBuffers(
 			vkCtx.device.vkDevice, cmdPool.vkCommandPool,

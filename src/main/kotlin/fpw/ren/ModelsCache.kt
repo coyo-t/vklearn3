@@ -31,7 +31,7 @@ class ModelsCache
 		val stagingBufferList = mutableListOf<GPUBuffer>()
 
 		val cmd = CommandBuffer(context, commandPool, oneTimeSubmit = true)
-		cmd.recordSubmitAndWait(context, queue) {
+		cmd.record {
 			val (id, meshData) = models
 			// Transform meshes loading their data into GPU buffers
 			val (vsrc, vdst) = createVerticesBuffers(context, meshData)
@@ -48,7 +48,8 @@ class ModelsCache
 			)
 			modelMap[id] = vulkanMesh
 		}
-		cmd.cleanup(context, commandPool)
+		cmd.submitAndWait(context, queue)
+		cmd.free(context, commandPool)
 		stagingBufferList.forEach { it.free(context) }
 	}
 

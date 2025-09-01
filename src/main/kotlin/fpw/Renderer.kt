@@ -153,7 +153,7 @@ class Renderer (engineContext: Engine)
 		fences.forEach { it.close(this) }
 		for ((cb, cp) in cmdBuffers.zip(cmdPools))
 		{
-			cb.cleanup(this, cp)
+			cb.free(this, cp)
 			cp.free(this)
 		}
 //		descAllocator.free(device)
