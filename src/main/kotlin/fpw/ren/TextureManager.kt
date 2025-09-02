@@ -8,7 +8,6 @@ import fpw.ren.gpu.CommandBuffer
 import fpw.ren.gpu.CommandPool
 import fpw.ren.gpu.CommandQueue
 import org.lwjgl.vulkan.VK10.VK_FORMAT_R8G8B8A8_SRGB
-import kotlin.io.path.Path
 import kotlin.io.path.div
 
 
@@ -27,8 +26,13 @@ class TextureManager (val renderer: Renderer)
 		try
 		{
 			val srcImage = Image.load(FUtil.ASSETS_PATH/p)!!
-			val outs = addTexture(p, srcImage, VK_FORMAT_R8G8B8A8_SRGB)
-			transitionTextures(renderer.currentCommandPool, renderer.graphicsQueue, outs)
+			val outs = Texture(renderer, p, srcImage, VK_FORMAT_R8G8B8A8_SRGB)
+			textureMap[p] = outs
+			uploadTextures(
+				renderer.currentSwapChainDirector.commandPool,
+				renderer.graphicsQueue,
+				outs,
+			)
 			return outs
 		}
 		catch (e: Exception)
@@ -38,39 +42,13 @@ class TextureManager (val renderer: Renderer)
 		}
 	}
 
-	fun addTexture(id: String, srcImage: Image, format: Int): Texture
-	{
-		return textureMap.getOrPut(id) {
-			Texture(renderer, id, srcImage, format)
-		}
-	}
-
-	fun addTexture (id: String, texturePath: String, format: Int): Texture?
-	{
-		try
-		{
-			val srcImage = Image.load(Path(texturePath))!!
-			return addTexture(id, srcImage, format)
-		}
-		catch (e: Exception)
-		{
-			FUtil.logError(e) {"Could not load texture [$texturePath]" }
-			return null
-		}
-	}
-
 	fun free ()
 	{
 		textureMap.values.forEach { it.cleanup(renderer) }
 		textureMap.clear()
 	}
 
-	fun getTexture(texturePath: String): Texture
-	{
-		return textureMap[texturePath]!!
-	}
-
-	fun transitionTextures (cmd: CommandPool, queue: CommandQueue, vararg textures: Texture)
+	fun uploadTextures (cmd: CommandPool, queue: CommandQueue, vararg textures: Texture)
 	{
 		val c = CommandBuffer(renderer, cmd, oneTimeSubmit = true)
 		c.beginRecording()

@@ -4,16 +4,19 @@ import fpw.ren.ModelsCache
 import fpw.ren.Texture
 import fpw.ren.TextureManager
 import fpw.ren.gpu.*
+import fpw.ren.gpu.GPUtil.gpuCheck
 import fpw.ren.gpu.GPUtil.imageBarrier
-import fpw.ren.gpu.CommandQueue
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
+import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
 import org.lwjgl.vulkan.VK14.*
+import org.lwjgl.vulkan.VkShaderModuleCreateInfo.calloc
 import party.iroiro.luajava.value.LuaTableValue
 import java.awt.Color
+import java.nio.ByteBuffer
 
 
 class Renderer (engineContext: Engine)
@@ -136,7 +139,7 @@ class Renderer (engineContext: Engine)
 
 	lateinit var textureTerrain: Texture
 
-	val currentCommandPool get() = swapChainDirectors[currentFrame].commandPool
+	val currentSwapChainDirector get() = swapChainDirectors[currentFrame]
 
 	fun init (engine: Engine)
 	{
@@ -174,7 +177,7 @@ class Renderer (engineContext: Engine)
 
 			meshManager.loadModels(
 				this,
-				currentCommandPool,
+				currentSwapChainDirector.commandPool,
 				graphicsQueue,
 				thing["temp_name"].toString(),
 				Mesh(
@@ -206,7 +209,7 @@ class Renderer (engineContext: Engine)
 		clrValueDepth.free()
 
 		meshManager.close(this)
-//		renderCompleteSemphs.forEach { it.free(this) }
+		renderCompleteSemphs.forEach { it.free(this) }
 //		imageAqSemphs.forEach { it.free(this) }
 //		fences.forEach { it.free(this) }
 //		for ((cb, cp) in cmdBuffers.zip(cmdPools))
@@ -491,4 +494,70 @@ class Renderer (engineContext: Engine)
 		}
 	}
 
+	fun createCommandPool (
+		queueFamilyIndex: Int,
+		supportReset: Boolean,
+	): CommandPool
+	{
+		MemoryStack.stackPush().use { stack ->
+			val cmdPoolInfo = VkCommandPoolCreateInfo.calloc(stack)
+				.`sType$Default`()
+				.queueFamilyIndex(queueFamilyIndex)
+			if (supportReset)
+			{
+				cmdPoolInfo.flags(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
+			}
+
+			val lp = stack.mallocLong(1)
+			gpuCheck(
+				vkCreateCommandPool(device.vkDevice, cmdPoolInfo, null, lp),
+				"Failed to create command pool"
+			)
+			return CommandPool(lp[0])
+		}
+	}
+
+	fun createFence (signaled: Boolean): GPUFence
+	{
+		MemoryStack.stackPush().use { stack ->
+			val fenceCreateInfo = VkFenceCreateInfo.calloc(stack)
+				.`sType$Default`()
+				.flags(if (signaled) VK_FENCE_CREATE_SIGNALED_BIT else 0)
+			val lp = stack.mallocLong(1)
+			gpuCheck(vkCreateFence(vkDevice, fenceCreateInfo, null, lp), "Failed to create fence")
+			return GPUFence(lp[0])
+		}
+	}
+
+	fun createSemaphor(): Semaphore
+	{
+		MemoryStack.stackPush().use { stack ->
+			val semaphoreCreateInfo = VkSemaphoreCreateInfo.calloc(stack).`sType$Default`()
+			val lp = stack.mallocLong(1)
+			gpuCheck(
+				vkCreateSemaphore(vkDevice, semaphoreCreateInfo, null, lp),
+				"Failed to create semaphore"
+			)
+			return Semaphore(lp.get(0))
+		}
+	}
+
+	fun createShaderModule (shaderStage: Int, spirv: ByteBuffer): ShaderModule
+	{
+		return ShaderModule(
+			handle = stackPush().use { stack ->
+				val moduleCreateInfo = calloc(stack)
+					.`sType$Default`()
+					.pCode(spirv)
+
+				val lp = stack.mallocLong(1)
+				gpuCheck(
+					vkCreateShaderModule(vkDevice, moduleCreateInfo, null, lp),
+					"Failed to create shader module"
+				)
+				lp.get(0)
+			},
+			shaderStage = shaderStage,
+		)
+	}
 }
