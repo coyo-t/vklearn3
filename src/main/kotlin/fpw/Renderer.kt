@@ -11,6 +11,7 @@ import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
 import org.lwjgl.vulkan.VK14.*
 import party.iroiro.luajava.value.LuaTableValue
+import java.awt.Color
 
 
 class Renderer (engineContext: Engine)
@@ -66,9 +67,7 @@ class Renderer (engineContext: Engine)
 	private val meshManager = ModelsCache()
 	private var doResize = false
 
-	val clrValueColor = VkClearValue.calloc().color {
-		it.float32(0, 0.5f).float32(1, 0.7f).float32(2, 0.9f).float32(3, 1.0f)
-	}
+	val clrValueColor = GPUtil.clearTintFrom(Color(0x7FB2E5))
 	val clrValueDepth = VkClearValue.calloc().color {
 		it.float32(0, 1f)
 	}
@@ -76,18 +75,44 @@ class Renderer (engineContext: Engine)
 	var attInfoColor = createColorAttachmentsInfo(clrValueColor)
 	var attInfoDepth = GPUtil.createDepthAttachmentsInfo(this, attDepth, clrValueDepth)
 	var renderInfo = createRenderInfo(attInfoColor, attInfoDepth)
-	val pipeline = run {
-		val shaderModules = GPUtil.createShaderModules(this)
-		GPUtil.createPipeline(this, shaderModules).also {
-			shaderModules.forEach { it.free(this) }
-		}
-	}
 	val pushConstantsBuffer = FUtil.createBuffer(128)
 
 	val descAllocator = DescriptorAllocator(hardware, device)
 
 	val viewpointMatrix = Matrix4f()
 	val mvMatrix = Matrix4f()
+
+	val descLayoutVtxUniform = DescriptorLayout(
+		this,
+		DescriptorLayout.Info(
+			DescriptorType.UNIFORM_BUFFER,
+			0,
+			1,
+			VK_SHADER_STAGE_VERTEX_BIT
+		)
+	)
+
+	val buffProjMatrix = GPUtil.createHostVisibleBuff(
+		this,
+		GPUtil.SIZEOF_MAT4.toLong(),
+		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		"MATRIX_PROJECTION",
+		descLayoutVtxUniform,
+	)
+
+	val textureSampler = Sampler(
+		this,
+		filter = SamplerFilter.NEAREST,
+		wrapping = SamplerWrapping.REPEAT,
+	)
+
+	val pipeline = run {
+		val shaderModules = GPUtil.createShaderModules(this)
+		GPUtil.createPipeline(this, shaderModules).also {
+			shaderModules.forEach { it.free(this) }
+		}
+	}
+
 
 	fun init (engine: Engine)
 	{
@@ -139,6 +164,10 @@ class Renderer (engineContext: Engine)
 	{
 		device.waitIdle()
 
+		descLayoutVtxUniform.free(this)
+		buffProjMatrix.free(this)
+
+		textureSampler.free(this)
 		descAllocator.free(device)
 		pipeline.cleanup(this)
 		renderInfo.forEach { it.free() }

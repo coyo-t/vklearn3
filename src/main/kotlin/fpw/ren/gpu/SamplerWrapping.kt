@@ -8,9 +8,9 @@ value class SamplerWrapping(val vkEnum: Int)
 
 	companion object
 	{
-		val REPEAT = SamplerWrapping(VK_SAMPLER_ADDRESS_MODE_REPEAT)
-		val EXTEND = SamplerWrapping(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE)
-		val CLIP = SamplerWrapping(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER)
-		val MIRROR = SamplerWrapping(VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT)
+		@JvmStatic val REPEAT = SamplerWrapping(VK_SAMPLER_ADDRESS_MODE_REPEAT)
+		@JvmStatic val EXTEND = SamplerWrapping(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE)
+		@JvmStatic val CLIP = SamplerWrapping(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER)
+		@JvmStatic val MIRROR = SamplerWrapping(VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT)
 	}
 }

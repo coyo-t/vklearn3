@@ -25,7 +25,7 @@ class DescriptorLayout
 				val layoutInfo = layoutInfos[i]
 				layoutBindings.get(i)
 					.binding(layoutInfo.binding)
-					.descriptorType(layoutInfo.descType)
+					.descriptorType(layoutInfo.descType.vk)
 					.descriptorCount(layoutInfo.descCount)
 					.stageFlags(layoutInfo.stage)
 			}
@@ -51,7 +51,7 @@ class DescriptorLayout
 	}
 
 	data class Info(
-		val descType: Int,
+		val descType: DescriptorType,
 		val binding: Int,
 		val descCount: Int,
 		val stage: Int,

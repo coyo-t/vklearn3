@@ -2,17 +2,22 @@ return {
 	vertex = [[
 		#version 450
 
-		layout(location = 0) in vec3 inPos;
-		layout(location = 1) in vec2 intTextCoords;
+		layout(location=0)
+		in vec3 inPos;
+		layout(location=1)
+		in vec2 intTextCoords;
 
-		layout(location = 0) out vec2 outTextCoords;
+		layout(location=0)
+		out vec2 outTextCoords;
 
-		layout(push_constant) uniform matrices {
+		layout(set=0, binding=0)
+		uniform MATRICES
+		{
 			mat4 projectionMatrix;
 			mat4 modelMatrix;
 		};
 
-		void main()
+		void main ()
 		{
 			gl_Position = projectionMatrix * modelMatrix * vec4(inPos, 1);
 			outTextCoords = intTextCoords;
@@ -21,12 +26,18 @@ return {
 	fragment = [[
 		#version 450
 
-		layout(location = 0) in vec2 inTextCoords;
-		layout(location = 0) out vec4 outFragColor;
+		layout(location=0)
+		in vec2 inTextCoords;
+
+		layout(location=0)
+		out vec4 outFragColor;
+
+		layout(set=0, binding=0)
+		uniform sampler2D gm_BaseTexture;
 
 		void main()
 		{
-			outFragColor = vec4(inTextCoords.x, inTextCoords.y, 0, 1);
+			outFragColor = texture(gm_BaseTexture, inTextCoords);
 		}
 	]],
 }

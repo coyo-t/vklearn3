@@ -9,14 +9,17 @@ import org.lwjgl.vulkan.VkSamplerCreateInfo
 
 class Sampler
 {
-
 	val vkSampler: Long
 
-	constructor (vkCtx: Renderer, textureSamplerInfo: Info)
+	constructor (
+		vkCtx: Renderer,
+		wrapping: SamplerWrapping,
+		filter: SamplerFilter,
+	)
 	{
 		MemoryStack.stackPush().use { stack ->
-			val filter = textureSamplerInfo.filter
-			val wrapping = textureSamplerInfo.wrapping
+			val filter = filter
+			val wrapping = wrapping
 			val samplerInfo = VkSamplerCreateInfo.calloc(stack)
 				.`sType$Default`()
 				.magFilter(filter.vkEnum)
@@ -24,7 +27,7 @@ class Sampler
 				.addressModeU(wrapping.vkEnum)
 				.addressModeV(wrapping.vkEnum)
 				.addressModeW(wrapping.vkEnum)
-				.borderColor(0)
+				.borderColor(VK_BORDER_COLOR_INT_OPAQUE_BLACK)
 				.unnormalizedCoordinates(false)
 				.compareEnable(false)
 				.compareOp(VK_COMPARE_OP_NEVER)
@@ -50,10 +53,5 @@ class Sampler
 	{
 		vkDestroySampler(vkCtx.vkDevice, vkSampler, null)
 	}
-
-	data class Info(
-		val wrapping: SamplerWrapping,
-		val filter: SamplerFilter,
-	)
 }
 

@@ -112,6 +112,14 @@ class Pipeline (vkCtx: Renderer, buildInfo: Info)
 				vpcr = null
 			}
 
+			val descSetLayouts = buildInfo.descriptorSetLayouts
+			val numLayouts = descSetLayouts.size
+			val ppLayout = stack.mallocLong(numLayouts)
+			for (i in 0..<numLayouts)
+			{
+				ppLayout.put(i, descSetLayouts[i].vkDescLayout)
+			}
+
 			val rendCreateInfo = VkPipelineRenderingCreateInfo.calloc(stack)
 				.`sType$Default`()
 				.colorAttachmentCount(1)
@@ -123,6 +131,7 @@ class Pipeline (vkCtx: Renderer, buildInfo: Info)
 
 			val pPipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo.calloc(stack)
 				.`sType$Default`()
+				.pSetLayouts(ppLayout)
 				.pPushConstantRanges(vpcr)
 
 			gpuCheck(
@@ -176,6 +185,7 @@ class Pipeline (vkCtx: Renderer, buildInfo: Info)
 		val shaderModules: List<ShaderModule>,
 		val vi: VkPipelineVertexInputStateCreateInfo,
 		val depthFormat: Int = VK_FORMAT_UNDEFINED,
-		val pushConstRange: List<Triple<Int, Int, Int>> = emptyList(),
+		var pushConstRange: List<Triple<Int, Int, Int>> = emptyList(),
+		var descriptorSetLayouts: List<DescriptorLayout> = emptyList(),
 	)
 }

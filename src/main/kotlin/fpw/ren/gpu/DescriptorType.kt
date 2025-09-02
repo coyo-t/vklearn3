@@ -1,0 +1,23 @@
+package fpw.ren.gpu
+
+import org.lwjgl.vulkan.VK10.*
+
+@JvmInline
+value class DescriptorType (val vk: Int)
+{
+	companion object
+	{
+		@JvmStatic val SAMPLER = DescriptorType(VK_DESCRIPTOR_TYPE_SAMPLER)
+		@JvmStatic val COMBINED_IMAGE_SAMPLER = DescriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+		@JvmStatic val SAMPLED_IMAGE = DescriptorType(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
+		@JvmStatic val STORAGE_IMAGE = DescriptorType(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
+		@JvmStatic val UNIFORM_TEXEL_BUFFER = DescriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER)
+		@JvmStatic val STORAGE_TEXEL_BUFFER = DescriptorType(VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER)
+		@JvmStatic val UNIFORM_BUFFER = DescriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+		@JvmStatic val STORAGE_BUFFER = DescriptorType(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
+		@JvmStatic val UNIFORM_BUFFER_DYNAMIC = DescriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC)
+		@JvmStatic val STORAGE_BUFFER_DYNAMIC = DescriptorType(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC)
+		@JvmStatic val INPUT_ATTACHMENT = DescriptorType(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT)
+	}
+
+}

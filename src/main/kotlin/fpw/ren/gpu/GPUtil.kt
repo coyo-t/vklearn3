@@ -3,10 +3,13 @@ package fpw.ren.gpu
 import fpw.Renderer
 import fpw.TestCube
 import fpw.ren.ShaderAssetThinger
+import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
+import org.lwjgl.system.MemoryUtil
 import org.lwjgl.util.shaderc.Shaderc
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK13.*
+import java.awt.Color
 import java.lang.foreign.ValueLayout.JAVA_FLOAT
 import java.lang.foreign.ValueLayout.JAVA_INT
 import kotlin.io.path.Path
@@ -176,6 +179,46 @@ object GPUtil
 		{
 			throwGpuCheck(err, errMsg)
 		}
+	}
+
+	fun clearTintFrom (c: Color): VkClearValue
+	{
+		return VkClearValue.calloc().color {
+			it
+			.float32(0, c.red / 255f)
+			.float32(1, c.green / 255f)
+			.float32(2, c.blue / 255f)
+			.float32(3, c.alpha / 255f)
+		}
+	}
+
+	fun copyMatrixToBuffer(vkCtx: Renderer, vkBuffer: GPUBuffer, matrix: Matrix4f, offset: Int)
+	{
+		val mappedMemory: Long = vkBuffer.map(vkCtx)
+		val matrixBuffer = MemoryUtil.memByteBuffer(mappedMemory, vkBuffer.requestedSize.toInt())
+		matrix.get(offset, matrixBuffer)
+		vkBuffer.unMap(vkCtx)
+	}
+
+	fun createHostVisibleBuff(vkCtx: Renderer, buffSize: Long, usage: Int, id: String, layout: DescriptorLayout): GPUBuffer
+	{
+		val buff = GPUBuffer(
+			vkCtx,
+			buffSize,
+			usage,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		)
+		val device = vkCtx.device
+		val descSet = vkCtx.descAllocator.addDescSets(device, id, 1, layout).first()
+		val first = layout.layoutInfos.first()
+		descSet.setBuffer(
+			device,
+			buff,
+			buff.requestedSize,
+			first.binding,
+			first.descType
+		)
+		return buff
 	}
 
 	private fun throwGpuCheck (er:Int, ms:String?): Nothing
