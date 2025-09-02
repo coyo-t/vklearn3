@@ -32,7 +32,7 @@ return {
 		layout(location=0)
 		out vec4 outFragColor;
 
-		layout(set=0, binding=0)
+		layout(set=1, binding=0)
 		uniform sampler2D gm_BaseTexture;
 
 		void main()

@@ -92,11 +92,21 @@ class Renderer (engineContext: Engine)
 		)
 	)
 
-	val buffProjMatrix = GPUtil.createHostVisibleBuff(
+	val  descLayoutTexture = DescriptorLayout(
 		this,
-		GPUtil.SIZEOF_MAT4.toLong(),
+		DescriptorLayout.Info(
+			DescriptorType.COMBINED_IMAGE_SAMPLER,
+			0,
+			1,
+			VK_SHADER_STAGE_FRAGMENT_BIT
+		)
+	)
+
+	val shaderMatrixBuffer = GPUtil.createHostVisibleBuff(
+		this,
+		GPUtil.SIZEOF_MAT4 * 2L,
 		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-		"MATRIX_PROJECTION",
+		"MATRIX",
 		descLayoutVtxUniform,
 	)
 
@@ -108,9 +118,17 @@ class Renderer (engineContext: Engine)
 
 	val pipeline = run {
 		val shaderModules = GPUtil.createShaderModules(this)
-		GPUtil.createPipeline(this, shaderModules).also {
-			shaderModules.forEach { it.free(this) }
-		}
+		val outs = GPUtil.createPipeline(
+			this,
+			shaderModules,
+			listOf(
+				descLayoutVtxUniform,
+				descLayoutTexture,
+			)
+		)
+
+		shaderModules.forEach { it.free(this) }
+		outs
 	}
 
 
@@ -165,7 +183,8 @@ class Renderer (engineContext: Engine)
 		device.waitIdle()
 
 		descLayoutVtxUniform.free(this)
-		buffProjMatrix.free(this)
+		descLayoutTexture.free(this)
+		shaderMatrixBuffer.free(this)
 
 		textureSampler.free(this)
 		descAllocator.free(device)
@@ -303,6 +322,7 @@ class Renderer (engineContext: Engine)
 
 			val entities = engineContext.entities
 			val numEntities = entities.size
+			val projectionMatrix = engineContext.lens.projectionMatrix
 			for (i in 0..<numEntities)
 			{
 				val entity = entities[i]
@@ -310,10 +330,14 @@ class Renderer (engineContext: Engine)
 					continue
 				val entityModelId = entity.modelId ?: continue
 				val model = meshManager.modelMap[entityModelId] ?: continue
-				engineContext.lens.projectionMatrix.get(pushConstantsBuffer)
 				entity.updateModelMatrix()
 				viewpointMatrix.mul(entity.modelMatrix, mvMatrix)
-				mvMatrix.get(GPUtil.SIZEOF_MAT4, pushConstantsBuffer)
+
+				GPUtil.copyMatrixToBuffer(this, shaderMatrixBuffer, projectionMatrix, 0)
+				GPUtil.copyMatrixToBuffer(this, shaderMatrixBuffer, mvMatrix, GPUtil.SIZEOF_MAT4)
+//				projectionMatrix.get(pushConstantsBuffer)
+//				mvMatrix.get(GPUtil.SIZEOF_MAT4, pushConstantsBuffer)
+
 				vkCmdPushConstants(
 					cmdHandle, pipeline.vkPipelineLayout,
 					VK_SHADER_STAGE_VERTEX_BIT, 0,

@@ -140,7 +140,11 @@ object GPUtil
 		}
 	}
 
-	fun createPipeline (vkCtx: Renderer, shaderModules: List<ShaderModule>): Pipeline
+	fun createPipeline (
+		vkCtx: Renderer,
+		shaderModules: List<ShaderModule>,
+		descLayouts: List<DescriptorLayout>,
+	): Pipeline
 	{
 		val buildInfo = Pipeline.Info(
 				shaderModules = shaderModules,
@@ -149,7 +153,8 @@ object GPUtil
 				depthFormat = VK_FORMAT_D16_UNORM,
 				pushConstRange = listOf(
 					Triple(VK_SHADER_STAGE_VERTEX_BIT, 0, 128)
-				)
+				),
+				descriptorSetLayouts = descLayouts,
 			)
 		return Pipeline(vkCtx, buildInfo)
 	}
@@ -216,7 +221,7 @@ object GPUtil
 			buff,
 			buff.requestedSize,
 			first.binding,
-			first.descType
+			first.descType.vk
 		)
 		return buff
 	}

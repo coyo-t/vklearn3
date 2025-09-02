@@ -54,10 +54,11 @@ class DescriptorAllocator
 			for (layoutInfo in descSetLayout.layoutInfos)
 			{
 				val descType = layoutInfo.descType
-				val available = requireNotNull(descPoolInfo.descCount[descType]) {
+				val dkvk = descType.vk
+				val available = requireNotNull(descPoolInfo.descCount[dkvk]) {
 					"Unknown type [$descType]"
 				}
-				val maxTotal = descLimits[descType]!!
+				val maxTotal = descLimits[dkvk]!!
 				check(count <= maxTotal) {
 					"Cannot create more than [$maxTotal] for descriptor type [$descType]"
 				}
@@ -91,7 +92,8 @@ class DescriptorAllocator
 		for (layoutInfo in descSetLayout.layoutInfos)
 		{
 			val descType = layoutInfo.descType
-			targetPool.descCount[descType] = targetPool.descCount[descType]!! - count
+			val dkvk = descType.vk
+			targetPool.descCount[dkvk] = targetPool.descCount[dkvk]!! - count
 		}
 
 		return result
