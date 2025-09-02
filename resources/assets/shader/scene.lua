@@ -10,7 +10,7 @@ return {
 		layout(location=0)
 		out vec2 outTextCoords;
 
-		layout(set=0, binding=0)
+		layout(binding=0)
 		uniform MATRICES
 		{
 			mat4 projectionMatrix;
@@ -32,7 +32,7 @@ return {
 		layout(location=0)
 		out vec4 outFragColor;
 
-		layout(set=1, binding=0)
+		layout(binding=0)
 		uniform sampler2D gm_BaseTexture;
 
 		void main()

@@ -40,13 +40,17 @@ class Engine (val window: Window)
 			location.set(0.5, 0.0, 0.0)
 		}
 
+		addEntity(RenderEntity("another one lol")) {
+			modelId = "test cube"
+			location.set(-0.5, -0.5, -3.0)
+		}
 		addEntity(RenderEntity("tha cube")) {
 			modelId = "test cube"
 			location.set(0.0, 0.0, -2.0)
 			update = { milliTimeDiff ->
 				location.set(
-					cos(window.time * PI*0.5) * 4.0,
-					sin(window.time * PI) * 2.0,
+					cos(window.time * PI*0.5) * 1.0,
+					sin(window.time * PI) * 0.5,
 					-2.0,
 				)
 
@@ -56,10 +60,6 @@ class Engine (val window: Window)
 				.rotateX(toRadians(fdt * 45f))
 				.rotateY(toRadians(fdt * 60f))
 			}
-		}
-		addEntity(RenderEntity("another one lol")) {
-			modelId = "test cube"
-			location.set(-0.5, -0.5, -3.0)
 		}
 
 		render.init(this)

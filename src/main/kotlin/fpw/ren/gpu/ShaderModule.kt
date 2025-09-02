@@ -5,12 +5,13 @@ import org.lwjgl.vulkan.VK10.vkDestroyShaderModule
 
 
 class ShaderModule (
+	val renderer: Renderer,
 	val handle: Long,
 	val shaderStage: Int,
 )
 {
-	fun free(context: Renderer)
+	fun free()
 	{
-		vkDestroyShaderModule(context.vkDevice, handle, null)
+		vkDestroyShaderModule(renderer.vkDevice, handle, null)
 	}
 }

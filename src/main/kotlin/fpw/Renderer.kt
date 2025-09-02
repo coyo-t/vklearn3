@@ -5,6 +5,7 @@ import fpw.ren.ShaderAssetThinger
 import fpw.ren.Texture
 import fpw.ren.TextureManager
 import fpw.ren.gpu.*
+import fpw.ren.gpu.GPUtil.freeAll
 import fpw.ren.gpu.GPUtil.gpuCheck
 import fpw.ren.gpu.GPUtil.imageBarrier
 import org.joml.Matrix4f
@@ -76,7 +77,6 @@ class Renderer (engineContext: Engine)
 	var attInfoColor = createColorAttachmentsInfo(clrValueColor)
 	var attInfoDepth = createDepthAttachmentsInfo(attDepth, clrValueDepth)
 	var renderInfo = createRenderInfo(attInfoColor, attInfoDepth)
-	val pushConstantsBuffer = FUtil.createBuffer(128)
 
 	val descAllocator = DescriptorAllocator(hardware, device)
 
@@ -110,8 +110,9 @@ class Renderer (engineContext: Engine)
 		wrapping = SamplerWrapping.REPEAT,
 	)
 
-	val shaderMatrixBuffer = createHostVisibleBuff(
+	val shaderMatrixBuffer = createHostVisibleBuffs(
 		GPUtil.SIZEOF_MAT4 * 2L,
+		maxInFlightFrameCount,
 		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		"MATRIX",
 		descLayoutVtxUniform,
@@ -131,7 +132,7 @@ class Renderer (engineContext: Engine)
 			)
 		)
 
-		shaderModules.forEach { it.free(this) }
+		shaderModules.forEach { it.free() }
 		outs
 	}
 
@@ -189,55 +190,24 @@ class Renderer (engineContext: Engine)
 		}
 	}
 
-	fun free()
-	{
-		device.waitIdle()
-		textureManager.free()
-
-		descLayoutVtxUniform.free()
-		descLayoutTexture.free()
-		shaderMatrixBuffer.free()
-
-		textureSampler.free()
-		descAllocator.free()
-		pipeline.cleanup()
-		renderInfo.forEach { it.free() }
-		attInfoColor.forEach { it.free() }
-		attInfoDepth.forEach { it.free() }
-		attDepth.forEach { it.free() }
-		clrValueColor.free()
-		clrValueDepth.free()
-
-		meshManager.free()
-		renderCompleteSemphs.forEach { it.free() }
-		swapChainDirectors.forEach(SwapChainDirector::free)
-
-		pipelineCache.free(this)
-		swapChain.cleanup(device)
-		displaySurface.free(instance)
-		device.free()
-		hardware.free()
-		instance.close()
-	}
-
 	private fun submit(cmdBuff: CommandBuffer, currentFrame: Int, imageIndex: Int)
 	{
 		val director = swapChainDirectors[currentFrame]
 		MemoryStack.stackPush().use { stack ->
 			val fence = director.fence
 			fence.reset(this)
-			val cmds = VkCommandBufferSubmitInfo.calloc(1, stack)
+			val commands = VkCommandBufferSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
 				.commandBuffer(cmdBuff.vkCommandBuffer)
-			val waitSemphs = VkSemaphoreSubmitInfo.calloc(1, stack)
+			val waits = VkSemaphoreSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
 				.stageMask(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT)
 				.semaphore(director.imageAcquiredSemaphore.vkSemaphore)
-			val signalSemphs = VkSemaphoreSubmitInfo.calloc(1, stack)
+			val signals = VkSemaphoreSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
 				.stageMask(VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)
 				.semaphore(renderCompleteSemphs[imageIndex].vkSemaphore)
-			graphicsQueue.submit(cmds, waitSemphs, signalSemphs, fence)
+			graphicsQueue.submit(commands, waits, signals, fence)
 		}
 	}
 
@@ -286,19 +256,10 @@ class Renderer (engineContext: Engine)
 				attDepth[imageIndex].image.vkImage,
 				VK_IMAGE_LAYOUT_UNDEFINED,
 				VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-				(
-					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT or
-					VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT
-				),
-				(
-					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT or
-					VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT
-				),
+				VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT or VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+				VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT or VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
 				VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-				(
-					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT or
-					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
-				),
+				VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT or VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
 				VK_IMAGE_ASPECT_DEPTH_BIT,
 			)
 			val renInf = renderInfo[imageIndex]
@@ -336,15 +297,16 @@ class Renderer (engineContext: Engine)
 				null,
 			)
 
-			val offsets = stack.mallocLong(1).put(0, 0L)
-			val vertexBuffer = stack.mallocLong(1)
+			val vbCount = 1
+			val offsets = stack.mallocLong(vbCount).put(0, 0L)
+			val vbAddress = stack.mallocLong(vbCount)
 
-			val vpvp = viewPoint
-			vpvp.updateMatricies()
+			viewPoint.updateMatricies()
 			val viewMatrix = viewPoint.viewMatrix
 			val projectionMatrix = viewPoint.projectionMatrix
 			val entities = engineContext.entities
 			val numEntities = entities.size
+			val curMatrixBuffer = shaderMatrixBuffer[currentFrame]
 			for (i in 0..<numEntities)
 			{
 				val entity = entities[i]
@@ -353,18 +315,23 @@ class Renderer (engineContext: Engine)
 				entity.updateModelMatrix()
 				viewMatrix.mul(entity.modelMatrix, mvMatrix)
 
-				GPUtil.copyMatrixToBuffer(shaderMatrixBuffer, projectionMatrix, 0)
-				GPUtil.copyMatrixToBuffer(shaderMatrixBuffer, mvMatrix, GPUtil.SIZEOF_MAT4)
+				GPUtil.copyMatrixToBuffer(curMatrixBuffer, projectionMatrix, 0)
+				GPUtil.copyMatrixToBuffer(curMatrixBuffer, mvMatrix, GPUtil.SIZEOF_MAT4)
 //				projectionMatrix.get(pushConstantsBuffer)
 //				mvMatrix.get(GPUtil.SIZEOF_MAT4, pushConstantsBuffer)
 
-				vkCmdPushConstants(
-					cmdHandle, pipeline.vkPipelineLayout,
-					VK_SHADER_STAGE_VERTEX_BIT, 0,
-					pushConstantsBuffer
+//				vkCmdPushConstants(
+//					cmdHandle, pipeline.vkPipelineLayout,
+//					VK_SHADER_STAGE_VERTEX_BIT, 0,
+//					pushConstantsBuffer
+//				)
+				vbAddress.put(0, model.verticesBuffer.bufferStruct)
+				vkCmdBindVertexBuffers(
+					cmdHandle,
+					0,
+					vbAddress,
+					offsets,
 				)
-				vertexBuffer.put(0, model.verticesBuffer.bufferStruct)
-				vkCmdBindVertexBuffers(cmdHandle, 0, vertexBuffer, offsets!!)
 				vkCmdBindIndexBuffer(
 					cmdHandle,
 					model.indicesBuffer.bufferStruct,
@@ -508,7 +475,10 @@ class Renderer (engineContext: Engine)
 				.`sType$Default`()
 				.flags(if (signaled) VK_FENCE_CREATE_SIGNALED_BIT else 0)
 			val lp = stack.mallocLong(1)
-			gpuCheck(vkCreateFence(vkDevice, fenceCreateInfo, null, lp), "Failed to create fence")
+			gpuCheck(
+				vkCreateFence(vkDevice, fenceCreateInfo, null, lp),
+				"Failed to create fence",
+			)
 			return GPUFence(lp[0])
 		}
 	}
@@ -528,19 +498,21 @@ class Renderer (engineContext: Engine)
 
 	fun createShaderModule (shaderStage: Int, spirv: ByteBuffer): ShaderModule
 	{
-		return ShaderModule(
-			handle = MemoryStack.stackPush().use { stack ->
-				val moduleCreateInfo = calloc(stack)
-					.`sType$Default`()
-					.pCode(spirv)
+		val handle = MemoryStack.stackPush().use { stack ->
+			val moduleCreateInfo = calloc(stack)
+				.`sType$Default`()
+				.pCode(spirv)
 
-				val lp = stack.mallocLong(1)
-				gpuCheck(
-					vkCreateShaderModule(vkDevice, moduleCreateInfo, null, lp),
-					"Failed to create shader module"
-				)
-				lp.get(0)
-			},
+			val lp = stack.mallocLong(1)
+			gpuCheck(
+				vkCreateShaderModule(vkDevice, moduleCreateInfo, null, lp),
+				"Failed to create shader module"
+			)
+			lp.get(0)
+		}
+		return ShaderModule(
+			this,
+			handle = handle,
 			shaderStage = shaderStage,
 		)
 	}
@@ -574,7 +546,7 @@ class Renderer (engineContext: Engine)
 			colorFormat = displaySurface.surfaceFormat.imageFormat,
 			depthFormat = VK_FORMAT_D16_UNORM,
 			pushConstRange = listOf(
-				Triple(VK_SHADER_STAGE_VERTEX_BIT, 0, 128)
+//				Triple(VK_SHADER_STAGE_VERTEX_BIT, 0, 128),
 			),
 			descriptorSetLayouts = descLayouts,
 		)
@@ -583,9 +555,8 @@ class Renderer (engineContext: Engine)
 
 	fun createDepthAttachments (): List<Attachment>
 	{
-		val swapChain = swapChain
-		val numImages: Int = swapChain.numImages
-		val swapChainExtent: VkExtent2D = swapChain.extents
+		val numImages = swapChain.numImages
+		val swapChainExtent = swapChain.extents
 		return List(numImages) {
 			Attachment(
 				this,
@@ -607,8 +578,37 @@ class Renderer (engineContext: Engine)
 			createShaderModule(VK_SHADER_STAGE_FRAGMENT_BIT, f),
 		)
 	}
-
-	fun createHostVisibleBuff (buffSize: Long, usage: Int, id: String, layout: DescriptorLayout): GPUBuffer
+	fun createHostVisibleBuffs(
+		buffSize: Long, numBuffs: Int, usage: Int,
+		id: String, layout: DescriptorLayout
+	): List<GPUBuffer>
+	{
+		descAllocator.addDescSets(id, layout, numBuffs)
+		val layoutInfo: DescriptorLayout.Info = layout.layoutInfos.first()
+		return List(numBuffs) {
+			val r = GPUBuffer(
+				this,
+				buffSize,
+				usage,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+			)
+			val descSet = descAllocator.getDescSet(id, it)
+			descSet.setBuffer(
+				device,
+				r,
+				r.requestedSize,
+				layoutInfo.binding,
+				layoutInfo.descType.vk,
+			)
+			r
+		}
+	}
+	fun createHostVisibleBuff (
+		buffSize: Long,
+		usage: Int,
+		id: String,
+		layout: DescriptorLayout,
+	): GPUBuffer
 	{
 		val buff = GPUBuffer(
 			this,
@@ -626,5 +626,36 @@ class Renderer (engineContext: Engine)
 			first.descType.vk
 		)
 		return buff
+	}
+
+	fun free()
+	{
+		device.waitIdle()
+		textureManager.free()
+
+		descLayoutVtxUniform.free()
+		descLayoutTexture.free()
+		shaderMatrixBuffer.freeAll()
+
+		textureSampler.free()
+		descAllocator.free()
+		pipeline.cleanup()
+		renderInfo.forEach(VkRenderingInfo::free)
+		attInfoColor.forEach(VkRenderingAttachmentInfo.Buffer::free)
+		attInfoDepth.forEach(VkRenderingAttachmentInfo::free)
+		attDepth.forEach(Attachment::free)
+		clrValueColor.free()
+		clrValueDepth.free()
+
+		meshManager.free()
+		renderCompleteSemphs.forEach(Semaphore::free)
+		swapChainDirectors.forEach(SwapChainDirector::free)
+
+		pipelineCache.free(this)
+		swapChain.cleanup(device)
+		displaySurface.free(instance)
+		device.free()
+		hardware.free()
+		instance.close()
 	}
 }
