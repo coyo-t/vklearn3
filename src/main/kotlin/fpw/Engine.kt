@@ -22,7 +22,7 @@ class Engine (val window: Window)
 		height = window.tall,
 	)
 
-	var viewPoint: RenderEntity? = null
+	val viewPoint = EntityViewPoint(lens)
 
 	private val render = Renderer(this)
 
@@ -36,7 +36,7 @@ class Engine (val window: Window)
 
 	fun run ()
 	{
-		viewPoint = addEntity(RenderEntity("camera")) {
+		viewPoint.viewer = addEntity(RenderEntity("camera")) {
 			location.set(0.5, 0.0, 0.0)
 		}
 
@@ -61,7 +61,10 @@ class Engine (val window: Window)
 			modelId = "test cube"
 			location.set(-0.5, -0.5, -3.0)
 		}
+
 		render.init(this)
+		render.viewPoint = viewPoint
+
 		try
 		{
 			var initialTime = System.currentTimeMillis()

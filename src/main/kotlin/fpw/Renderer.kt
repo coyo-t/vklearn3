@@ -80,7 +80,6 @@ class Renderer (engineContext: Engine)
 
 	val descAllocator = DescriptorAllocator(hardware, device)
 
-	val viewpointMatrix = Matrix4f()
 	val mvMatrix = Matrix4f()
 
 	val descLayoutVtxUniform = DescriptorLayout(
@@ -93,7 +92,7 @@ class Renderer (engineContext: Engine)
 		)
 	)
 
-	val  descLayoutTexture = DescriptorLayout(
+	val descLayoutTexture = DescriptorLayout(
 		this,
 		DescriptorLayout.Info(
 			DescriptorType.COMBINED_IMAGE_SAMPLER,
@@ -103,6 +102,7 @@ class Renderer (engineContext: Engine)
 		)
 	)
 
+	var viewPoint: ViewPoint = IdentityViewPoint()
 
 	val textureSampler = Sampler(
 		this,
@@ -303,10 +303,6 @@ class Renderer (engineContext: Engine)
 			)
 			val renInf = renderInfo[imageIndex]
 			vkCmdBeginRendering(cmdHandle, renInf)
-			val vp = engineContext.viewPoint?.apply {
-				updateModelMatrix()
-				viewpointMatrix.set(modelMatrix).invert()
-			}
 			vkCmdBindPipeline(cmdHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vkPipeline)
 			val swapChainExtent: VkExtent2D = swapChain.extents
 			val width = swapChainExtent.width()
@@ -343,18 +339,19 @@ class Renderer (engineContext: Engine)
 			val offsets = stack.mallocLong(1).put(0, 0L)
 			val vertexBuffer = stack.mallocLong(1)
 
+			val vpvp = viewPoint
+			vpvp.updateMatricies()
+			val viewMatrix = viewPoint.viewMatrix
+			val projectionMatrix = viewPoint.projectionMatrix
 			val entities = engineContext.entities
 			val numEntities = entities.size
-			val projectionMatrix = engineContext.lens.projectionMatrix
 			for (i in 0..<numEntities)
 			{
 				val entity = entities[i]
-				if (entity === vp)
-					continue
-				val entityModelId = entity.modelId ?: continue
-				val model = meshManager.modelMap[entityModelId] ?: continue
+				val modelId = entity.modelId ?: continue
+				val model = meshManager.modelMap[modelId] ?: continue
 				entity.updateModelMatrix()
-				viewpointMatrix.mul(entity.modelMatrix, mvMatrix)
+				viewMatrix.mul(entity.modelMatrix, mvMatrix)
 
 				GPUtil.copyMatrixToBuffer(shaderMatrixBuffer, projectionMatrix, 0)
 				GPUtil.copyMatrixToBuffer(shaderMatrixBuffer, mvMatrix, GPUtil.SIZEOF_MAT4)
