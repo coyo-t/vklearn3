@@ -8,18 +8,17 @@ import org.lwjgl.vulkan.KHRPortabilitySubset.VK_KHR_PORTABILITY_SUBSET_EXTENSION
 import org.lwjgl.vulkan.VK13.*
 
 
-class LogicalDevice
+class LogicalDevice (val hardware: HardwareDevice)
 {
 	val vkDevice: VkDevice
 	val samplerAnisotropy: Boolean
 
-	constructor (physDevice: HardwareDevice)
+	init
 	{
 		MemoryStack.stackPush().use { stack ->
-	//		Main.logDebug("REIFYING DEVICE ")
-			val reqExtensions = createReqExtensions(physDevice, stack)
+			val reqExtensions = createReqExtensions(stack)
 			// Enable all the queue families
-			val queuePropsBuff = physDevice.vkQueueFamilyProps
+			val queuePropsBuff = hardware.vkQueueFamilyProps
 			val numQueuesFamilies = queuePropsBuff.capacity()
 			val queueCreationInfoBuf = VkDeviceQueueCreateInfo.calloc(numQueuesFamilies, stack)
 			for (i in 0..<numQueuesFamilies)
@@ -41,7 +40,7 @@ class LogicalDevice
 			val features2 = VkPhysicalDeviceFeatures2.calloc(stack).`sType$Default`()
 			var features = features2.features()
 
-			val supportedFeatures = physDevice.vkPhysicalDeviceFeatures
+			val supportedFeatures = hardware.vkPhysicalDeviceFeatures
 			samplerAnisotropy = supportedFeatures.samplerAnisotropy()
 			if (samplerAnisotropy)
 			{
@@ -58,17 +57,17 @@ class LogicalDevice
 
 			val pp = stack.mallocPointer(1)
 			gpuCheck(
-				vkCreateDevice(physDevice.vkPhysicalDevice, deviceCreateInfo, null, pp),
+				vkCreateDevice(hardware.vkPhysicalDevice, deviceCreateInfo, null, pp),
 				"Failed to create device"
 			)
-			vkDevice = VkDevice(pp.get(0), physDevice.vkPhysicalDevice, deviceCreateInfo)
+			vkDevice = VkDevice(pp.get(0), hardware.vkPhysicalDevice, deviceCreateInfo)
 		}
 	}
 
 
-	private fun createReqExtensions(physDevice: HardwareDevice, stack: MemoryStack): PointerBuffer
+	private fun createReqExtensions(stack: MemoryStack): PointerBuffer
 	{
-		val deviceExtensions = getDeviceExtensions(physDevice)
+		val deviceExtensions = getDeviceExtensions()
 		val usePortability = (VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME in deviceExtensions) && OSType.isMacintosh
 
 		val extsList = buildList {
@@ -84,12 +83,12 @@ class LogicalDevice
 		}
 	}
 
-	private fun getDeviceExtensions(physDevice: HardwareDevice): Set<String>
+	private fun getDeviceExtensions(): Set<String>
 	{
 		MemoryStack.stackPush().use { stack ->
 			val numExtensionsBuf = stack.callocInt(1)
 			vkEnumerateDeviceExtensionProperties(
-				physDevice.vkPhysicalDevice,
+				hardware.vkPhysicalDevice,
 				null as String?,
 				numExtensionsBuf,
 				null,
@@ -97,7 +96,7 @@ class LogicalDevice
 			val numExtensions = numExtensionsBuf.get(0)
 			val propsBuff = VkExtensionProperties.calloc(numExtensions, stack)
 			vkEnumerateDeviceExtensionProperties(
-				physDevice.vkPhysicalDevice,
+				hardware.vkPhysicalDevice,
 				null as String?,
 				numExtensionsBuf,
 				propsBuff
@@ -117,9 +116,8 @@ class LogicalDevice
 		}
 	}
 
-	fun close()
+	fun free()
 	{
-//		Main.logDebug("Destroying Vulkan device")
 		vkDestroyDevice(vkDevice, null)
 	}
 
@@ -127,6 +125,7 @@ class LogicalDevice
 	{
 		vkDeviceWaitIdle(vkDevice)
 	}
+
 	fun createPipelineCache(): PipelineCache
 	{
 		val outs = MemoryStack.stackPush().use { stack ->

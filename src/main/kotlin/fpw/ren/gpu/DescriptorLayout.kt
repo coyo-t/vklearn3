@@ -9,14 +9,16 @@ import org.lwjgl.vulkan.VkDescriptorSetLayoutBinding
 import org.lwjgl.vulkan.VkDescriptorSetLayoutCreateInfo
 
 
-class DescriptorLayout
+class DescriptorLayout (
+	val vkCtx: Renderer,
+	vararg layoutInfos: Info,
+)
 {
-	val layoutInfos: List<Info>
+	val layoutInfos = layoutInfos.toList()
 	val vkDescLayout: Long
 
-	constructor (vkCtx: Renderer, vararg layoutInfos: Info)
+	init
 	{
-		this.layoutInfos = layoutInfos.toList()
 		MemoryStack.stackPush().use { stack ->
 			val count = layoutInfos.size
 			val layoutBindings = VkDescriptorSetLayoutBinding.calloc(count, stack)
@@ -44,7 +46,7 @@ class DescriptorLayout
 		}
 	}
 
-	fun free (vkCtx: Renderer)
+	fun free ()
 	{
 //		Logger.debug("Destroying descriptor set layout")
 		vkDestroyDescriptorSetLayout(vkCtx.vkDevice, vkDescLayout, null)

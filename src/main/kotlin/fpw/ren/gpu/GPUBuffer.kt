@@ -20,7 +20,12 @@ import org.lwjgl.vulkan.VkMemoryAllocateInfo
 import org.lwjgl.vulkan.VkMemoryRequirements
 
 
-class GPUBuffer
+class GPUBuffer (
+	val vkCtx: Renderer,
+	size: Long,
+	usage: Int,
+	reqMask: Int,
+)
 {
 
 	val allocationSize: Long
@@ -32,7 +37,7 @@ class GPUBuffer
 	var mappedMemory: Long
 		private set
 
-	constructor (vkCtx: Renderer, size: Long, usage: Int, reqMask: Int)
+	init
 	{
 		mappedMemory = NULL
 		requestedSize = size
@@ -69,15 +74,15 @@ class GPUBuffer
 		}
 	}
 
-	fun free(context: Renderer)
+	fun free()
 	{
 		MemoryUtil.memFree(pb)
-		val vkDevice = context.vkDevice
+		val vkDevice = vkCtx.vkDevice
 		vkDestroyBuffer(vkDevice, bufferStruct, null)
 		vkFreeMemory(vkDevice, bufferData, null)
 	}
 
-	fun map(vkCtx: Renderer): Long
+	fun map(): Long
 	{
 		if (mappedMemory == NULL)
 		{
@@ -90,7 +95,7 @@ class GPUBuffer
 		return mappedMemory
 	}
 
-	fun unMap(vkCtx: Renderer)
+	fun unMap ()
 	{
 		if (mappedMemory != NULL)
 		{
@@ -99,10 +104,10 @@ class GPUBuffer
 		}
 	}
 
-	inline fun doMapped (context: Renderer, cb: (Long)->Unit)
+	inline fun doMapped (cb: (Long)->Unit)
 	{
-		cb.invoke(map(context))
-		unMap(context)
+		cb.invoke(map())
+		unMap()
 	}
 }
 

@@ -8,7 +8,6 @@ import fpw.ren.gpu.GPUtil.gpuCheck
 import fpw.ren.gpu.GPUtil.imageBarrier
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
@@ -21,6 +20,7 @@ import java.nio.ByteBuffer
 
 class Renderer (engineContext: Engine)
 {
+
 	val maxInFlightFrameCount = 2
 	val preferredImageBufferingCount = 3
 	var useVerticalSync = false
@@ -62,7 +62,7 @@ class Renderer (engineContext: Engine)
 	var renderCompleteSemphs = List(swapChain.numImages) {
 		createSemaphor()
 	}
-	private val meshManager = ModelsCache()
+	private val meshManager = ModelsCache(this)
 	private var doResize = false
 
 	val clrValueColor = GPUtil.clearTintFrom(Color(0x7FB2E5))
@@ -115,7 +115,6 @@ class Renderer (engineContext: Engine)
 		descLayoutVtxUniform,
 	)
 	val shaderTextureUniform = descAllocator.addDescSets(
-		device,
 		"TEXTURE",
 		descLayoutTexture,
 	)
@@ -194,22 +193,22 @@ class Renderer (engineContext: Engine)
 		device.waitIdle()
 		textureManager.free()
 
-		descLayoutVtxUniform.free(this)
-		descLayoutTexture.free(this)
-		shaderMatrixBuffer.free(this)
+		descLayoutVtxUniform.free()
+		descLayoutTexture.free()
+		shaderMatrixBuffer.free()
 
-		textureSampler.free(this)
-		descAllocator.free(device)
-		pipeline.cleanup(this)
+		textureSampler.free()
+		descAllocator.free()
+		pipeline.cleanup()
 		renderInfo.forEach { it.free() }
 		attInfoColor.forEach { it.free() }
 		attInfoDepth.forEach { it.free() }
-		attDepth.forEach { it.close(this) }
+		attDepth.forEach { it.free() }
 		clrValueColor.free()
 		clrValueDepth.free()
 
-		meshManager.close(this)
-		renderCompleteSemphs.forEach { it.free(this) }
+		meshManager.free()
+		renderCompleteSemphs.forEach { it.free() }
 //		imageAqSemphs.forEach { it.free(this) }
 //		fences.forEach { it.free(this) }
 //		for ((cb, cp) in cmdBuffers.zip(cmdPools))
@@ -222,7 +221,7 @@ class Renderer (engineContext: Engine)
 		pipelineCache.free(this)
 		swapChain.cleanup(device)
 		displaySurface.free(instance)
-		device.close()
+		device.free()
 		hardware.free()
 		instance.close()
 	}
@@ -315,7 +314,7 @@ class Renderer (engineContext: Engine)
 				viewpointMatrix.set(modelMatrix).invert()
 			}
 			vkCmdBindPipeline(cmdHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vkPipeline)
-			val swapChainExtent: VkExtent2D = swapChain.swapChainExtent
+			val swapChainExtent: VkExtent2D = swapChain.extents
 			val width = swapChainExtent.width()
 			val height = swapChainExtent.height()
 			val viewport = VkViewport.calloc(1, stack)
@@ -434,24 +433,18 @@ class Renderer (engineContext: Engine)
 
 		swapChainDirectors.forEach(SwapChainDirector::onResize)
 
-//		imageAqSemphs.forEach { it.free(this) }
-//
-//		imageAqSemphs = List(maxInFlightFrameCount) {
-//			createSemaphor()
-//		}
-
-		renderCompleteSemphs.forEach { it.free(this) }
+		renderCompleteSemphs.forEach { it.free() }
 		renderCompleteSemphs = List(swapChain.numImages) {
 			createSemaphor()
 		}
 
-		val extent = swapChain.swapChainExtent
+		val extent = swapChain.extents
 		engCtx.lens.resize(extent.width(), extent.height())
 
 		renderInfo.forEach { it.free() }
 		attInfoDepth.forEach { it.free() }
 		attInfoColor.forEach { it.free() }
-		attDepth.forEach { it.close(this) }
+		attDepth.forEach { it.free() }
 		attDepth = GPUtil.createDepthAttachments(this)
 		attInfoColor = createColorAttachmentsInfo(clrValueColor)
 		attInfoDepth = GPUtil.createDepthAttachmentsInfo(this, attDepth, clrValueDepth)
@@ -481,7 +474,7 @@ class Renderer (engineContext: Engine)
 	{
 
 		MemoryStack.stackPush().use { stack ->
-			val extent = this.swapChain.swapChainExtent
+			val extent = this.swapChain.extents
 			val renderArea = VkRect2D.calloc(stack).extent(extent)
 			return List(swapChain.numImages) {
 				VkRenderingInfo.calloc()
@@ -538,14 +531,14 @@ class Renderer (engineContext: Engine)
 				vkCreateSemaphore(vkDevice, semaphoreCreateInfo, null, lp),
 				"Failed to create semaphore"
 			)
-			return Semaphore(lp.get(0))
+			return Semaphore(this, lp[0])
 		}
 	}
 
 	fun createShaderModule (shaderStage: Int, spirv: ByteBuffer): ShaderModule
 	{
 		return ShaderModule(
-			handle = stackPush().use { stack ->
+			handle = MemoryStack.stackPush().use { stack ->
 				val moduleCreateInfo = calloc(stack)
 					.`sType$Default`()
 					.pCode(spirv)

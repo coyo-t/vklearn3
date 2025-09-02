@@ -5,27 +5,20 @@ import org.lwjgl.vulkan.VK14.*
 
 
 
-class Attachment
+class Attachment (
+	val context: Renderer,
+	width: Int,
+	height: Int,
+	format: Int,
+	usage: Int,
+)
 {
 	val image: GPUImage
 	val imageView: ImageView
 	var isDepthAttachment = false
 		internal set
 
-	companion object
-	{
-		val atMapping = listOf<Pair<Int, (Attachment.()->Int)>>(
-			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT to {
-				VK_IMAGE_ASPECT_COLOR_BIT
-			},
-			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT to {
-				isDepthAttachment = true
-				VK_IMAGE_ASPECT_DEPTH_BIT
-			}
-		)
-	}
-
-	constructor (vkCtx: Renderer, width: Int, height: Int, format: Int, usage: Int)
+	init
 	{
 		val imageData = GPUImage.Data(
 			wide = width,
@@ -33,7 +26,7 @@ class Attachment
 			usage = usage or VK_IMAGE_USAGE_SAMPLED_BIT,
 			format = format,
 		)
-		image = GPUImage(vkCtx, imageData)
+		image = GPUImage(context, imageData)
 
 		var aspectMask = 0
 
@@ -50,17 +43,29 @@ class Attachment
 
 		)
 		imageView = ImageView(
-			vkCtx.device,
+			context.device,
 			image.vkImage,
 			imageViewData,
 			isDepthImage = isDepthAttachment,
 		)
 	}
+	fun free ()
 
-	fun close (context: Renderer)
 	{
 		imageView.free(context.device)
 		image.free(context)
 	}
 
+	companion object
+	{
+		val atMapping = listOf<Pair<Int, (Attachment.()->Int)>>(
+			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT to {
+				VK_IMAGE_ASPECT_COLOR_BIT
+			},
+			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT to {
+				isDepthAttachment = true
+				VK_IMAGE_ASPECT_DEPTH_BIT
+			}
+		)
+	}
 }

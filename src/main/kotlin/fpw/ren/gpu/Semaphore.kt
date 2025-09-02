@@ -4,9 +4,9 @@ import fpw.Renderer
 import org.lwjgl.vulkan.VK10.vkDestroySemaphore
 
 
-class Semaphore (val vkSemaphore: Long)
+class Semaphore (val context: Renderer, val vkSemaphore: Long)
 {
-	fun free (context: Renderer)
+	fun free ()
 	{
 		vkDestroySemaphore(context.vkDevice, vkSemaphore, null)
 	}

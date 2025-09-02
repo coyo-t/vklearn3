@@ -11,7 +11,7 @@ class GPUMesh(
 {
 	fun free (context: Renderer)
 	{
-		verticesBuffer.free(context)
-		indicesBuffer.free(context)
+		verticesBuffer.free()
+		indicesBuffer.free()
 	}
 }

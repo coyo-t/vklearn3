@@ -12,15 +12,14 @@ import org.lwjgl.vulkan.VK10.vkDestroyPipeline
 import org.lwjgl.vulkan.VK14.*
 
 
-class Pipeline (vkCtx: Renderer, buildInfo: Info)
+class Pipeline (val renderer: Renderer, buildInfo: Info)
 {
 	val vkPipeline: Long
 	val vkPipelineLayout: Long
 
 	init
 	{
-//		Main.logDebug("Creating pipeline")
-		val device = vkCtx.device
+		val device = renderer.device
 		MemoryStack.stackPush().use { stack ->
 			val lp = stack.mallocLong(1)
 			val main = stack.UTF8("main")
@@ -161,7 +160,7 @@ class Pipeline (vkCtx: Renderer, buildInfo: Info)
 			gpuCheck(
 				vkCreateGraphicsPipelines(
 					device.vkDevice,
-					vkCtx.pipelineCache.vkPipelineCache,
+					renderer.pipelineCache.vkPipelineCache,
 					createInfo,
 					null,
 					lp
@@ -172,10 +171,9 @@ class Pipeline (vkCtx: Renderer, buildInfo: Info)
 		}
 	}
 
-	fun cleanup(vkCtx: Renderer)
+	fun cleanup ()
 	{
-//		Main.logDebug("Destroying pipeline")
-		val vkDevice = vkCtx.vkDevice
+		val vkDevice = renderer.vkDevice
 		vkDestroyPipelineLayout(vkDevice, vkPipelineLayout, null)
 		vkDestroyPipeline(vkDevice, vkPipeline, null)
 	}

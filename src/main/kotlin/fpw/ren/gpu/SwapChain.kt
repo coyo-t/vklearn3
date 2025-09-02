@@ -1,7 +1,6 @@
 package fpw.ren.gpu
 
 import fpw.ren.gpu.GPUtil.gpuCheck
-import fpw.ren.gpu.CommandQueue
 import org.joml.Math.clamp
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
@@ -21,7 +20,7 @@ class SwapChain
 
 	val imageViews: List<ImageView>
 	val numImages: Int
-	val swapChainExtent: VkExtent2D
+	val extents: VkExtent2D
 	val vkSwapChain: Long
 
 	constructor (
@@ -38,7 +37,7 @@ class SwapChain
 		MemoryStack.stackPush().use { stack ->
 			val surfaceCaps = displaySurface.surfaceCaps
 			val reqImages = calcNumImages(surfaceCaps, requestedImages)
-			swapChainExtent = calcSwapChainExtent(surfaceCaps)
+			extents = calcSwapChainExtent(surfaceCaps)
 
 			val surfaceFormat = displaySurface.surfaceFormat
 			val vkSwapchainCreateInfo = VkSwapchainCreateInfoKHR.calloc(stack)
@@ -47,7 +46,7 @@ class SwapChain
 				.minImageCount(reqImages)
 				.imageFormat(surfaceFormat.imageFormat)
 				.imageColorSpace(surfaceFormat.colorSpace)
-				.imageExtent(swapChainExtent)
+				.imageExtent(extents)
 				.imageArrayLayers(1)
 				.imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
 				.preTransform(surfaceCaps.currentTransform())
@@ -160,7 +159,7 @@ class SwapChain
 	fun cleanup(device: LogicalDevice)
 	{
 //		Main.logDebug("Destroying Vulkan SwapChain")
-		swapChainExtent.free()
+		extents.free()
 		imageViews.forEach { it.free(device) }
 		KHRSwapchain.vkDestroySwapchainKHR(device.vkDevice, vkSwapChain, null)
 	}

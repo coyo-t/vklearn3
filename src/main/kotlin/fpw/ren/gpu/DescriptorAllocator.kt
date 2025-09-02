@@ -2,45 +2,45 @@ package fpw.ren.gpu
 
 import fpw.FUtil
 import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
 
 
-class DescriptorAllocator
+class DescriptorAllocator (
+	val hardwareDevice: HardwareDevice,
+	val logicalDevice: LogicalDevice,
+)
 {
 
 	private val descLimits: MutableMap<Int, Int>
 	private val descPoolList = mutableListOf<PoolInfo>()
 	private val descSetInfoMap = mutableMapOf<String, SetInfo>()
 
-	constructor (physDevice: HardwareDevice, device: LogicalDevice)
+	init
 	{
-		descLimits = createDescLimits(physDevice)
-		descPoolList.add(createDescPoolInfo(device, descLimits))
-//		descPoolList.add(createDescPoolInfo(device, descLimits))
-	}
-
-	private fun createDescLimits(physDevice: HardwareDevice): MutableMap<Int, Int>
-	{
-		val limits = physDevice.vkPhysicalDeviceProperties.properties().limits()
-		return mutableMapOf(
+		val limits = hardwareDevice.vkPhysicalDeviceProperties.properties().limits()
+		descLimits = mutableMapOf(
 			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER to limits.maxDescriptorSetUniformBuffers(),
 			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER to limits.maxDescriptorSetSamplers(),
 			VK_DESCRIPTOR_TYPE_STORAGE_BUFFER to limits.maxDescriptorSetStorageBuffers(),
 		)
+		descPoolList.add(createDescPoolInfo(descLimits))
+//		descPoolList.add(createDescPoolInfo(device, descLimits))
 	}
 
-	private fun createDescPoolInfo (device: LogicalDevice, descLimits: MutableMap<Int, Int>): PoolInfo
+	private fun createDescPoolInfo (descLimits: MutableMap<Int, Int>): PoolInfo
 	{
 		val descCount = descLimits.toMutableMap()
 		val descTypeCounts = mutableListOf<DescriptorPool.DescTypeCount>()
 		descLimits.forEach { (k, v) ->
 			descTypeCounts.add(DescriptorPool.DescTypeCount(k, v))
 		}
-		val descPool = DescriptorPool(device, descTypeCounts)
+		val descPool = DescriptorPool(logicalDevice, descTypeCounts)
 		return PoolInfo(descCount, descPool)
 	}
 
 	fun addDescSets (
-		device: LogicalDevice,
 		id: String,
 		descSetLayout: DescriptorLayout,
 		count: Int=1,
@@ -77,13 +77,13 @@ class DescriptorAllocator
 
 		if (targetPool == null)
 		{
-			targetPool = createDescPoolInfo(device, descLimits)
+			targetPool = createDescPoolInfo(descLimits)
 			descPoolList.add(targetPool)
 			poolPos++
 		}
 
 		val result = MutableList(count) {
-			DescriptorSet(device, targetPool.descPool, descSetLayout)
+			DescriptorSet(logicalDevice, targetPool.descPool, descSetLayout)
 		}
 
 		descSetInfoMap[id] = SetInfo(result, poolPos)
@@ -99,14 +99,14 @@ class DescriptorAllocator
 		return result
 	}
 
-	fun free(device: LogicalDevice)
+	fun free ()
 	{
 //		Logger.debug("Destroying descriptor allocator")
 		descSetInfoMap.clear()
-		descPoolList.forEach { it.descPool.free(device) }
+		descPoolList.forEach { it.descPool.free(logicalDevice) }
 	}
 
-	fun freeDescSet(device: LogicalDevice, id: String?)
+	fun freeDescSet (id: String?)
 	{
 		val descSetInfo = descSetInfoMap[id]
 		if (descSetInfo == null)
@@ -121,7 +121,7 @@ class DescriptorAllocator
 		}
 		val descPoolInfo = descPoolList[descSetInfo.poolPos]
 		descSetInfo.descSets.forEach {
-			descPoolInfo.descPool.freeDescriptorSet(device, it.vkDescriptorSet)
+			descPoolInfo.descPool.freeDescriptorSet(logicalDevice, it.vkDescriptorSet)
 		}
 	}
 

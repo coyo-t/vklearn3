@@ -109,7 +109,7 @@ object GPUtil
 	{
 		val swapChain = vkCtx.swapChain
 		val numImages: Int = swapChain.numImages
-		val swapChainExtent: VkExtent2D = swapChain.swapChainExtent
+		val swapChainExtent: VkExtent2D = swapChain.extents
 		return List(numImages) {
 			Attachment(
 				vkCtx,
@@ -199,10 +199,10 @@ object GPUtil
 
 	fun copyMatrixToBuffer(vkCtx: Renderer, vkBuffer: GPUBuffer, matrix: Matrix4f, offset: Int)
 	{
-		val mappedMemory: Long = vkBuffer.map(vkCtx)
+		val mappedMemory: Long = vkBuffer.map()
 		val matrixBuffer = MemoryUtil.memByteBuffer(mappedMemory, vkBuffer.requestedSize.toInt())
 		matrix.get(offset, matrixBuffer)
-		vkBuffer.unMap(vkCtx)
+		vkBuffer.unMap()
 	}
 
 	fun createHostVisibleBuff(vkCtx: Renderer, buffSize: Long, usage: Int, id: String, layout: DescriptorLayout): GPUBuffer
@@ -214,7 +214,7 @@ object GPUtil
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 		)
 		val device = vkCtx.device
-		val descSet = vkCtx.descAllocator.addDescSets(device, id, layout, 1).first()
+		val descSet = vkCtx.descAllocator.addDescSets(id, layout, 1).first()
 		val first = layout.layoutInfos.first()
 		descSet.setBuffer(
 			device,

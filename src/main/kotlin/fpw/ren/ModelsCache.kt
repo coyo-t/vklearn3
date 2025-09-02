@@ -10,12 +10,12 @@ import org.lwjgl.vulkan.VkBufferCopy
 import kotlin.use
 
 
-class ModelsCache
+class ModelsCache (val context: Renderer)
 {
 	val modelMap = mutableMapOf<String, GPUMesh>()
 
 
-	fun close (context: Renderer)
+	fun free ()
 	{
 		modelMap.values.forEach { it.free(context) }
 		modelMap.clear()
@@ -47,7 +47,7 @@ class ModelsCache
 		cmd.endRecording()
 		cmd.submitAndWait(context, queue)
 		cmd.free(context, commandPool)
-		stagingBufferList.forEach { it.free(context) }
+		stagingBufferList.forEach { it.free() }
 	}
 
 	private fun createIndicesBuffers(context: Renderer, meshData: Mesh): Pair<GPUBuffer, GPUBuffer>
@@ -69,7 +69,7 @@ class ModelsCache
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		)
 
-		srcBuffer.doMapped(context) { mapped ->
+		srcBuffer.doMapped { mapped ->
 			val data = MemoryUtil.memIntBuffer(mapped, srcBuffer.requestedSize.toInt())
 			data.put(indices)
 		}
@@ -101,7 +101,7 @@ class ModelsCache
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		)
 
-		srcBuffer.doMapped(context) { mappedMemory ->
+		srcBuffer.doMapped { mappedMemory ->
 			val data = MemoryUtil.memFloatBuffer(mappedMemory, srcBuffer.requestedSize.toInt())
 
 			val rows = positions.size / 3

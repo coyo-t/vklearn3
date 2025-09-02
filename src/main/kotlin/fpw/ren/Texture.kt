@@ -46,7 +46,7 @@ class Texture
 					VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 				)
 			)
-			stgBuffer.doMapped(vkCtx) {
+			stgBuffer.doMapped() {
 				val buffer = FUtil.createMemoryAt(it, stgBuffer.requestedSize)
 				buffer.copyFrom(srcImage.data)
 			}
@@ -86,7 +86,7 @@ class Texture
 	fun cleanupStgBuffer(vkCtx: Renderer)
 	{
 		stgBuffer?.let {
-			it.free(vkCtx)
+			it.free()
 			stgBuffer = null
 		}
 	}

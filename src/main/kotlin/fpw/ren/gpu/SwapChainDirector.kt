@@ -19,7 +19,7 @@ class SwapChainDirector (val renderer: Renderer)
 
 	fun onResize ()
 	{
-		imageAcquiredSemaphore.free(renderer)
+		imageAcquiredSemaphore.free()
 		imageAcquiredSemaphore = renderer.createSemaphor()
 	}
 
@@ -27,7 +27,7 @@ class SwapChainDirector (val renderer: Renderer)
 	{
 		commandBuffer.free(renderer, commandPool)
 		commandPool.free(renderer)
-		imageAcquiredSemaphore.free(renderer)
+		imageAcquiredSemaphore.free()
 		fence.free(renderer)
 	}
 }
