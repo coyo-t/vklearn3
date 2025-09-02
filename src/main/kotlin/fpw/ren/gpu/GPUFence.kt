@@ -6,7 +6,7 @@ import org.lwjgl.vulkan.VK10.*
 
 class GPUFence(val vkFence: Long)
 {
-	fun close (context: Renderer)
+	fun free (context: Renderer)
 	{
 		vkDestroyFence(context.vkDevice, vkFence, null)
 	}

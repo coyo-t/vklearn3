@@ -111,7 +111,7 @@ class CommandBuffer
 			queue.submit(cmds, null, null, fence)
 		}
 		fence.wait(vkCtx)
-		fence.close(vkCtx)
+		fence.free(vkCtx)
 	}
 
 	class InheritanceInfo (

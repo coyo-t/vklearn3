@@ -52,18 +52,10 @@ class Renderer (engineContext: Engine)
 	val graphicsQueue = CommandQueue.createGraphics(this, 0)
 	val presentQueue = CommandQueue.createPresentation(this, 0)
 
-	val cmdPools = List(maxInFlightFrameCount) {
-		createCommandPool(graphicsQueue.queueFamilyIndex, false)
+	val swapChainDirectors = List(maxInFlightFrameCount) {
+		SwapChainDirector(this)
 	}
-	val cmdBuffers = List(maxInFlightFrameCount) {
-		CommandBuffer(this, cmdPools[it], oneTimeSubmit = true)
-	}
-	var imageAqSemphs = List(maxInFlightFrameCount) {
-		createSemaphor()
-	}
-	var fences = List(maxInFlightFrameCount) {
-		createFence(signaled = true)
-	}
+
 	var renderCompleteSemphs = List(swapChain.numImages) {
 		createSemaphor()
 	}
@@ -144,7 +136,7 @@ class Renderer (engineContext: Engine)
 
 	lateinit var textureTerrain: Texture
 
-	val currentCommandPool get() = cmdPools[currentFrame]
+	val currentCommandPool get() = swapChainDirectors[currentFrame].commandPool
 
 	fun init (engine: Engine)
 	{
@@ -182,7 +174,7 @@ class Renderer (engineContext: Engine)
 
 			meshManager.loadModels(
 				this,
-				cmdPools[0],
+				currentCommandPool,
 				graphicsQueue,
 				thing["temp_name"].toString(),
 				Mesh(
@@ -214,14 +206,16 @@ class Renderer (engineContext: Engine)
 		clrValueDepth.free()
 
 		meshManager.close(this)
-		renderCompleteSemphs.forEach { it.free(this) }
-		imageAqSemphs.forEach { it.free(this) }
-		fences.forEach { it.close(this) }
-		for ((cb, cp) in cmdBuffers.zip(cmdPools))
-		{
-			cb.free(this, cp)
-			cp.free(this)
-		}
+//		renderCompleteSemphs.forEach { it.free(this) }
+//		imageAqSemphs.forEach { it.free(this) }
+//		fences.forEach { it.free(this) }
+//		for ((cb, cp) in cmdBuffers.zip(cmdPools))
+//		{
+//			cb.free(this, cp)
+//			cp.free(this)
+//		}
+		swapChainDirectors.forEach(SwapChainDirector::free)
+
 		pipelineCache.free(this)
 		swapChain.cleanup(device)
 		displaySurface.free(instance)
@@ -232,8 +226,9 @@ class Renderer (engineContext: Engine)
 
 	private fun submit(cmdBuff: CommandBuffer, currentFrame: Int, imageIndex: Int)
 	{
+		val director = swapChainDirectors[currentFrame]
 		MemoryStack.stackPush().use { stack ->
-			val fence = fences[currentFrame]
+			val fence = director.fence
 			fence.reset(this)
 			val cmds = VkCommandBufferSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
@@ -241,7 +236,7 @@ class Renderer (engineContext: Engine)
 			val waitSemphs = VkSemaphoreSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
 				.stageMask(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT)
-				.semaphore(imageAqSemphs[currentFrame].vkSemaphore)
+				.semaphore(director.imageAcquiredSemaphore.vkSemaphore)
 			val signalSemphs = VkSemaphoreSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
 				.stageMask(VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)
@@ -252,10 +247,10 @@ class Renderer (engineContext: Engine)
 
 	fun render (engineContext: Engine)
 	{
-		fences[currentFrame].wait(this)
-
-		val cmdPool = cmdPools[currentFrame]
-		val cmdBuffer = cmdBuffers[currentFrame]
+		val director = swapChainDirectors[currentFrame]
+		director.fence.wait(this)
+		val cmdPool = director.commandPool
+		val cmdBuffer = director.commandBuffer
 
 		cmdPool.reset(this)
 		cmdBuffer.beginRecording()
@@ -265,7 +260,7 @@ class Renderer (engineContext: Engine)
 			resize(engineContext)
 			return
 		}
-		val imageIndex = swapChain.acquireNextImage(device, imageAqSemphs[currentFrame])
+		val imageIndex = swapChain.acquireNextImage(device, director.imageAcquiredSemaphore)
 		if (imageIndex < 0)
 		{
 			resize(engineContext)
@@ -434,13 +429,15 @@ class Renderer (engineContext: Engine)
 			useVerticalSync,
 		)
 
+		swapChainDirectors.forEach(SwapChainDirector::onResize)
+
+//		imageAqSemphs.forEach { it.free(this) }
+//
+//		imageAqSemphs = List(maxInFlightFrameCount) {
+//			createSemaphor()
+//		}
+
 		renderCompleteSemphs.forEach { it.free(this) }
-		imageAqSemphs.forEach { it.free(this) }
-
-		imageAqSemphs = List(maxInFlightFrameCount) {
-			createSemaphor()
-		}
-
 		renderCompleteSemphs = List(swapChain.numImages) {
 			createSemaphor()
 		}
