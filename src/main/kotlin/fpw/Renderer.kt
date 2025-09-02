@@ -84,7 +84,7 @@ class Renderer (engineContext: Engine)
 	}
 	val pushConstantsBuffer = FUtil.createBuffer(128)
 
-//	val descAllocator = DescriptorAllocator(hardware, device)
+	val descAllocator = DescriptorAllocator(hardware, device)
 
 	val viewpointMatrix = Matrix4f()
 	val mvMatrix = Matrix4f()
@@ -139,6 +139,7 @@ class Renderer (engineContext: Engine)
 	{
 		device.waitIdle()
 
+		descAllocator.free(device)
 		pipeline.cleanup(this)
 		renderInfo.forEach { it.free() }
 		attInfoColor.forEach { it.free() }
@@ -156,7 +157,6 @@ class Renderer (engineContext: Engine)
 			cb.free(this, cp)
 			cp.free(this)
 		}
-//		descAllocator.free(device)
 		pipelineCache.free(this)
 		swapChain.cleanup(device)
 		displaySurface.free(instance)

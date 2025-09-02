@@ -9,7 +9,7 @@ import org.lwjgl.vulkan.VkDescriptorSetLayoutBinding
 import org.lwjgl.vulkan.VkDescriptorSetLayoutCreateInfo
 
 
-class DescriptorSetLayout
+class DescriptorLayout
 {
 	val layoutInfos: List<Info>
 	val vkDescLayout: Long

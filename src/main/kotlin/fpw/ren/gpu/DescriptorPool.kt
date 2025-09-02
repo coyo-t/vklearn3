@@ -10,7 +10,7 @@ import org.lwjgl.vulkan.VkDescriptorPoolCreateInfo
 import org.lwjgl.vulkan.VkDescriptorPoolSize
 
 
-class DescriptorSetPool
+class DescriptorPool
 {
 	val vkDescPool: Long
 	val descTypeCounts: MutableList<DescTypeCount>

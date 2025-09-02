@@ -14,7 +14,11 @@ class DescriptorSet
 {
 	val vkDescriptorSet: Long
 
-	constructor (device: LogicalDevice, descPool: DescriptorSetPool, descSetLayout: DescriptorSetLayout)
+	constructor (
+		device: LogicalDevice,
+		descPool: DescriptorPool,
+		descSetLayout: DescriptorLayout,
+	)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val pDescriptorSetLayout = stack.mallocLong(1)

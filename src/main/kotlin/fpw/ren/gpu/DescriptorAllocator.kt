@@ -7,13 +7,15 @@ import org.lwjgl.vulkan.VK10.*
 class DescriptorAllocator
 {
 
-	private val descLimits = mutableMapOf<Int, Int>()
+	private val descLimits: MutableMap<Int, Int>
 	private val descPoolList = mutableListOf<PoolInfo>()
 	private val descSetInfoMap = mutableMapOf<String, SetInfo>()
 
 	constructor (physDevice: HardwareDevice, device: LogicalDevice)
 	{
+		descLimits = createDescLimits(physDevice)
 		descPoolList.add(createDescPoolInfo(device, descLimits))
+//		descPoolList.add(createDescPoolInfo(device, descLimits))
 	}
 
 	private fun createDescLimits(physDevice: HardwareDevice): MutableMap<Int, Int>
@@ -29,15 +31,20 @@ class DescriptorAllocator
 	private fun createDescPoolInfo (device: LogicalDevice, descLimits: MutableMap<Int, Int>): PoolInfo
 	{
 		val descCount = descLimits.toMutableMap()
-		val descTypeCounts = mutableListOf<DescriptorSetPool.DescTypeCount>()
+		val descTypeCounts = mutableListOf<DescriptorPool.DescTypeCount>()
 		descLimits.forEach { (k, v) ->
-			descTypeCounts.add(DescriptorSetPool.DescTypeCount(k, v))
+			descTypeCounts.add(DescriptorPool.DescTypeCount(k, v))
 		}
-		val descPool = DescriptorSetPool(device, descTypeCounts)
+		val descPool = DescriptorPool(device, descTypeCounts)
 		return PoolInfo(descCount, descPool)
 	}
 
-	fun addDescSets(device: LogicalDevice, id: String, count: Int, descSetLayout: DescriptorSetLayout): List<DescriptorSet>
+	fun addDescSets (
+		device: LogicalDevice,
+		id: String,
+		count: Int,
+		descSetLayout: DescriptorLayout,
+	): List<DescriptorSet>
 	{
 		// Check if we have room for the sets in any descriptor pool
 		var targetPool: PoolInfo? = null
@@ -47,11 +54,12 @@ class DescriptorAllocator
 			for (layoutInfo in descSetLayout.layoutInfos)
 			{
 				val descType = layoutInfo.descType
-				val available = descPoolInfo.descCount[descType] ?: throw RuntimeException("Unknown type [$descType]")
+				val available = requireNotNull(descPoolInfo.descCount[descType]) {
+					"Unknown type [$descType]"
+				}
 				val maxTotal = descLimits[descType]!!
-				if (count > maxTotal)
-				{
-					throw RuntimeException("Cannot create more than [$maxTotal] for descriptor type [$descType]")
+				check(count <= maxTotal) {
+					"Cannot create more than [$maxTotal] for descriptor type [$descType]"
 				}
 				if (available < count)
 				{
@@ -110,22 +118,19 @@ class DescriptorAllocator
 			return
 		}
 		val descPoolInfo = descPoolList[descSetInfo.poolPos]
-		descSetInfo.descSets.forEach { descPoolInfo.descPool.freeDescriptorSet(device, it.vkDescriptorSet) }
+		descSetInfo.descSets.forEach {
+			descPoolInfo.descPool.freeDescriptorSet(device, it.vkDescriptorSet)
+		}
 	}
 
 	fun getDescSet(id: String, pos: Int): DescriptorSet?
 	{
-		val descSetInfo = descSetInfoMap[id]
-		if (descSetInfo != null)
-		{
-			return descSetInfo.descSets[pos]
-		}
-		return null
+		return descSetInfoMap[id]?.let { it.descSets[pos] }
 	}
 
 	class PoolInfo (
 		val descCount: MutableMap<Int, Int>,
-		val descPool: DescriptorSetPool,
+		val descPool: DescriptorPool,
 	)
 
 	class SetInfo(
