@@ -214,7 +214,7 @@ object GPUtil
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 		)
 		val device = vkCtx.device
-		val descSet = vkCtx.descAllocator.addDescSets(device, id, 1, layout).first()
+		val descSet = vkCtx.descAllocator.addDescSets(device, id, layout, 1).first()
 		val first = layout.layoutInfos.first()
 		descSet.setBuffer(
 			device,

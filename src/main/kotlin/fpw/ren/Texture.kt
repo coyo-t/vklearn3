@@ -20,11 +20,11 @@ import org.lwjgl.vulkan.VkBufferImageCopy.calloc
 class Texture
 {
 
-	private val wide: Int
-	private val tall: Int
-	private val id: String
-	private val image: GPUImage
-	private val imageView: ImageView
+	val wide: Int
+	val tall: Int
+	val id: String
+	val image: GPUImage
+	val imageView: ImageView
 	private var recordedTransition: Boolean
 	private var stgBuffer: GPUBuffer?
 

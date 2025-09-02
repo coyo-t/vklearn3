@@ -1,6 +1,8 @@
 package fpw
 
 import fpw.ren.ModelsCache
+import fpw.ren.Texture
+import fpw.ren.TextureManager
 import fpw.ren.gpu.*
 import fpw.ren.gpu.GPUtil.imageBarrier
 import fpw.ren.gpu.CommandQueue
@@ -44,24 +46,25 @@ class Renderer (engineContext: Engine)
 
 	val pipelineCache = device.createPipelineCache()
 
-	private var currentFrame = 0
+	var currentFrame = 0
+		private set
 
-	private val graphicsQueue = CommandQueue.createGraphics(this, 0)
-	private val presentQueue = CommandQueue.createPresentation(this, 0)
+	val graphicsQueue = CommandQueue.createGraphics(this, 0)
+	val presentQueue = CommandQueue.createPresentation(this, 0)
 
-	private val cmdPools = List(maxInFlightFrameCount) {
+	val cmdPools = List(maxInFlightFrameCount) {
 		createCommandPool(graphicsQueue.queueFamilyIndex, false)
 	}
-	private val cmdBuffers = List(maxInFlightFrameCount) {
+	val cmdBuffers = List(maxInFlightFrameCount) {
 		CommandBuffer(this, cmdPools[it], oneTimeSubmit = true)
 	}
-	private var imageAqSemphs = List(maxInFlightFrameCount) {
+	var imageAqSemphs = List(maxInFlightFrameCount) {
 		createSemaphor()
 	}
-	private var fences = List(maxInFlightFrameCount) {
+	var fences = List(maxInFlightFrameCount) {
 		createFence(signaled = true)
 	}
-	private var renderCompleteSemphs = List(swapChain.numImages) {
+	var renderCompleteSemphs = List(swapChain.numImages) {
 		createSemaphor()
 	}
 	private val meshManager = ModelsCache()
@@ -102,6 +105,13 @@ class Renderer (engineContext: Engine)
 		)
 	)
 
+
+	val textureSampler = Sampler(
+		this,
+		filter = SamplerFilter.NEAREST,
+		wrapping = SamplerWrapping.REPEAT,
+	)
+
 	val shaderMatrixBuffer = GPUtil.createHostVisibleBuff(
 		this,
 		GPUtil.SIZEOF_MAT4 * 2L,
@@ -109,11 +119,10 @@ class Renderer (engineContext: Engine)
 		"MATRIX",
 		descLayoutVtxUniform,
 	)
-
-	val textureSampler = Sampler(
-		this,
-		filter = SamplerFilter.NEAREST,
-		wrapping = SamplerWrapping.REPEAT,
+	val shaderTextureUniform = descAllocator.addDescSets(
+		device,
+		"TEXTURE",
+		descLayoutTexture,
 	)
 
 	val pipeline = run {
@@ -131,9 +140,16 @@ class Renderer (engineContext: Engine)
 		outs
 	}
 
+	val textureManager = TextureManager(this)
+
+	lateinit var textureTerrain: Texture
+
+	val currentCommandPool get() = cmdPools[currentFrame]
 
 	fun init (engine: Engine)
 	{
+		textureTerrain = textureManager[ResourceLocation.withDefaultNameSpace("image/terrain.png")]
+
 		LuaCoyote().use { L ->
 			L.openLibraries()
 			val thing = (L.run(engine.testModel) as? LuaTableValue) ?: return@use
@@ -181,6 +197,7 @@ class Renderer (engineContext: Engine)
 	fun free()
 	{
 		device.waitIdle()
+		textureManager.free()
 
 		descLayoutVtxUniform.free(this)
 		descLayoutTexture.free(this)
@@ -316,6 +333,21 @@ class Renderer (engineContext: Engine)
 				.extent { it.width(width).height(height) }
 				.offset { it.x(0).y(0) }
 			vkCmdSetScissor(cmdHandle, 0, scissor)
+
+			val descr = stack.mallocLong(2).apply {
+				put(0, descAllocator.getDescSet("MATRIX").vkDescriptorSet)
+				put(1, descAllocator.getDescSet("TEXTURE").vkDescriptorSet)
+			}
+			shaderTextureUniform.first().setImages(device, textureSampler, 1, textureTerrain.imageView)
+
+			vkCmdBindDescriptorSets(
+				cmdHandle,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				pipeline.vkPipelineLayout,
+				0,
+				descr,
+				null,
+			)
 
 			val offsets = stack.mallocLong(1).put(0, 0L)
 			val vertexBuffer = stack.mallocLong(1)

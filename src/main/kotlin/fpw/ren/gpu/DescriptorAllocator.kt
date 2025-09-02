@@ -42,8 +42,8 @@ class DescriptorAllocator
 	fun addDescSets (
 		device: LogicalDevice,
 		id: String,
-		count: Int,
 		descSetLayout: DescriptorLayout,
+		count: Int=1,
 	): List<DescriptorSet>
 	{
 		// Check if we have room for the sets in any descriptor pool
@@ -125,9 +125,9 @@ class DescriptorAllocator
 		}
 	}
 
-	fun getDescSet(id: String, pos: Int): DescriptorSet?
+	fun getDescSet(id: String, pos: Int=0): DescriptorSet
 	{
-		return descSetInfoMap[id]?.let { it.descSets[pos] }
+		return descSetInfoMap[id]?.let { it.descSets[pos] }!!
 	}
 
 	class PoolInfo (

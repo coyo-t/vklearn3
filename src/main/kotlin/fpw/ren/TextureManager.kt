@@ -3,31 +3,54 @@ package fpw.ren
 import fpw.FUtil
 import fpw.Image
 import fpw.Renderer
+import fpw.ResourceLocation
 import fpw.ren.gpu.CommandBuffer
 import fpw.ren.gpu.CommandPool
 import fpw.ren.gpu.CommandQueue
 import org.lwjgl.vulkan.VK10.VK_FORMAT_R8G8B8A8_SRGB
-import java.util.*
 import kotlin.io.path.Path
+import kotlin.io.path.div
 
 
-class TextureManager
+class TextureManager (val renderer: Renderer)
 {
 	private val textureMap = mutableMapOf<String, Texture>()
 
-	fun addTexture(vkCtx: Renderer, id: String, srcImage: Image, format: Int): Texture
+	operator fun get (from: ResourceLocation): Texture
 	{
-		return textureMap.getOrPut(id) {
-			Texture(vkCtx, id, srcImage, format)
+		val p = from.path
+		if (p in textureMap)
+		{
+			return textureMap[p]!!
+		}
+
+		try
+		{
+			val srcImage = Image.load(FUtil.ASSETS_PATH/p)!!
+			val outs = addTexture(p, srcImage, VK_FORMAT_R8G8B8A8_SRGB)
+			transitionTextures(renderer.currentCommandPool, renderer.graphicsQueue, outs)
+			return outs
+		}
+		catch (e: Exception)
+		{
+			FUtil.logError(e) { "Could not load texture [$from]" }
+			throw e
 		}
 	}
 
-	fun addTexture (vkCtx: Renderer, id: String, texturePath: String, format: Int): Texture?
+	fun addTexture(id: String, srcImage: Image, format: Int): Texture
+	{
+		return textureMap.getOrPut(id) {
+			Texture(renderer, id, srcImage, format)
+		}
+	}
+
+	fun addTexture (id: String, texturePath: String, format: Int): Texture?
 	{
 		try
 		{
 			val srcImage = Image.load(Path(texturePath))!!
-			return addTexture(vkCtx, id, srcImage, format)
+			return addTexture(id, srcImage, format)
 		}
 		catch (e: Exception)
 		{
@@ -36,9 +59,9 @@ class TextureManager
 		}
 	}
 
-	fun cleanup(vkCtx: Renderer)
+	fun free ()
 	{
-		textureMap.values.forEach { it.cleanup(vkCtx) }
+		textureMap.values.forEach { it.cleanup(renderer) }
 		textureMap.clear()
 	}
 
@@ -47,23 +70,40 @@ class TextureManager
 		return textureMap[texturePath]!!
 	}
 
-	fun transitionTexts(vkCtx: Renderer, cmdPool: CommandPool, queue: CommandQueue)
+	fun transitionTextures (cmd: CommandPool, queue: CommandQueue, vararg textures: Texture)
 	{
-//		Logger.debug("Recording texture transitions")
-		val numTextures = textureMap.size
-		val numPaddingTexts = numTextures
-		val defaultTexturePath =  "resources/assets/image/"
-		for (i in 0..<numPaddingTexts)
-		{
-			addTexture(vkCtx, UUID.randomUUID().toString(), defaultTexturePath, VK_FORMAT_R8G8B8A8_SRGB)
-		}
-		val c = CommandBuffer(vkCtx, cmdPool, oneTimeSubmit = true)
+		val c = CommandBuffer(renderer, cmd, oneTimeSubmit = true)
 		c.beginRecording()
-		textureMap.values.forEach { it.recordTextureTransition(c) }
+		for (it in textures)
+		{
+			it.recordTextureTransition(c)
+		}
 		c.endRecording()
-		c.submitAndWait(vkCtx, queue)
-		c.free(vkCtx, cmdPool)
-		textureMap.values.forEach { it.cleanupStgBuffer(vkCtx) }
+		c.submitAndWait(renderer, queue)
+		c.free(renderer, cmd)
+		for (it in textures)
+		{
+			it.cleanupStgBuffer(renderer)
+		}
 	}
+
+//	fun transitionTexts (cmdPool: CommandPool, queue: CommandQueue)
+//	{
+////		Logger.debug("Recording texture transitions")
+////		val numTextures = textureMap.size
+////		val numPaddingTexts = numTextures
+////		val defaultTexturePath =  "resources/assets/image/"
+////		for (i in 0..<numPaddingTexts)
+////		{
+////			addTexture(UUID.randomUUID().toString(), defaultTexturePath, VK_FORMAT_R8G8B8A8_SRGB)
+////		}
+//		val c = CommandBuffer(renderer, cmdPool, oneTimeSubmit = true)
+//		c.beginRecording()
+//		textureMap.values.forEach { it.recordTextureTransition(c) }
+//		c.endRecording()
+//		c.submitAndWait(renderer, queue)
+//		c.free(renderer, cmdPool)
+//		textureMap.values.forEach { it.cleanupStgBuffer(renderer) }
+//	}
 
 }
