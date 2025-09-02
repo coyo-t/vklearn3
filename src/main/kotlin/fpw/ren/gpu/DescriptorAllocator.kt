@@ -8,8 +8,8 @@ class DescriptorAllocator
 {
 
 	private val descLimits = mutableMapOf<Int, Int>()
-	private val descPoolList = mutableListOf<DescPoolInfo>()
-	private val descSetInfoMap = mutableMapOf<String, DescSetInfo>()
+	private val descPoolList = mutableListOf<PoolInfo>()
+	private val descSetInfoMap = mutableMapOf<String, SetInfo>()
 
 	constructor (physDevice: HardwareDevice, device: LogicalDevice)
 	{
@@ -26,7 +26,7 @@ class DescriptorAllocator
 		)
 	}
 
-	private fun createDescPoolInfo (device: LogicalDevice, descLimits: MutableMap<Int, Int>): DescPoolInfo
+	private fun createDescPoolInfo (device: LogicalDevice, descLimits: MutableMap<Int, Int>): PoolInfo
 	{
 		val descCount = descLimits.toMutableMap()
 		val descTypeCounts = mutableListOf<DescriptorSetPool.DescTypeCount>()
@@ -34,13 +34,13 @@ class DescriptorAllocator
 			descTypeCounts.add(DescriptorSetPool.DescTypeCount(k, v))
 		}
 		val descPool = DescriptorSetPool(device, descTypeCounts)
-		return DescPoolInfo(descCount, descPool)
+		return PoolInfo(descCount, descPool)
 	}
 
 	fun addDescSets(device: LogicalDevice, id: String, count: Int, descSetLayout: DescriptorSetLayout): List<DescriptorSet>
 	{
 		// Check if we have room for the sets in any descriptor pool
-		var targetPool: DescPoolInfo? = null
+		var targetPool: PoolInfo? = null
 		var poolPos = 0
 		for (descPoolInfo in descPoolList)
 		{
@@ -77,7 +77,7 @@ class DescriptorAllocator
 			DescriptorSet(device, targetPool.descPool, descSetLayout)
 		}
 
-		descSetInfoMap[id] = DescSetInfo(result, poolPos)
+		descSetInfoMap[id] = SetInfo(result, poolPos)
 
 		// Update consumed descriptors
 		for (layoutInfo in descSetLayout.layoutInfos)
@@ -93,7 +93,7 @@ class DescriptorAllocator
 	{
 //		Logger.debug("Destroying descriptor allocator")
 		descSetInfoMap.clear()
-		descPoolList.forEach { it.descPool.cleanup(device) }
+		descPoolList.forEach { it.descPool.free(device) }
 	}
 
 	fun freeDescSet(device: LogicalDevice, id: String?)
@@ -123,12 +123,12 @@ class DescriptorAllocator
 		return null
 	}
 
-	class DescPoolInfo (
+	class PoolInfo (
 		val descCount: MutableMap<Int, Int>,
 		val descPool: DescriptorSetPool,
 	)
 
-	class DescSetInfo(
+	class SetInfo(
 		val descSets: MutableList<DescriptorSet>,
 		val poolPos: Int,
 	)

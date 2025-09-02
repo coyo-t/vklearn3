@@ -45,9 +45,8 @@ class DescriptorSetPool
 		}
 	}
 
-	fun cleanup(device: LogicalDevice)
+	fun free(device: LogicalDevice)
 	{
-//		Logger.debug("Destroying descriptor pool")
 		vkDestroyDescriptorPool(device.vkDevice, vkDescPool, null)
 	}
 

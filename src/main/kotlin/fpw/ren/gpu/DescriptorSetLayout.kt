@@ -11,10 +11,10 @@ import org.lwjgl.vulkan.VkDescriptorSetLayoutCreateInfo
 
 class DescriptorSetLayout
 {
-	val layoutInfos: List<LayoutInfo>
+	val layoutInfos: List<Info>
 	val vkDescLayout: Long
 
-	constructor (vkCtx: Renderer, vararg layoutInfos: LayoutInfo)
+	constructor (vkCtx: Renderer, vararg layoutInfos: Info)
 	{
 		this.layoutInfos = layoutInfos.toList()
 		MemoryStack.stackPush().use { stack ->
@@ -44,17 +44,17 @@ class DescriptorSetLayout
 		}
 	}
 
-	fun cleanup(vkCtx: Renderer)
+	fun free (vkCtx: Renderer)
 	{
 //		Logger.debug("Destroying descriptor set layout")
 		vkDestroyDescriptorSetLayout(vkCtx.vkDevice, vkDescLayout, null)
 	}
 
-	fun getLayoutInfo (): LayoutInfo
-	{
-		return layoutInfos[0]
-	}
-
-	data class LayoutInfo(val descType: Int, val binding: Int, val descCount: Int, val stage: Int)
+	data class Info(
+		val descType: Int,
+		val binding: Int,
+		val descCount: Int,
+		val stage: Int,
+	)
 
 }
