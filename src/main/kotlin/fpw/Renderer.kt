@@ -1,6 +1,7 @@
 package fpw
 
 import fpw.ren.ModelsCache
+import fpw.ren.ShaderAssetThinger
 import fpw.ren.Texture
 import fpw.ren.TextureManager
 import fpw.ren.gpu.*
@@ -8,6 +9,7 @@ import fpw.ren.gpu.GPUtil.gpuCheck
 import fpw.ren.gpu.GPUtil.imageBarrier
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
+import org.lwjgl.util.shaderc.Shaderc
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
@@ -16,6 +18,7 @@ import org.lwjgl.vulkan.VkShaderModuleCreateInfo.calloc
 import party.iroiro.luajava.value.LuaTableValue
 import java.awt.Color
 import java.nio.ByteBuffer
+import kotlin.io.path.Path
 
 
 class Renderer (engineContext: Engine)
@@ -69,9 +72,9 @@ class Renderer (engineContext: Engine)
 	val clrValueDepth = VkClearValue.calloc().color {
 		it.float32(0, 1f)
 	}
-	var attDepth = GPUtil.createDepthAttachments(this)
+	var attDepth = createDepthAttachments()
 	var attInfoColor = createColorAttachmentsInfo(clrValueColor)
-	var attInfoDepth = GPUtil.createDepthAttachmentsInfo(this, attDepth, clrValueDepth)
+	var attInfoDepth = createDepthAttachmentsInfo(attDepth, clrValueDepth)
 	var renderInfo = createRenderInfo(attInfoColor, attInfoDepth)
 	val pushConstantsBuffer = FUtil.createBuffer(128)
 
@@ -107,8 +110,7 @@ class Renderer (engineContext: Engine)
 		wrapping = SamplerWrapping.REPEAT,
 	)
 
-	val shaderMatrixBuffer = GPUtil.createHostVisibleBuff(
-		this,
+	val shaderMatrixBuffer = createHostVisibleBuff(
 		GPUtil.SIZEOF_MAT4 * 2L,
 		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		"MATRIX",
@@ -120,9 +122,8 @@ class Renderer (engineContext: Engine)
 	)
 
 	val pipeline = run {
-		val shaderModules = GPUtil.createShaderModules(this)
-		val outs = GPUtil.createPipeline(
-			this,
+		val shaderModules = createShaderModules()
+		val outs = createPipeline(
 			shaderModules,
 			listOf(
 				descLayoutVtxUniform,
@@ -209,13 +210,6 @@ class Renderer (engineContext: Engine)
 
 		meshManager.free()
 		renderCompleteSemphs.forEach { it.free() }
-//		imageAqSemphs.forEach { it.free(this) }
-//		fences.forEach { it.free(this) }
-//		for ((cb, cp) in cmdBuffers.zip(cmdPools))
-//		{
-//			cb.free(this, cp)
-//			cp.free(this)
-//		}
 		swapChainDirectors.forEach(SwapChainDirector::free)
 
 		pipelineCache.free(this)
@@ -362,8 +356,8 @@ class Renderer (engineContext: Engine)
 				entity.updateModelMatrix()
 				viewpointMatrix.mul(entity.modelMatrix, mvMatrix)
 
-				GPUtil.copyMatrixToBuffer(this, shaderMatrixBuffer, projectionMatrix, 0)
-				GPUtil.copyMatrixToBuffer(this, shaderMatrixBuffer, mvMatrix, GPUtil.SIZEOF_MAT4)
+				GPUtil.copyMatrixToBuffer(shaderMatrixBuffer, projectionMatrix, 0)
+				GPUtil.copyMatrixToBuffer(shaderMatrixBuffer, mvMatrix, GPUtil.SIZEOF_MAT4)
 //				projectionMatrix.get(pushConstantsBuffer)
 //				mvMatrix.get(GPUtil.SIZEOF_MAT4, pushConstantsBuffer)
 
@@ -445,9 +439,9 @@ class Renderer (engineContext: Engine)
 		attInfoDepth.forEach { it.free() }
 		attInfoColor.forEach { it.free() }
 		attDepth.forEach { it.free() }
-		attDepth = GPUtil.createDepthAttachments(this)
+		attDepth = createDepthAttachments()
 		attInfoColor = createColorAttachmentsInfo(clrValueColor)
-		attInfoDepth = GPUtil.createDepthAttachmentsInfo(this, attDepth, clrValueDepth)
+		attInfoDepth = createDepthAttachmentsInfo(attDepth, clrValueDepth)
 		renderInfo = createRenderInfo(attInfoColor, attInfoDepth)
 	}
 
@@ -552,5 +546,88 @@ class Renderer (engineContext: Engine)
 			},
 			shaderStage = shaderStage,
 		)
+	}
+
+	fun createDepthAttachmentsInfo(
+		depthAttachments: List<Attachment>,
+		clearValue: VkClearValue
+	): List<VkRenderingAttachmentInfo>
+	{
+		val swapChain = swapChain
+		val numImages = swapChain.numImages
+		return List(numImages) {
+			VkRenderingAttachmentInfo.calloc()
+				.`sType$Default`()
+				.imageView(depthAttachments[it].imageView.vkImageView)
+				.imageLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+				.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
+				.storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)
+				.clearValue(clearValue)
+		}
+	}
+
+	fun createPipeline (
+		shaderModules: List<ShaderModule>,
+		descLayouts: List<DescriptorLayout>,
+	): Pipeline
+	{
+		val buildInfo = Pipeline.Info(
+			shaderModules = shaderModules,
+			vi = TestCube.format.vi,
+			colorFormat = displaySurface.surfaceFormat.imageFormat,
+			depthFormat = VK_FORMAT_D16_UNORM,
+			pushConstRange = listOf(
+				Triple(VK_SHADER_STAGE_VERTEX_BIT, 0, 128)
+			),
+			descriptorSetLayouts = descLayouts,
+		)
+		return Pipeline(this, buildInfo)
+	}
+
+	fun createDepthAttachments (): List<Attachment>
+	{
+		val swapChain = swapChain
+		val numImages: Int = swapChain.numImages
+		val swapChainExtent: VkExtent2D = swapChain.extents
+		return List(numImages) {
+			Attachment(
+				this,
+				swapChainExtent.width(),
+				swapChainExtent.height(),
+				VK_FORMAT_D16_UNORM,
+				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+			)
+		}
+	}
+
+	fun createShaderModules(): List<ShaderModule>
+	{
+		val srcs = ShaderAssetThinger.loadFromLuaScript(Path("resources/assets/shader/scene.lua"))
+		val v = ShaderAssetThinger.compileSPIRV(srcs.vertex, Shaderc.shaderc_glsl_vertex_shader)
+		val f = ShaderAssetThinger.compileSPIRV(srcs.fragment, Shaderc.shaderc_glsl_fragment_shader)
+		return listOf(
+			createShaderModule(VK_SHADER_STAGE_VERTEX_BIT, v),
+			createShaderModule(VK_SHADER_STAGE_FRAGMENT_BIT, f),
+		)
+	}
+
+	fun createHostVisibleBuff (buffSize: Long, usage: Int, id: String, layout: DescriptorLayout): GPUBuffer
+	{
+		val buff = GPUBuffer(
+			this,
+			buffSize,
+			usage,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		)
+		val descSet = descAllocator.addDescSets(id, layout, 1).first()
+		val first = layout.layoutInfos.first()
+		descSet.setBuffer(
+			this.device,
+			buff,
+			buff.requestedSize,
+			first.binding,
+			first.descType.vk
+		)
+		return buff
 	}
 }

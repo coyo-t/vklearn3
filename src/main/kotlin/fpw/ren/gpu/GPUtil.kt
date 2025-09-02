@@ -1,18 +1,14 @@
 package fpw.ren.gpu
 
 import fpw.Renderer
-import fpw.TestCube
-import fpw.ren.ShaderAssetThinger
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.util.shaderc.Shaderc
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK13.*
 import java.awt.Color
 import java.lang.foreign.ValueLayout.JAVA_FLOAT
 import java.lang.foreign.ValueLayout.JAVA_INT
-import kotlin.io.path.Path
 
 
 object GPUtil
@@ -105,71 +101,6 @@ object GPUtil
 		VK_ERROR_UNKNOWN to "unknown",
 	).withDefault { "unmapped??? #$it" }
 
-	fun createDepthAttachments (vkCtx: Renderer): List<Attachment>
-	{
-		val swapChain = vkCtx.swapChain
-		val numImages: Int = swapChain.numImages
-		val swapChainExtent: VkExtent2D = swapChain.extents
-		return List(numImages) {
-			Attachment(
-				vkCtx,
-				swapChainExtent.width(),
-				swapChainExtent.height(),
-				VK_FORMAT_D16_UNORM,
-				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-			)
-		}
-	}
-
-	fun createDepthAttachmentsInfo(
-		vkCtx: Renderer,
-		depthAttachments: List<Attachment>,
-		clearValue: VkClearValue
-	): List<VkRenderingAttachmentInfo>
-	{
-		val swapChain = vkCtx.swapChain
-		val numImages = swapChain.numImages
-		return List(numImages) {
-			VkRenderingAttachmentInfo.calloc()
-				.`sType$Default`()
-				.imageView(depthAttachments[it].imageView.vkImageView)
-				.imageLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-				.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
-				.storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)
-				.clearValue(clearValue)
-		}
-	}
-
-	fun createPipeline (
-		vkCtx: Renderer,
-		shaderModules: List<ShaderModule>,
-		descLayouts: List<DescriptorLayout>,
-	): Pipeline
-	{
-		val buildInfo = Pipeline.Info(
-				shaderModules = shaderModules,
-				vi = TestCube.format.vi,
-				colorFormat = vkCtx.displaySurface.surfaceFormat.imageFormat,
-				depthFormat = VK_FORMAT_D16_UNORM,
-				pushConstRange = listOf(
-					Triple(VK_SHADER_STAGE_VERTEX_BIT, 0, 128)
-				),
-				descriptorSetLayouts = descLayouts,
-			)
-		return Pipeline(vkCtx, buildInfo)
-	}
-
-	fun createShaderModules(vkCtx: Renderer): List<ShaderModule>
-	{
-		val srcs = ShaderAssetThinger.loadFromLuaScript(Path("resources/assets/shader/scene.lua"))
-		val v = ShaderAssetThinger.compileSPIRV(srcs.vertex, Shaderc.shaderc_glsl_vertex_shader)
-		val f = ShaderAssetThinger.compileSPIRV(srcs.fragment, Shaderc.shaderc_glsl_fragment_shader)
-		return listOf(
-			vkCtx.createShaderModule(VK_SHADER_STAGE_VERTEX_BIT, v),
-			vkCtx.createShaderModule(VK_SHADER_STAGE_FRAGMENT_BIT, f),
-		)
-	}
-
 	fun gpuCheck(err:Int, messageProvider:(Int)->String?)
 	{
 		if (err != VK_SUCCESS)
@@ -197,33 +128,12 @@ object GPUtil
 		}
 	}
 
-	fun copyMatrixToBuffer(vkCtx: Renderer, vkBuffer: GPUBuffer, matrix: Matrix4f, offset: Int)
+	fun copyMatrixToBuffer(vkBuffer: GPUBuffer, matrix: Matrix4f, offset: Int)
 	{
 		val mappedMemory: Long = vkBuffer.map()
 		val matrixBuffer = MemoryUtil.memByteBuffer(mappedMemory, vkBuffer.requestedSize.toInt())
 		matrix.get(offset, matrixBuffer)
 		vkBuffer.unMap()
-	}
-
-	fun createHostVisibleBuff(vkCtx: Renderer, buffSize: Long, usage: Int, id: String, layout: DescriptorLayout): GPUBuffer
-	{
-		val buff = GPUBuffer(
-			vkCtx,
-			buffSize,
-			usage,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		)
-		val device = vkCtx.device
-		val descSet = vkCtx.descAllocator.addDescSets(id, layout, 1).first()
-		val first = layout.layoutInfos.first()
-		descSet.setBuffer(
-			device,
-			buff,
-			buff.requestedSize,
-			first.binding,
-			first.descType.vk
-		)
-		return buff
 	}
 
 	private fun throwGpuCheck (er:Int, ms:String?): Nothing
