@@ -3,7 +3,6 @@ package fpw.ren
 import fpw.FUtil
 import fpw.Image
 import fpw.Renderer
-import fpw.ren.*
 import fpw.ren.GPUtil.imageBarrier
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
@@ -73,14 +72,14 @@ class Texture
 		)
 	}
 
-	fun cleanup(vkCtx: Renderer)
+	fun free()
 	{
-		cleanupStgBuffer(vkCtx)
-		imageView.free(vkCtx.device)
+		cleanupStgBuffer()
+		imageView.free()
 		image.free()
 	}
 
-	fun cleanupStgBuffer(vkCtx: Renderer)
+	fun cleanupStgBuffer()
 	{
 		stgBuffer?.let {
 			it.free()

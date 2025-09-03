@@ -4,9 +4,6 @@ import fpw.FUtil
 import fpw.Image
 import fpw.Renderer
 import fpw.ResourceLocation
-import fpw.ren.CommandBuffer
-import fpw.ren.CommandPool
-import fpw.ren.CommandQueue
 import org.lwjgl.vulkan.VK10.VK_FORMAT_R8G8B8A8_SRGB
 import kotlin.io.path.div
 
@@ -44,7 +41,7 @@ class TextureManager (val renderer: Renderer)
 
 	fun free ()
 	{
-		textureMap.values.forEach { it.cleanup(renderer) }
+		textureMap.values.forEach { it.free() }
 		textureMap.clear()
 	}
 
@@ -61,7 +58,7 @@ class TextureManager (val renderer: Renderer)
 		c.free(renderer, cmd)
 		for (it in textures)
 		{
-			it.cleanupStgBuffer(renderer)
+			it.cleanupStgBuffer()
 		}
 	}
 

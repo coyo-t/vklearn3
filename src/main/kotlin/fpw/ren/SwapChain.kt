@@ -13,59 +13,54 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-class SwapChain
+class SwapChain (
+	val device: LogicalDevice,
+	var wide: Int,
+	var tall: Int,
+	displaySurface: DisplaySurface,
+	requestedImages: Int,
+	vsync: Boolean,
+)
 {
-	var wide = 0
-	var tall = 0
-
 	val imageViews: List<ImageView>
 	val numImages: Int
 	val extents: VkExtent2D
 	val vkSwapChain: Long
 
-	constructor (
-		wide: Int,
-		tall: Int,
-		device: LogicalDevice,
-		displaySurface: DisplaySurface,
-		requestedImages: Int,
-		vsync: Boolean,
-	)
+	init
 	{
-		this.wide = wide
-		this.tall = tall
 		MemoryStack.stackPush().use { stack ->
 			val surfaceCaps = displaySurface.surfaceCaps
 			val reqImages = calcNumImages(surfaceCaps, requestedImages)
 			extents = calcSwapChainExtent(surfaceCaps)
 
 			val surfaceFormat = displaySurface.surfaceFormat
-			val vkSwapchainCreateInfo = VkSwapchainCreateInfoKHR.calloc(stack)
-				.`sType$Default`()
-				.surface(displaySurface.vkSurface)
-				.minImageCount(reqImages)
-				.imageFormat(surfaceFormat.imageFormat)
-				.imageColorSpace(surfaceFormat.colorSpace)
-				.imageExtent(extents)
-				.imageArrayLayers(1)
-				.imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-				.preTransform(surfaceCaps.currentTransform())
-				.compositeAlpha(VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR)
-				.clipped(true)
+			val createInfo = VkSwapchainCreateInfoKHR.calloc(stack)
+			createInfo.`sType$Default`()
+			createInfo.surface(displaySurface.vkSurface)
+			createInfo.minImageCount(reqImages)
+			createInfo.imageFormat(surfaceFormat.imageFormat)
+			createInfo.imageColorSpace(surfaceFormat.colorSpace)
+			createInfo.imageExtent(extents)
+			createInfo.imageArrayLayers(1)
+			createInfo.imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+			createInfo.preTransform(surfaceCaps.currentTransform())
+			createInfo.compositeAlpha(VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR)
+			createInfo.clipped(true)
 
-			vkSwapchainCreateInfo.presentMode(
+			createInfo.presentMode(
 				if (vsync) VK_PRESENT_MODE_FIFO_KHR
 				else VK_PRESENT_MODE_IMMEDIATE_KHR
 			)
 
 			val lp = stack.mallocLong(1)
 			gpuCheck(
-				KHRSwapchain.vkCreateSwapchainKHR(device.vkDevice, vkSwapchainCreateInfo, null, lp),
+				KHRSwapchain.vkCreateSwapchainKHR(device.vkDevice, createInfo, null, lp),
 				"Failed to create swap chain"
 			)
 			vkSwapChain = lp.get(0)
 
-			imageViews = createImageViews(stack, device, vkSwapChain, surfaceFormat.imageFormat)
+			imageViews = createImageViews(stack, vkSwapChain, surfaceFormat.imageFormat)
 			numImages = imageViews.size
 		}
 	}
@@ -102,7 +97,7 @@ class SwapChain
 		return result
 	}
 
-	private fun createImageViews(stack: MemoryStack, device: LogicalDevice, swapChain: Long, format: Int): List<ImageView>
+	private fun createImageViews(stack: MemoryStack, swapChain: Long, format: Int): List<ImageView>
 	{
 		val ip = stack.mallocInt(1)
 		gpuCheck(
@@ -126,7 +121,7 @@ class SwapChain
 		}
 	}
 
-	fun acquireNextImage(device: LogicalDevice, imageAqSem: Semaphore): Int
+	fun acquireNextImage(imageAqSem: Semaphore): Int
 	{
 		val imageIndex: Int
 		MemoryStack.stackPush().use { stack ->
@@ -156,11 +151,10 @@ class SwapChain
 		return imageIndex
 	}
 
-	fun cleanup(device: LogicalDevice)
+	fun free()
 	{
-//		Main.logDebug("Destroying Vulkan SwapChain")
 		extents.free()
-		imageViews.forEach { it.free(device) }
+		imageViews.forEach { it.free() }
 		KHRSwapchain.vkDestroySwapchainKHR(device.vkDevice, vkSwapChain, null)
 	}
 

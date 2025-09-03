@@ -102,16 +102,16 @@ class CommandBuffer
 
 	fun submitAndWait(vkCtx: Renderer, queue: CommandQueue)
 	{
-		val fence = vkCtx.createFence(true)
-		fence.reset(vkCtx)
+		val fence = GPUFence(vkCtx, signaled = true)
+		fence.reset()
 		MemoryStack.stackPush().use { stack ->
 			val cmds = VkCommandBufferSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
 				.commandBuffer(vkCommandBuffer)
 			queue.submit(cmds, null, null, fence)
 		}
-		fence.wait(vkCtx)
-		fence.free(vkCtx)
+		fence.waitForFences()
+		fence.free()
 	}
 
 	class InheritanceInfo (

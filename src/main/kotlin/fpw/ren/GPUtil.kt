@@ -23,11 +23,6 @@ object GPUtil
 	val SIZEOF_FLOAT = JAVA_FLOAT.byteSize().toInt()
 	val SIZEOF_MAT4 = SIZEOF_FLOAT*4*4
 
-	fun List<GPUBuffer>.freeAll ()
-	{
-		forEach(GPUBuffer::free)
-	}
-
 	fun memoryTypeFromProperties(vkCtx: Renderer, typeBits: Int, reqsMask: Int): Int
 	{
 		var typeBits = typeBits

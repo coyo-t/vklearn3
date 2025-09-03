@@ -126,17 +126,4 @@ class LogicalDevice (val hardware: HardwareDevice)
 		vkDeviceWaitIdle(vkDevice)
 	}
 
-	fun createPipelineCache(): PipelineCache
-	{
-		val outs = MemoryStack.stackPush().use { stack ->
-			val createInfo = VkPipelineCacheCreateInfo.calloc(stack).`sType$Default`()
-			val lp = stack.mallocLong(1)
-			gpuCheck(
-				vkCreatePipelineCache(vkDevice, createInfo, null, lp),
-				"Error creating pipeline cache"
-			)
-			lp.get(0)
-		}
-		return PipelineCache(outs)
-	}
 }

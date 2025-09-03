@@ -7,31 +7,28 @@ import org.lwjgl.vulkan.VkImageViewCreateInfo
 
 
 class ImageView (
-	device: LogicalDevice,
-	vkImage: Long,
+	val device: LogicalDevice,
+	val vkImage: Long,
 	imageViewData: Data,
-	isDepthImage: Boolean,
+	val isDepthImage: Boolean,
 )
 {
-	val vkImage = vkImage
 	val aspectMask = imageViewData.aspectMask
 	val mipLevels = imageViewData.mipLevels
-	val isDepthImage = isDepthImage
 	val vkImageView = MemoryStack.stackPush().use { stack ->
 		val lp = stack.mallocLong(1)
 		val viewCreateInfo = VkImageViewCreateInfo.calloc(stack)
-			.`sType$Default`()
-			.image(vkImage)
-			.viewType(imageViewData.viewType)
-			.format(imageViewData.format)
-			.subresourceRange {
-				it
-					.aspectMask(aspectMask)
-					.baseMipLevel(0)
-					.levelCount(mipLevels)
-					.baseArrayLayer(imageViewData.baseArrayLayer)
-					.layerCount(imageViewData.layerCount)
-			}
+		viewCreateInfo.`sType$Default`()
+		viewCreateInfo.image(vkImage)
+		viewCreateInfo.viewType(imageViewData.viewType)
+		viewCreateInfo.format(imageViewData.format)
+		viewCreateInfo.subresourceRange {
+			it.aspectMask(aspectMask)
+			it.baseMipLevel(0)
+			it.levelCount(mipLevels)
+			it.baseArrayLayer(imageViewData.baseArrayLayer)
+			it.layerCount(imageViewData.layerCount)
+		}
 
 		gpuCheck(
 			vkCreateImageView(device.vkDevice, viewCreateInfo, null, lp),
@@ -41,7 +38,7 @@ class ImageView (
 	}
 
 
-	fun free (device: LogicalDevice)
+	fun free ()
 	{
 		vkDestroyImageView(device.vkDevice, vkImageView, null)
 	}

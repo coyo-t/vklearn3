@@ -5,22 +5,22 @@ import fpw.Renderer
 class SwapChainDirector (val renderer: Renderer)
 {
 	val commandPool
-		= renderer.createCommandPool(renderer.graphicsQueue.queueFamilyIndex, false)
+		= CommandPool(renderer, renderer.graphicsQueue.queueFamilyIndex, false)
 
 	val commandBuffer
 		= CommandBuffer(renderer, commandPool, oneTimeSubmit = true)
 
 	var imageAcquiredSemaphore
-		= renderer.createSemaphor()
+		= Semaphore(renderer)
 
 	val fence
-		= renderer.createFence(signaled = true)
+		= GPUFence(renderer, signaled = true)
 
 
 	fun onResize ()
 	{
 		imageAcquiredSemaphore.free()
-		imageAcquiredSemaphore = renderer.createSemaphor()
+		imageAcquiredSemaphore = Semaphore(renderer)
 	}
 
 	fun free ()
@@ -28,6 +28,6 @@ class SwapChainDirector (val renderer: Renderer)
 		commandBuffer.free(renderer, commandPool)
 		commandPool.free()
 		imageAcquiredSemaphore.free()
-		fence.free(renderer)
+		fence.free()
 	}
 }

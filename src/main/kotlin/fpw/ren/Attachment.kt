@@ -54,7 +54,7 @@ class Attachment (
 	fun free ()
 
 	{
-		imageView.free(context.device)
+		imageView.free()
 		image.free()
 	}
 

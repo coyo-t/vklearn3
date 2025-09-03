@@ -3,10 +3,13 @@ package fpw.ren
 import fpw.Renderer
 import org.lwjgl.vulkan.VK10.vkDestroyPipelineCache
 
-@JvmInline
-value class PipelineCache (val vkPipelineCache: Long)
+
+class PipelineCache (
+	val context: Renderer,
+	val vkPipelineCache: Long,
+)
 {
-	fun free (context: Renderer)
+	fun free ()
 	{
 		vkDestroyPipelineCache(context.vkDevice, vkPipelineCache, null)
 	}

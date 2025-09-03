@@ -1,14 +1,8 @@
 package fpw
 
-import fpw.ren.ModelsCache
-import fpw.ren.ShaderAssetThinger
-import fpw.ren.Texture
-import fpw.ren.TextureManager
 import fpw.ren.*
-import fpw.ren.GPUtil.freeAll
 import fpw.ren.GPUtil.gpuCheck
 import fpw.ren.GPUtil.imageBarrier
-import fpw.ren.Pipeline
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
@@ -48,17 +42,17 @@ class Renderer (val engineContext: Engine)
 
 	var displaySurface = DisplaySurface(instance, hardware, engineContext.window)
 	var swapChain = SwapChain(
+		device,
 		engineContext.window.wide,
 		engineContext.window.tall,
-		device,
 		displaySurface,
-		requestedImages = preferredImageBufferingCount,
-		vsync = useVerticalSync,
+		preferredImageBufferingCount,
+		useVerticalSync,
 	)
 
 	val vkDevice get() = device.vkDevice
 
-	val pipelineCache = device.createPipelineCache()
+	val pipelineCache = createPipelineCache()
 
 	var currentFrame = 0
 		private set
@@ -71,7 +65,7 @@ class Renderer (val engineContext: Engine)
 	}
 
 	var renderCompleteSemphs = List(swapChain.numImages) {
-		createSemaphor()
+		Semaphore(this)
 	}
 	private val meshManager = ModelsCache(this)
 	private var doResize = false
@@ -145,14 +139,12 @@ class Renderer (val engineContext: Engine)
 
 	val textureManager = TextureManager(this)
 
-	lateinit var textureTerrain: Texture
+	val textureTerrain = textureManager[ResourceLocation.create("image/terrain.png")]
 
 	val currentSwapChainDirector get() = swapChainDirectors[currentFrame]
 
 	fun init ()
 	{
-		textureTerrain = textureManager[ResourceLocation.create("image/terrain.png")]
-
 		LuaCoyote().use { L ->
 			L.openLibraries()
 			val thing = (L.run(engineContext.testModel) as? LuaTableValue) ?: return@use
@@ -202,7 +194,7 @@ class Renderer (val engineContext: Engine)
 		val director = swapChainDirectors[currentFrame]
 		MemoryStack.stackPush().use { stack ->
 			val fence = director.fence
-			fence.reset(this)
+			fence.reset()
 			val commands = VkCommandBufferSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
 				.commandBuffer(cmdBuff.vkCommandBuffer)
@@ -221,7 +213,7 @@ class Renderer (val engineContext: Engine)
 	fun render ()
 	{
 		val director = swapChainDirectors[currentFrame]
-		director.fence.wait(this)
+		director.fence.waitForFences()
 		val cmdPool = director.commandPool
 		val cmdBuffer = director.commandBuffer
 
@@ -233,7 +225,7 @@ class Renderer (val engineContext: Engine)
 			resize()
 			return
 		}
-		val imageIndex = swapChain.acquireNextImage(device, director.imageAcquiredSemaphore)
+		val imageIndex = swapChain.acquireNextImage(director.imageAcquiredSemaphore)
 		if (imageIndex < 0)
 		{
 			resize()
@@ -273,10 +265,9 @@ class Renderer (val engineContext: Engine)
 			val renInf = renderInfo[imageIndex]
 			vkCmdBeginRendering(cmdHandle, renInf)
 			vkCmdBindPipeline(cmdHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vkPipeline)
-			val descr = stack.mallocLong(2).apply {
-				put(0, descAllocator.getDescSet("MATRIX").vkDescriptorSet)
-//				put(1, descAllocator.getDescSet("TEXTURE").vkDescriptorSet)
-			}
+			val descr = stack.longs(
+				descAllocator.getDescSet("MATRIX").vkDescriptorSet,
+			)
 			vkCmdBindDescriptorSets(
 				cmdHandle,
 				VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -285,21 +276,21 @@ class Renderer (val engineContext: Engine)
 				descr,
 				null,
 			)
-			val swapChainExtent: VkExtent2D = swapChain.extents
+			val swapChainExtent = swapChain.extents
 			val width = swapChainExtent.width()
 			val height = swapChainExtent.height()
 			val viewport = VkViewport.calloc(1, stack)
-				.x(0f)
-				.y(height.toFloat())
-				.height(-height.toFloat())
-				.width(width.toFloat())
-				.minDepth(0.0f)
-				.maxDepth(1.0f)
+			viewport.x(0f)
+			viewport.y(height.toFloat())
+			viewport.height(-height.toFloat())
+			viewport.width(width.toFloat())
+			viewport.minDepth(0.0f)
+			viewport.maxDepth(1.0f)
 			vkCmdSetViewport(cmdHandle, 0, viewport)
 
 			val scissor = VkRect2D.calloc(1, stack)
-				.extent { it.width(width).height(height) }
-				.offset { it.x(0).y(0) }
+			scissor.extent { it.width(width).height(height) }
+			scissor.offset { it.x(0).y(0) }
 			vkCmdSetScissor(cmdHandle, 0, scissor)
 
 //			shaderTextureUniform[currentFrame].setImages(device, textureSampler, 1, textureTerrain.imageView)
@@ -382,13 +373,13 @@ class Renderer (val engineContext: Engine)
 		doResize = false
 		device.waitIdle()
 
-		swapChain.cleanup(device)
+		swapChain.free()
 		displaySurface.free(instance)
 		displaySurface = DisplaySurface(instance, hardware, window)
 		swapChain = SwapChain(
+			device,
 			window.wide,
 			window.tall,
-			device,
 			displaySurface,
 			preferredImageBufferingCount,
 			useVerticalSync,
@@ -398,7 +389,7 @@ class Renderer (val engineContext: Engine)
 
 		renderCompleteSemphs.forEach { it.free() }
 		renderCompleteSemphs = List(swapChain.numImages) {
-			createSemaphor()
+			Semaphore(this)
 		}
 
 		val extent = swapChain.extents
@@ -420,13 +411,14 @@ class Renderer (val engineContext: Engine)
 	{
 		val swapChain = swapChain
 		return List(swapChain.numImages) {
-			VkRenderingAttachmentInfo.calloc(1)
-				.`sType$Default`()
-				.imageView(swapChain.imageViews[it].vkImageView)
-				.imageLayout(VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR)
-				.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
-				.storeOp(VK_ATTACHMENT_STORE_OP_STORE)
-				.clearValue(clearValue)
+			val inf = VkRenderingAttachmentInfo.calloc(1)
+			inf.`sType$Default`()
+			inf.imageView(swapChain.imageViews[it].vkImageView)
+			inf.imageLayout(VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR)
+			inf.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
+			inf.storeOp(VK_ATTACHMENT_STORE_OP_STORE)
+			inf.clearValue(clearValue)
+			inf
 		}
 	}
 
@@ -440,64 +432,14 @@ class Renderer (val engineContext: Engine)
 			val extent = this.swapChain.extents
 			val renderArea = VkRect2D.calloc(stack).extent(extent)
 			return List(swapChain.numImages) {
-				VkRenderingInfo.calloc()
-					.`sType$Default`()
-					.renderArea(renderArea)
-					.layerCount(1)
-					.pColorAttachments(colorAttachments[it])
-					.pDepthAttachment(depthAttachments[it])
+				val inf = VkRenderingInfo.calloc()
+				inf.`sType$Default`()
+				inf.renderArea(renderArea)
+				inf.layerCount(1)
+				inf.pColorAttachments(colorAttachments[it])
+				inf.pDepthAttachment(depthAttachments[it])
+				inf
 			}
-		}
-	}
-
-	fun createCommandPool (
-		queueFamilyIndex: Int,
-		supportReset: Boolean,
-	): CommandPool
-	{
-		MemoryStack.stackPush().use { stack ->
-			val cmdPoolInfo = VkCommandPoolCreateInfo.calloc(stack)
-				.`sType$Default`()
-				.queueFamilyIndex(queueFamilyIndex)
-			if (supportReset)
-			{
-				cmdPoolInfo.flags(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
-			}
-
-			val lp = stack.mallocLong(1)
-			gpuCheck(
-				vkCreateCommandPool(device.vkDevice, cmdPoolInfo, null, lp),
-				"Failed to create command pool"
-			)
-			return CommandPool(this, lp[0])
-		}
-	}
-
-	fun createFence (signaled: Boolean): GPUFence
-	{
-		MemoryStack.stackPush().use { stack ->
-			val fenceCreateInfo = VkFenceCreateInfo.calloc(stack)
-				.`sType$Default`()
-				.flags(if (signaled) VK_FENCE_CREATE_SIGNALED_BIT else 0)
-			val lp = stack.mallocLong(1)
-			gpuCheck(
-				vkCreateFence(vkDevice, fenceCreateInfo, null, lp),
-				"Failed to create fence",
-			)
-			return GPUFence(lp[0])
-		}
-	}
-
-	fun createSemaphor(): Semaphore
-	{
-		MemoryStack.stackPush().use { stack ->
-			val semaphoreCreateInfo = VkSemaphoreCreateInfo.calloc(stack).`sType$Default`()
-			val lp = stack.mallocLong(1)
-			gpuCheck(
-				vkCreateSemaphore(vkDevice, semaphoreCreateInfo, null, lp),
-				"Failed to create semaphore"
-			)
-			return Semaphore(this, lp[0])
 		}
 	}
 
@@ -530,13 +472,14 @@ class Renderer (val engineContext: Engine)
 		val swapChain = swapChain
 		val numImages = swapChain.numImages
 		return List(numImages) {
-			VkRenderingAttachmentInfo.calloc()
-				.`sType$Default`()
-				.imageView(depthAttachments[it].imageView.vkImageView)
-				.imageLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-				.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
-				.storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)
-				.clearValue(clearValue)
+			val inf = VkRenderingAttachmentInfo.calloc()
+			inf.`sType$Default`()
+			inf.imageView(depthAttachments[it].imageView.vkImageView)
+			inf.imageLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+			inf.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
+			inf.storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)
+			inf.clearValue(clearValue)
+			inf
 		}
 	}
 
@@ -612,6 +555,20 @@ class Renderer (val engineContext: Engine)
 		return buff
 	}
 
+	fun createPipelineCache(): PipelineCache
+	{
+		val outs = MemoryStack.stackPush().use { stack ->
+			val createInfo = VkPipelineCacheCreateInfo.calloc(stack).`sType$Default`()
+			val lp = stack.mallocLong(1)
+			gpuCheck(
+				vkCreatePipelineCache(device.vkDevice, createInfo, null, lp),
+				"Error creating pipeline cache"
+			)
+			lp.get(0)
+		}
+		return PipelineCache(this, outs)
+	}
+
 	fun free()
 	{
 		device.waitIdle()
@@ -619,25 +576,26 @@ class Renderer (val engineContext: Engine)
 
 		descriptorLayoutVertexStage.free()
 //		descLayoutTexture.free()
-		shaderMatrixBuffer.freeAll()
+		shaderMatrixBuffer.forEach { it.free() }
 
 //		textureSampler.free()
 		descAllocator.free()
 		pipeline.free()
-		renderInfo.forEach(VkRenderingInfo::free)
-		attInfoColor.forEach(VkRenderingAttachmentInfo.Buffer::free)
-		attInfoDepth.forEach(VkRenderingAttachmentInfo::free)
-		attDepth.forEach(Attachment::free)
+		renderInfo.forEach { it.free() }
+		attInfoColor.forEach { it.free() }
+		attInfoDepth.forEach { it.free() }
+		attDepth.forEach { it.free() }
 		clrValueColor.free()
 		clrValueDepth.free()
 
 		meshManager.free()
-		renderCompleteSemphs.forEach(Semaphore::free)
-		swapChainDirectors.forEach(SwapChainDirector::free)
+		renderCompleteSemphs.forEach { it.free() }
+		swapChainDirectors.forEach { it.free() }
 
-		pipelineCache.free(this)
-		swapChain.cleanup(device)
+		pipelineCache.free()
+		swapChain.free()
 		displaySurface.free(instance)
+		memAlloc.free()
 		device.free()
 		hardware.free()
 		instance.close()

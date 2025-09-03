@@ -55,8 +55,9 @@ class Engine (val window: Window)
 				)
 
 				val dt = milliTimeDiff / 1000.0
-				val fdt = dt.toFloat()
+				val fdt = window.time.toFloat()
 				rotation
+				.identity()
 				.rotateX(toRadians(fdt * 45f))
 				.rotateY(toRadians(fdt * 60f))
 			}
