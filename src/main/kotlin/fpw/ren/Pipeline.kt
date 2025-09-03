@@ -166,7 +166,7 @@ class Pipeline (
 			gpuCheck(
 				vkCreateGraphicsPipelines(
 					device.vkDevice,
-					renderer.pipelineCache.vkPipelineCache,
+					VK_NULL_HANDLE,
 					createInfo,
 					null,
 					lp

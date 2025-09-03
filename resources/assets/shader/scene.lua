@@ -10,7 +10,7 @@ return {
 		layout(location=0)
 		out vec2 outTextCoords;
 
-		layout(binding=0)
+		layout(set=0, binding=0)
 		uniform MATRICES
 		{
 			mat4 projectionMatrix;

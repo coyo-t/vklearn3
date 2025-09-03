@@ -52,8 +52,6 @@ class Renderer (val engineContext: Engine)
 		useVerticalSync,
 	)
 
-	val pipelineCache = createPipelineCache()
-
 	var currentFrame = 0
 		private set
 
@@ -420,20 +418,6 @@ class Renderer (val engineContext: Engine)
 		return buff
 	}
 
-	fun createPipelineCache(): PipelineCache
-	{
-		val outs = MemoryStack.stackPush().use { stack ->
-			val createInfo = VkPipelineCacheCreateInfo.calloc(stack).`sType$Default`()
-			val lp = stack.mallocLong(1)
-			gpuCheck(
-				vkCreatePipelineCache(gpu.logicalDevice.vkDevice, createInfo, null, lp),
-				"Error creating pipeline cache"
-			)
-			lp.get(0)
-		}
-		return PipelineCache(this, outs)
-	}
-
 	fun free()
 	{
 		gpu.logicalDevice.waitIdle()
@@ -450,7 +434,6 @@ class Renderer (val engineContext: Engine)
 		meshManager.free()
 		swapChainDirectors.forEach { it.free() }
 
-		pipelineCache.free()
 		swapChain.free()
 		displaySurface.free(instance)
 		memAlloc.free()
