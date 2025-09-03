@@ -1,12 +1,19 @@
-package fpw.ren
+package fpw.ren.device
 
 import fpw.FUtil
-import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.GPUInstance
+import fpw.ren.GPUtil
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.VK13.*
-
+import org.lwjgl.vulkan.KHRSwapchain
+import org.lwjgl.vulkan.VK10
+import org.lwjgl.vulkan.VK11
+import org.lwjgl.vulkan.VkExtensionProperties
+import org.lwjgl.vulkan.VkPhysicalDevice
+import org.lwjgl.vulkan.VkPhysicalDeviceFeatures
+import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties
+import org.lwjgl.vulkan.VkPhysicalDeviceProperties2
+import org.lwjgl.vulkan.VkQueueFamilyProperties
 
 class HardwareDevice
 private constructor (vkPhysicalDevice: VkPhysicalDevice)
@@ -26,30 +33,30 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 
 			// Get device properties
 			vkPhysicalDeviceProperties = VkPhysicalDeviceProperties2.calloc().`sType$Default`()
-			vkGetPhysicalDeviceProperties2(vkPhysicalDevice, vkPhysicalDeviceProperties)
+			VK11.vkGetPhysicalDeviceProperties2(vkPhysicalDevice, vkPhysicalDeviceProperties)
 
 			// Get device extensions
-			gpuCheck(
-				vkEnumerateDeviceExtensionProperties(vkPhysicalDevice, null as String?, intBuffer, null),
+			GPUtil.gpuCheck(
+				VK10.vkEnumerateDeviceExtensionProperties(vkPhysicalDevice, null as String?, intBuffer, null),
 				"Failed to get number of device extension properties"
 			)
 			vkDeviceExtensions = VkExtensionProperties.calloc(intBuffer.get(0))
-			gpuCheck(
-				vkEnumerateDeviceExtensionProperties(vkPhysicalDevice, null as String?, intBuffer, vkDeviceExtensions),
+			GPUtil.gpuCheck(
+				VK10.vkEnumerateDeviceExtensionProperties(vkPhysicalDevice, null as String?, intBuffer, vkDeviceExtensions),
 				"Failed to get extension properties"
 			)
 
 			// Get Queue family properties
-			vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, intBuffer, null)
+			VK10.vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, intBuffer, null)
 			vkQueueFamilyProps = VkQueueFamilyProperties.calloc(intBuffer.get(0))
-			vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, intBuffer, vkQueueFamilyProps)
+			VK10.vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, intBuffer, vkQueueFamilyProps)
 
 			vkPhysicalDeviceFeatures = VkPhysicalDeviceFeatures.calloc()
-			vkGetPhysicalDeviceFeatures(vkPhysicalDevice, vkPhysicalDeviceFeatures)
+			VK10.vkGetPhysicalDeviceFeatures(vkPhysicalDevice, vkPhysicalDeviceFeatures)
 
 			// Get Memory information and properties
 			vkMemoryProperties = VkPhysicalDeviceMemoryProperties.calloc()
-			vkGetPhysicalDeviceMemoryProperties(vkPhysicalDevice, vkMemoryProperties)
+			VK10.vkGetPhysicalDeviceMemoryProperties(vkPhysicalDevice, vkMemoryProperties)
 		}
 	}
 
@@ -73,7 +80,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 		for (i in 0..<numQueueFamilies)
 		{
 			val familyProps = vkQueueFamilyProps.get(i)
-			if ((familyProps.queueFlags() and VK_QUEUE_GRAPHICS_BIT) != 0)
+			if ((familyProps.queueFlags() and VK10.VK_QUEUE_GRAPHICS_BIT) != 0)
 			{
 				result = true
 				break
@@ -112,8 +119,8 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 			val pPhysicalDevices: PointerBuffer
 			// Get number of physical devices
 			val intBuffer = stack.mallocInt(1)
-			gpuCheck(
-				vkEnumeratePhysicalDevices(instance.vkInstance, intBuffer, null),
+			GPUtil.gpuCheck(
+				VK10.vkEnumeratePhysicalDevices(instance.vkInstance, intBuffer, null),
 				"Failed to get number of physical devices"
 			)
 			val numDevices = intBuffer.get(0)
@@ -121,8 +128,8 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 
 			// Populate physical devices list pointer
 			pPhysicalDevices = stack.mallocPointer(numDevices)
-			gpuCheck(
-				vkEnumeratePhysicalDevices(instance.vkInstance, intBuffer, pPhysicalDevices),
+			GPUtil.gpuCheck(
+				VK10.vkEnumeratePhysicalDevices(instance.vkInstance, intBuffer, pPhysicalDevices),
 				"Failed to get physical devices"
 			)
 			return pPhysicalDevices
@@ -164,7 +171,7 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 							result = physDevice
 							break
 						}
-						if (physDevice.vkPhysicalDeviceProperties.properties().deviceType() == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+						if (physDevice.vkPhysicalDeviceProperties.properties().deviceType() == VK10.VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 						{
 							addFirst(physDevice)
 						}
@@ -189,4 +196,3 @@ private constructor (vkPhysicalDevice: VkPhysicalDevice)
 	}
 
 }
-

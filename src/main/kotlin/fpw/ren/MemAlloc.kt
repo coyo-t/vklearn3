@@ -1,6 +1,7 @@
 package fpw.ren
 
 import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.device.GPUDevice
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.vma.Vma.vmaCreateAllocator
 import org.lwjgl.util.vma.Vma.vmaDestroyAllocator
@@ -13,18 +14,18 @@ class MemAlloc
 {
 	val vmaAlloc: Long
 
-	constructor (instance: GPUInstance, physDevice: HardwareDevice, device: LogicalDevice)
+	constructor (instance: GPUInstance, gpu: GPUDevice)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val pAllocator = stack.mallocPointer(1)
 			val vmaVulkanFunctions = VmaVulkanFunctions.calloc(stack)
-				.set(instance.vkInstance, device.vkDevice)
+				.set(instance.vkInstance, gpu.logicalDevice.vkDevice)
 
 			val createInfo = VmaAllocatorCreateInfo.calloc(stack)
 				.instance(instance.vkInstance)
 				.vulkanApiVersion(instance.apiVersion)
-				.device(device.vkDevice)
-				.physicalDevice(physDevice.vkPhysicalDevice)
+				.device(gpu.logicalDevice.vkDevice)
+				.physicalDevice(gpu.hardwareDevice.vkPhysicalDevice)
 				.pVulkanFunctions(vmaVulkanFunctions)
 			gpuCheck(
 				vmaCreateAllocator(createInfo, pAllocator),

@@ -1,13 +1,14 @@
 package fpw.ren
 
 import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.device.GPUDevice
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkImageViewCreateInfo
 
 
 class ImageView (
-	val device: LogicalDevice,
+	val device: GPUDevice,
 	val vkImage: Long,
 	imageViewData: Data,
 	val isDepthImage: Boolean,
@@ -31,7 +32,7 @@ class ImageView (
 		}
 
 		gpuCheck(
-			vkCreateImageView(device.vkDevice, viewCreateInfo, null, lp),
+			vkCreateImageView(device.logicalDevice.vkDevice, viewCreateInfo, null, lp),
 			"image view creation"
 		)
 		lp.get(0)
@@ -40,7 +41,7 @@ class ImageView (
 
 	fun free ()
 	{
-		vkDestroyImageView(device.vkDevice, vkImageView, null)
+		vkDestroyImageView(device.logicalDevice.vkDevice, vkImageView, null)
 	}
 
 	data class Data(

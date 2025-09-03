@@ -8,6 +8,7 @@ import fpw.ren.GPUtil.MESSAGE_TYPE_BITMASK
 import fpw.ren.GPUtil.PORTABILITY_EXTENSION
 import fpw.ren.GPUtil.VALIDATION_LAYER
 import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.enums.OSType
 import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryStack

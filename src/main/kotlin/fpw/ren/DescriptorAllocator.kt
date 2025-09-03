@@ -1,14 +1,13 @@
 package fpw.ren
 
-import fpw.FUtil
+import fpw.ren.device.GPUDevice
 import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
 import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
 import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
 
 
 class DescriptorAllocator (
-	val hardwareDevice: HardwareDevice,
-	val logicalDevice: LogicalDevice,
+	val gpu: GPUDevice,
 )
 {
 
@@ -18,7 +17,7 @@ class DescriptorAllocator (
 
 	init
 	{
-		val limits = hardwareDevice.vkPhysicalDeviceProperties.properties().limits()
+		val limits = gpu.hardwareDevice.vkPhysicalDeviceProperties.properties().limits()
 		descLimits = mutableMapOf(
 			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
 			to limits.maxDescriptorSetUniformBuffers(),
@@ -30,7 +29,6 @@ class DescriptorAllocator (
 			to limits.maxDescriptorSetStorageBuffers(),
 		)
 		descPoolList.add(createDescPoolInfo(descLimits))
-//		descPoolList.add(createDescPoolInfo(device, descLimits))
 	}
 
 	private fun createDescPoolInfo (descLimits: MutableMap<Int, Int>): PoolInfo
@@ -40,7 +38,7 @@ class DescriptorAllocator (
 		descLimits.forEach { (k, v) ->
 			descTypeCounts.add(DescriptorPool.DescTypeCount(k, v))
 		}
-		val descPool = DescriptorPool(logicalDevice, descTypeCounts)
+		val descPool = DescriptorPool(gpu, descTypeCounts)
 		return PoolInfo(descCount, descPool)
 	}
 
@@ -87,7 +85,7 @@ class DescriptorAllocator (
 		}
 
 		val result = MutableList(count) {
-			DescriptorSet(logicalDevice, targetPool.descPool, descSetLayout)
+			DescriptorSet(gpu, targetPool.descPool, descSetLayout)
 		}
 
 		descSetInfoMap[id] = SetInfo(result, poolPos)
@@ -107,23 +105,6 @@ class DescriptorAllocator (
 	{
 		descSetInfoMap.clear()
 		descPoolList.forEach { it.descPool.free() }
-	}
-
-	fun freeDescSet (id: String?)
-	{
-		val descSetInfo = descSetInfoMap[id]
-		if (descSetInfo == null)
-		{
-			FUtil.logInfo("Could not find descriptor set with id [$id]")
-			return
-		}
-		if (descSetInfo.poolPos >= descPoolList.size)
-		{
-			FUtil.logInfo("Could not find descriptor pool associated to set with id [$id]")
-			return
-		}
-		val descPoolInfo = descPoolList[descSetInfo.poolPos]
-		descSetInfo.descSets.forEach(descPoolInfo.descPool::freeDescriptorSet)
 	}
 
 	fun getDescSet(id: String, pos: Int=0): DescriptorSet

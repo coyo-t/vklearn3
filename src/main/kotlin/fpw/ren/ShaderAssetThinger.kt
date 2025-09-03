@@ -3,6 +3,7 @@ package fpw.ren
 import fpw.FUtil
 import fpw.LuaCoyote
 import fpw.ResourceLocation
+import fpw.ren.enums.ShaderType
 import org.lwjgl.util.shaderc.Shaderc.*
 import party.iroiro.luajava.Lua
 import java.nio.ByteBuffer

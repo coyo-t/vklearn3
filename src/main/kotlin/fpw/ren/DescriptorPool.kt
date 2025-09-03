@@ -1,6 +1,7 @@
 package fpw.ren
 
 import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.device.GPUDevice
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT
 import org.lwjgl.vulkan.VK10.vkCreateDescriptorPool
@@ -11,7 +12,7 @@ import org.lwjgl.vulkan.VkDescriptorPoolSize
 
 
 class DescriptorPool (
-	val device: LogicalDevice,
+	val device: GPUDevice,
 	val descTypeCounts: MutableList<DescTypeCount>,
 )
 {
@@ -39,7 +40,7 @@ class DescriptorPool (
 
 			val pDescriptorPool = stack.mallocLong(1)
 			gpuCheck(
-				vkCreateDescriptorPool(device.vkDevice, descriptorPoolInfo, null, pDescriptorPool),
+				vkCreateDescriptorPool(device.logicalDevice.vkDevice, descriptorPoolInfo, null, pDescriptorPool),
 				"Failed to create descriptor pool"
 			)
 			vkDescPool = pDescriptorPool[0]
@@ -48,7 +49,7 @@ class DescriptorPool (
 
 	fun free ()
 	{
-		vkDestroyDescriptorPool(device.vkDevice, vkDescPool, null)
+		vkDestroyDescriptorPool(device.logicalDevice.vkDevice, vkDescPool, null)
 	}
 
 	fun freeDescriptorSet (vkDescriptorSet: DescriptorSet)
@@ -57,7 +58,7 @@ class DescriptorPool (
 			val longBuffer = stack.mallocLong(1)
 			longBuffer.put(0, vkDescriptorSet.vkDescriptorSet)
 			gpuCheck(
-				vkFreeDescriptorSets(device.vkDevice, vkDescPool, longBuffer),
+				vkFreeDescriptorSets(device.logicalDevice.vkDevice, vkDescPool, longBuffer),
 				"Failed to free descriptor set"
 			)
 		}

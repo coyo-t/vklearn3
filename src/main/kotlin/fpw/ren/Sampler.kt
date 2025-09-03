@@ -2,6 +2,8 @@ package fpw.ren
 
 import fpw.Renderer
 import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.enums.SamplerFilter
+import fpw.ren.enums.SamplerWrapping
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkSamplerCreateInfo

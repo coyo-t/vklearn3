@@ -1,6 +1,7 @@
 package fpw.ren
 
 import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.device.GPUDevice
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkDescriptorBufferInfo
@@ -10,15 +11,15 @@ import org.lwjgl.vulkan.VkWriteDescriptorSet
 
 
 // shader sockets
-class DescriptorSet
+class DescriptorSet (
+	val device: GPUDevice,
+	descPool: DescriptorPool,
+	descSetLayout: DescriptorSetLayout,
+)
 {
 	val vkDescriptorSet: Long
 
-	constructor (
-		device: LogicalDevice,
-		descPool: DescriptorPool,
-		descSetLayout: DescriptorSetLayout,
-	)
+	init
 	{
 		MemoryStack.stackPush().use { stack ->
 			val pDescriptorSetLayout = stack.mallocLong(1)
@@ -30,14 +31,14 @@ class DescriptorSet
 
 			val pDescriptorSet = stack.mallocLong(1)
 			gpuCheck(
-				vkAllocateDescriptorSets(device.vkDevice, allocInfo, pDescriptorSet),
+				vkAllocateDescriptorSets(device.logicalDevice.vkDevice, allocInfo, pDescriptorSet),
 				"Failed to create descriptor set"
 			)
 			vkDescriptorSet = pDescriptorSet.get(0)
 		}
 	}
 
-	fun setBuffer(device: LogicalDevice, buffer: GPUBuffer, range: Long, binding: Int, type: Int)
+	fun setBuffer(buffer: GPUBuffer, range: Long, binding: Int, type: Int)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val bufferInfo = VkDescriptorBufferInfo.calloc(1, stack)
@@ -53,12 +54,11 @@ class DescriptorSet
 				.descriptorType(type)
 				.descriptorCount(1)
 				.pBufferInfo(bufferInfo)
-			vkUpdateDescriptorSets(device.vkDevice, descrBuffer, null)
+			vkUpdateDescriptorSets(device.logicalDevice.vkDevice, descrBuffer, null)
 		}
 	}
 
 	fun setImages (
-		device: LogicalDevice,
 		textureSampler: Sampler,
 		baseBinding: Int,
 		vararg imgViews: ImageView)
@@ -89,12 +89,11 @@ class DescriptorSet
 					.descriptorCount(1)
 					.pImageInfo(imageInfo)
 			}
-			vkUpdateDescriptorSets(device.vkDevice, descrBuffer, null)
+			vkUpdateDescriptorSets(device.logicalDevice.vkDevice, descrBuffer, null)
 		}
 	}
 
 	fun setImagesArray(
-		device: LogicalDevice,
 		textureSampler: Sampler,
 		baseBinding: Int,
 		vararg imgViews: ImageView,
@@ -130,7 +129,7 @@ class DescriptorSet
 				.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
 				.descriptorCount(numImages)
 				.pImageInfo(imageInfos)
-			vkUpdateDescriptorSets(device.vkDevice, descrBuffer, null)
+			vkUpdateDescriptorSets(device.logicalDevice.vkDevice, descrBuffer, null)
 		}
 	}
 }

@@ -1,4 +1,4 @@
-package fpw.ren
+package fpw.ren.device
 
 import fpw.Renderer
 

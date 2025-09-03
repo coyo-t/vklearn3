@@ -2,6 +2,7 @@ package fpw.ren
 
 import fpw.Window
 import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.device.GPUDevice
 import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.KHRSurface
@@ -17,7 +18,7 @@ class DisplaySurface
 	val surfaceFormat: Format
 	val vkSurface: Long
 
-	constructor (instance: GPUInstance, physDevice: HardwareDevice, window: Window)
+	constructor (instance: GPUInstance, gpu: GPUDevice, window: Window)
 	{
 		stackPush().use { stack ->
 			val pSurface = stack.mallocLong(1)
@@ -30,7 +31,7 @@ class DisplaySurface
 			surfaceCaps = VkSurfaceCapabilitiesKHR.calloc()
 			gpuCheck(
 				KHRSurface.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-					physDevice.vkPhysicalDevice,
+					gpu.hardwareDevice.vkPhysicalDevice,
 					vkSurface, surfaceCaps
 				), "Failed to get surface capabilities"
 			)
@@ -38,7 +39,7 @@ class DisplaySurface
 				val ip = stack.mallocInt(1)
 				gpuCheck(
 					vkGetPhysicalDeviceSurfaceFormatsKHR(
-						physDevice.vkPhysicalDevice,
+						gpu.hardwareDevice.vkPhysicalDevice,
 						vkSurface, ip, null
 					), "Failed to get the number surface formats"
 				)
@@ -50,7 +51,7 @@ class DisplaySurface
 				val surfaceFormats = VkSurfaceFormatKHR.calloc(numFormats, stack)
 				gpuCheck(
 					vkGetPhysicalDeviceSurfaceFormatsKHR(
-						physDevice.vkPhysicalDevice,
+						gpu.hardwareDevice.vkPhysicalDevice,
 						vkSurface, ip, surfaceFormats
 					), "Failed to get surface formats"
 				)

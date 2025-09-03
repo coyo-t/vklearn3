@@ -2,6 +2,7 @@ package fpw.ren
 
 import fpw.Renderer
 import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.enums.DescriptorType
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.vkCreateDescriptorSetLayout
 import org.lwjgl.vulkan.VK10.vkDestroyDescriptorSetLayout

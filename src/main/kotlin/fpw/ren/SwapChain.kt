@@ -3,6 +3,7 @@ package fpw.ren
 import fpw.Renderer
 import fpw.ren.GPUtil.gpuCheck
 import fpw.ren.ImageView.Data
+import fpw.ren.device.GPUDevice
 import org.joml.Math.clamp
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
@@ -21,7 +22,7 @@ import kotlin.math.min
 
 class SwapChain (
 	val renderer: Renderer,
-	val device: LogicalDevice,
+	val device: GPUDevice,
 	var wide: Int,
 	var tall: Int,
 	displaySurface: DisplaySurface,
@@ -86,7 +87,7 @@ class SwapChain (
 
 			val lp = stack.mallocLong(1)
 			gpuCheck(
-				vkCreateSwapchainKHR(device.vkDevice, createInfo, null, lp),
+				vkCreateSwapchainKHR(device.logicalDevice.vkDevice, createInfo, null, lp),
 				"Failed to create swap chain"
 			)
 			vkSwapChain = lp.get(0)
@@ -94,13 +95,13 @@ class SwapChain (
 
 			val ip = stack.mallocInt(1)
 			gpuCheck(
-				vkGetSwapchainImagesKHR(device.vkDevice, vkSwapChain, ip, null),
+				vkGetSwapchainImagesKHR(device.logicalDevice.vkDevice, vkSwapChain, ip, null),
 				"failed to get number of surface images"
 			)
 			val numImages = ip.get(0)
 			val swapChainImages = stack.mallocLong(numImages)
 			gpuCheck(
-				vkGetSwapchainImagesKHR(device.vkDevice, vkSwapChain, ip, swapChainImages),
+				vkGetSwapchainImagesKHR(device.logicalDevice.vkDevice, vkSwapChain, ip, swapChainImages),
 				"failed to get surface images"
 			)
 			val imageViewData = Data(
@@ -124,7 +125,7 @@ class SwapChain (
 		MemoryStack.stackPush().use { stack ->
 			val ip = stack.mallocInt(1)
 			val err = vkAcquireNextImageKHR(
-				device.vkDevice,
+				device.logicalDevice.vkDevice,
 				vkSwapChain,
 				0L.inv(),
 				imageAqSem.vkSemaphore,
@@ -182,6 +183,6 @@ class SwapChain (
 		extents.free()
 		renderThinger.forEach { it.free() }
 //		imageViews.forEach { it.free() }
-		vkDestroySwapchainKHR(device.vkDevice, vkSwapChain, null)
+		vkDestroySwapchainKHR(device.logicalDevice.vkDevice, vkSwapChain, null)
 	}
 }

@@ -3,6 +3,11 @@ package fpw
 import fpw.ren.*
 import fpw.ren.GPUtil.imageBarrier
 import fpw.ren.VertexFormatBuilder.Companion.buildVertexFormat
+import fpw.ren.device.GPUDevice
+import fpw.ren.enums.DescriptorType
+import fpw.ren.enums.SamplerFilter
+import fpw.ren.enums.SamplerWrapping
+import fpw.ren.enums.ShaderType
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
@@ -37,13 +42,13 @@ class Renderer (val engineContext: Engine)
 		preferredPhysicalDevice,
 	)
 
-	val memAlloc = MemAlloc(instance, gpu.hardwareDevice, gpu.logicalDevice)
-	val descAlloc = DescriptorAllocator(gpu.hardwareDevice, gpu.logicalDevice)
+	val memAlloc = MemAlloc(instance, gpu)
+	val descAlloc = DescriptorAllocator(gpu)
 
-	var displaySurface = DisplaySurface(instance, gpu.hardwareDevice, engineContext.window)
+	var displaySurface = DisplaySurface(instance, gpu, engineContext.window)
 	var swapChain = SwapChain(
 		this,
-		gpu.logicalDevice,
+		gpu,
 		engineContext.window.wide,
 		engineContext.window.tall,
 		displaySurface,
@@ -67,7 +72,7 @@ class Renderer (val engineContext: Engine)
 	val descriptorLayoutVertexStage = DescriptorSetLayout(
 		this,
 		DescriptorSetLayout.Info(
-			DescriptorType.UNIFORM_BUFFER,
+			DescriptorType.UniformBuffer,
 			0,
 			1,
 			VK_SHADER_STAGE_VERTEX_BIT
@@ -77,7 +82,7 @@ class Renderer (val engineContext: Engine)
 	val descriptorLayoutFragmentStage = DescriptorSetLayout(
 		this,
 		DescriptorSetLayout.Info(
-			DescriptorType.COMBINED_IMAGE_SAMPLER,
+			DescriptorType.CombinedImageSampler,
 			1,
 			1,
 			VK_SHADER_STAGE_FRAGMENT_BIT
@@ -138,8 +143,8 @@ class Renderer (val engineContext: Engine)
 	val textureManager = TextureManager(this)
 	val textureSampler = Sampler(
 		this,
-		wrapping = SamplerWrapping.REPEAT,
-		filter = SamplerFilter.NEAREST,
+		wrapping = SamplerWrapping.Repeat,
+		filter = SamplerFilter.Nearest,
 	)
 
 	val textureTerrain = textureManager[ResourceLocation.create("image/terrain.png")]
@@ -264,7 +269,7 @@ class Renderer (val engineContext: Engine)
 			vkCmdSetScissor(cmdHandle, 0, scissor)
 
 
-			shaderTextureShit[currentFrame].setImages(gpu.logicalDevice, textureSampler, 1, textureTerrain.imageView)
+			shaderTextureShit[currentFrame].setImages(textureSampler, 1, textureTerrain.imageView)
 
 
 			val vbCount = 1
@@ -347,10 +352,10 @@ class Renderer (val engineContext: Engine)
 
 		swapChain.free()
 		displaySurface.free(instance)
-		displaySurface = DisplaySurface(instance, gpu.hardwareDevice, window)
+		displaySurface = DisplaySurface(instance, gpu, window)
 		swapChain = SwapChain(
 			this,
-			gpu.logicalDevice,
+			gpu,
 			window.wide,
 			window.tall,
 			displaySurface,
@@ -386,7 +391,6 @@ class Renderer (val engineContext: Engine)
 			)
 			val descSet = descAlloc.getDescSet(id, it)
 			descSet.setBuffer(
-				gpu.logicalDevice,
 				r,
 				r.requestedSize,
 				first.binding,
@@ -413,7 +417,6 @@ class Renderer (val engineContext: Engine)
 		)
 		val first = layout.layoutInfos.first()
 		descSet.setBuffer(
-			gpu.logicalDevice,
 			buff,
 			buff.requestedSize,
 			first.binding,

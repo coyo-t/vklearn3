@@ -1,4 +1,4 @@
-package fpw.ren
+package fpw.ren.enums
 
 import org.lwjgl.util.shaderc.Shaderc
 import org.lwjgl.vulkan.VK10

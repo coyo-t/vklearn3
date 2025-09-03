@@ -1,12 +1,18 @@
-package fpw.ren
+package fpw.ren.device
 
-import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.GPUtil
+import fpw.ren.device.HardwareDevice
+import fpw.ren.enums.OSType
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.KHRPortabilitySubset.VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
-import org.lwjgl.vulkan.VK13.*
-
+import org.lwjgl.vulkan.KHRPortabilitySubset
+import org.lwjgl.vulkan.VK10
+import org.lwjgl.vulkan.VkDevice
+import org.lwjgl.vulkan.VkDeviceCreateInfo
+import org.lwjgl.vulkan.VkDeviceQueueCreateInfo
+import org.lwjgl.vulkan.VkExtensionProperties
+import org.lwjgl.vulkan.VkPhysicalDeviceFeatures2
+import org.lwjgl.vulkan.VkPhysicalDeviceVulkan13Features
 
 class LogicalDevice (val hardware: HardwareDevice)
 {
@@ -56,8 +62,8 @@ class LogicalDevice (val hardware: HardwareDevice)
 				.pQueueCreateInfos(queueCreationInfoBuf)
 
 			val pp = stack.mallocPointer(1)
-			gpuCheck(
-				vkCreateDevice(hardware.vkPhysicalDevice, deviceCreateInfo, null, pp),
+			GPUtil.gpuCheck(
+				VK10.vkCreateDevice(hardware.vkPhysicalDevice, deviceCreateInfo, null, pp),
 				"Failed to create device"
 			)
 			vkDevice = VkDevice(pp.get(0), hardware.vkPhysicalDevice, deviceCreateInfo)
@@ -68,13 +74,13 @@ class LogicalDevice (val hardware: HardwareDevice)
 	private fun createReqExtensions(stack: MemoryStack): PointerBuffer
 	{
 		val deviceExtensions = getDeviceExtensions()
-		val usePortability = (VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME in deviceExtensions) && OSType.isMacintosh
+		val usePortability = (KHRPortabilitySubset.VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME in deviceExtensions) && OSType.Companion.isMacintosh
 
 		val extsList = buildList {
-			addAll(HardwareDevice.REQUIRED_EXTENSIONS.map(stack::ASCII))
+			addAll(HardwareDevice.Companion.REQUIRED_EXTENSIONS.map(stack::ASCII))
 			if (usePortability)
 			{
-				add(stack.ASCII(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME))
+				add(stack.ASCII(KHRPortabilitySubset.VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME))
 			}
 		}
 		return stack.mallocPointer(extsList.size).apply {
@@ -87,7 +93,7 @@ class LogicalDevice (val hardware: HardwareDevice)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val numExtensionsBuf = stack.callocInt(1)
-			vkEnumerateDeviceExtensionProperties(
+			VK10.vkEnumerateDeviceExtensionProperties(
 				hardware.vkPhysicalDevice,
 				null as String?,
 				numExtensionsBuf,
@@ -95,7 +101,7 @@ class LogicalDevice (val hardware: HardwareDevice)
 			)
 			val numExtensions = numExtensionsBuf.get(0)
 			val propsBuff = VkExtensionProperties.calloc(numExtensions, stack)
-			vkEnumerateDeviceExtensionProperties(
+			VK10.vkEnumerateDeviceExtensionProperties(
 				hardware.vkPhysicalDevice,
 				null as String?,
 				numExtensionsBuf,
@@ -118,12 +124,12 @@ class LogicalDevice (val hardware: HardwareDevice)
 
 	fun free()
 	{
-		vkDestroyDevice(vkDevice, null)
+		VK10.vkDestroyDevice(vkDevice, null)
 	}
 
 	fun waitIdle()
 	{
-		vkDeviceWaitIdle(vkDevice)
+		VK10.vkDeviceWaitIdle(vkDevice)
 	}
 
 }
