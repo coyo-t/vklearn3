@@ -32,13 +32,13 @@ return {
 		layout(location=0)
 		out vec4 outFragColor;
 
-//		layout(binding=1)
-//		uniform sampler2D gm_BaseTexture;
+		layout(set=1, binding=1)
+		uniform sampler2D gm_BaseTexture;
 
 		void main()
 		{
-			outFragColor = vec4(inTextCoords.x, inTextCoords.y, 0, 1);
-//			outFragColor = texture(gm_BaseTexture, inTextCoords);
+//			outFragColor = vec4(inTextCoords.x, inTextCoords.y, 0, 1);
+			outFragColor = texture(gm_BaseTexture, inTextCoords);
 		}
 	]],
 }

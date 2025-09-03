@@ -74,6 +74,16 @@ class Renderer (val engineContext: Engine)
 		),
 	)
 
+	val descriptorLayoutFragmentStage = DescriptorSetLayout(
+		this,
+		DescriptorSetLayout.Info(
+			DescriptorType.COMBINED_IMAGE_SAMPLER,
+			1,
+			1,
+			VK_SHADER_STAGE_FRAGMENT_BIT
+		),
+	)
+
 	var viewPoint: ViewPoint = IdentityViewPoint()
 	val shaderMatrixBuffer = createHostVisibleBuffs(
 		GPUtil.SIZEOF_MAT4 * 2L,
@@ -81,6 +91,11 @@ class Renderer (val engineContext: Engine)
 		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		"MATRIX",
 		descriptorLayoutVertexStage,
+	)
+	val shaderTextureShit = descAlloc.addDescSets(
+		"TEXTURE",
+		descriptorLayoutFragmentStage,
+		maxInFlightFrameCount,
 	)
 	val mvMatrix = Matrix4f()
 
@@ -90,18 +105,18 @@ class Renderer (val engineContext: Engine)
 		val shaderModules = listOf(
 			ShaderModule(
 				this,
-				shaderStage = ShaderAssetThinger.ShaderType.Vertex,
+				shaderStage = ShaderType.Vertex,
 				spirv = ShaderAssetThinger.compileSPIRV(
 					srcs.vertex,
-					ShaderAssetThinger.ShaderType.Vertex,
+					ShaderType.Vertex,
 				),
 			),
 			ShaderModule(
 				this,
-				shaderStage = ShaderAssetThinger.ShaderType.Fragment,
+				shaderStage = ShaderType.Fragment,
 				spirv = ShaderAssetThinger.compileSPIRV(
 					srcs.fragment,
-					ShaderAssetThinger.ShaderType.Fragment,
+					ShaderType.Fragment,
 				),
 			),
 		)
@@ -113,6 +128,7 @@ class Renderer (val engineContext: Engine)
 			depthFormat = VK_FORMAT_D16_UNORM,
 			descriptorSetLayouts = listOf(
 				descriptorLayoutVertexStage,
+				descriptorLayoutFragmentStage,
 			),
 		)
 		shaderModules.forEach { it.free() }
@@ -120,6 +136,11 @@ class Renderer (val engineContext: Engine)
 	}
 
 	val textureManager = TextureManager(this)
+	val textureSampler = Sampler(
+		this,
+		wrapping = SamplerWrapping.REPEAT,
+		filter = SamplerFilter.NEAREST,
+	)
 
 	val textureTerrain = textureManager[ResourceLocation.create("image/terrain.png")]
 
@@ -215,6 +236,7 @@ class Renderer (val engineContext: Engine)
 			vkCmdBindPipeline(cmdHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vkPipeline)
 			val descr = stack.longs(
 				descAlloc.getDescSet("MATRIX").vkDescriptorSet,
+				descAlloc.getDescSet("TEXTURE").vkDescriptorSet,
 			)
 			vkCmdBindDescriptorSets(
 				cmdHandle,
@@ -241,7 +263,8 @@ class Renderer (val engineContext: Engine)
 			scissor.offset { it.x(0).y(0) }
 			vkCmdSetScissor(cmdHandle, 0, scissor)
 
-//			shaderTextureUniform[currentFrame].setImages(device, textureSampler, 1, textureTerrain.imageView)
+
+			shaderTextureShit[currentFrame].setImages(gpu.logicalDevice, textureSampler, 1, textureTerrain.imageView)
 
 
 			val vbCount = 1
@@ -405,7 +428,9 @@ class Renderer (val engineContext: Engine)
 		textureManager.free()
 
 		descriptorLayoutVertexStage.free()
+		descriptorLayoutFragmentStage.free()
 		shaderMatrixBuffer.forEach { it.free() }
+		textureSampler.free()
 
 		descAlloc.free()
 		pipeline.free()

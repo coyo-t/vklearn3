@@ -7,31 +7,11 @@ import org.lwjgl.util.shaderc.Shaderc.*
 import party.iroiro.luajava.Lua
 import java.nio.ByteBuffer
 import kotlin.io.path.div
-import org.lwjgl.vulkan.VK14.*
 
 object ShaderAssetThinger
 {
 	val L = LuaCoyote {
 		openLibraries()
-	}
-
-	enum class ShaderType (
-		val vkFlag: Int,
-		val scEnum: Int,
-	)
-	{
-		Vertex(
-			VK_SHADER_STAGE_VERTEX_BIT,
-			shaderc_vertex_shader,
-		),
-		Fragment(
-			VK_SHADER_STAGE_FRAGMENT_BIT,
-			shaderc_fragment_shader,
-		),
-		Compute(
-			VK_SHADER_STAGE_COMPUTE_BIT,
-			shaderc_compute_shader,
-		),
 	}
 
 	var doGenerateShaderDebugSymbols = true

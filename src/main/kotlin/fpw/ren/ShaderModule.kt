@@ -12,7 +12,7 @@ import kotlin.use
 
 class ShaderModule (
 	val renderer: Renderer,
-	val shaderStage: ShaderAssetThinger.ShaderType,
+	val shaderStage: ShaderType,
 	spirv: ByteBuffer,
 )
 {

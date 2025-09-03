@@ -41,6 +41,7 @@ class GPUBuffer (
 			bufferCreateInfo.size(size)
 			bufferCreateInfo.usage(bufferUsage)
 			bufferCreateInfo.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
+
 			val allocInfo = VmaAllocationCreateInfo.calloc(stack)
 			allocInfo.usage(vmaUsage)
 			allocInfo.flags(vmaFlags)
