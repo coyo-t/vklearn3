@@ -11,6 +11,7 @@ class Engine (val window: Window)
 	val testTexture = ResourceLocation.create("image/cros.png")
 	val testShader = ResourceLocation.create("shader/scene.lua")
 	val testModel = ResourceLocation.create("mesh/test cube.lua")
+	val testModelTriangle = ResourceLocation.create("mesh/triangle.lua")
 	val updatesPerSecond = 120
 
 	val entities = mutableListOf<RenderEntity>()
@@ -41,11 +42,11 @@ class Engine (val window: Window)
 		}
 
 		addEntity(RenderEntity("another one lol")) {
-			modelId = "test cube"
+			model = testModel
 			location.set(-0.5, -0.5, -3.0)
 		}
 		addEntity(RenderEntity("tha cube")) {
-			modelId = "test cube"
+			model = testModelTriangle
 			location.set(0.0, 0.0, -2.0)
 			update = { milliTimeDiff ->
 				location.set(
@@ -54,7 +55,6 @@ class Engine (val window: Window)
 					-2.0,
 				)
 
-				val dt = milliTimeDiff / 1000.0
 				val fdt = window.time.toFloat()
 				rotation
 				.identity()

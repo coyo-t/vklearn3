@@ -63,13 +63,13 @@ class CommandBuffer
 					pColorFormats.put(0, inherit.colorFormats[i])
 				}
 				val renderingInfo = VkCommandBufferInheritanceRenderingInfo.calloc(stack)
-					.`sType$Default`()
-					.depthAttachmentFormat(inherit.depthFormat)
-					.pColorAttachmentFormats(pColorFormats)
-					.rasterizationSamples(inherit.rasterizationSamples)
+				renderingInfo.`sType$Default`()
+				renderingInfo.depthAttachmentFormat(inherit.depthFormat)
+				renderingInfo.pColorAttachmentFormats(pColorFormats)
+				renderingInfo.rasterizationSamples(inherit.rasterizationSamples)
 				val vkInheritanceInfo = VkCommandBufferInheritanceInfo.calloc(stack)
-					.`sType$Default`()
-					.pNext(renderingInfo)
+				vkInheritanceInfo.`sType$Default`()
+				vkInheritanceInfo.pNext(renderingInfo)
 				cmdBufInfo.pInheritanceInfo(vkInheritanceInfo)
 			}
 			gpuCheck(
@@ -106,8 +106,8 @@ class CommandBuffer
 		fence.reset()
 		MemoryStack.stackPush().use { stack ->
 			val cmds = VkCommandBufferSubmitInfo.calloc(1, stack)
-				.`sType$Default`()
-				.commandBuffer(vkCommandBuffer)
+			cmds.`sType$Default`()
+			cmds.commandBuffer(vkCommandBuffer)
 			queue.submit(cmds, null, null, fence)
 		}
 		fence.waitForFences()

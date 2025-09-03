@@ -8,7 +8,8 @@ import org.joml.Vector3f
 open class RenderEntity
 {
 	val id: String
-	var modelId: String? = null
+	var model: ResourceLocation? = null
+
 	val modelMatrix = Matrix4f()
 	val location = Vector3f()
 	val rotation = Quaternionf()

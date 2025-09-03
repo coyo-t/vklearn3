@@ -1,6 +1,8 @@
 package fpw.ren
 
+import fpw.LuaCoyote
 import fpw.Renderer
+import fpw.ResourceLocation
 import fpw.ren.*
 import fpw.ren.CommandQueue
 import org.lwjgl.system.MemoryStack
@@ -9,12 +11,15 @@ import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE
 import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO
 import org.lwjgl.vulkan.VK14.*
 import org.lwjgl.vulkan.VkBufferCopy
+import party.iroiro.luajava.value.LuaTableValue
+import kotlin.collections.component1
+import kotlin.collections.component2
 import kotlin.use
 
 
 class ModelsCache (val context: Renderer)
 {
-	val modelMap = mutableMapOf<String, GPUMesh>()
+	val modelMap = mutableMapOf<ResourceLocation, GPUMesh>()
 
 
 	fun free ()
@@ -26,13 +31,68 @@ class ModelsCache (val context: Renderer)
 		modelMap.clear()
 	}
 
+	operator fun get (rl: ResourceLocation): GPUMesh?
+	{
+		if (rl in modelMap)
+		{
+			return modelMap[rl]!!
+		}
+		return ldMdl(rl)
+	}
+
+	private fun ldMdl (mRlrl: ResourceLocation): GPUMesh?
+	{
+		LuaCoyote().use { L ->
+			L.openLibraries()
+			val thing = (L.run(mRlrl) as? LuaTableValue) ?: return null
+			val verticesTable = requireNotNull(thing["points"] as? LuaTableValue) {
+				"model needs AT LEAST positions >:["
+			}
+			val vertexCount = verticesTable.length()
+			val vertices = verticesTable.flatMap { (_, it) ->
+				check(it is LuaTableValue)
+				listOf(
+					it[1].toNumber().toFloat(),
+					it[2].toNumber().toFloat(),
+					it[3].toNumber().toFloat(),
+				)
+			}.toFloatArray()
+
+			val uvs = ((thing["uvs"] as? LuaTableValue)?.flatMap { (_, it) ->
+				check(it is LuaTableValue)
+				listOf(
+					it[1].toNumber().toFloat(),
+					it[2].toNumber().toFloat(),
+				)
+			}?.toFloatArray()) ?: FloatArray(vertexCount * 2) { 0f }
+
+			val indices = requireNotNull(thing["indices"] as? LuaTableValue) {
+				"I REQUIRE INDICES (for now -.-)"
+			}.map { (_, it) ->
+				it.toInteger().toInt()
+			}.toIntArray()
+
+			return loadModels(
+				context,
+				context.currentSwapChainDirector.commandPool,
+				context.graphicsQueue,
+				mRlrl,
+				Mesh(
+					positions = vertices,
+					texCoords = uvs,
+					indices = indices
+				),
+			)
+		}
+	}
+
 	fun loadModels (
 		context: Renderer,
 		commandPool: CommandPool,
 		queue: CommandQueue,
-		id: String,
+		id: ResourceLocation,
 		meshData: Mesh,
-	)
+	): GPUMesh
 	{
 		val stagingBufferList = mutableListOf<GPUBuffer>()
 
@@ -44,15 +104,17 @@ class ModelsCache (val context: Renderer)
 		stagingBufferList.add(isrc)
 		recordTransferCommand(cmd, vsrc, vdst)
 		recordTransferCommand(cmd, isrc, idst)
-		modelMap[id] = GPUMesh(
+		val outs = GPUMesh(
 			vdst,
 			idst,
 			meshData.indices.size,
 		)
+		modelMap[id] = outs
 		cmd.endRecording()
 		cmd.submitAndWait(context, queue)
 		cmd.free(context, commandPool)
 		stagingBufferList.forEach { it.free() }
+		return outs
 	}
 
 	private fun createIndicesBuffers(context: Renderer, meshData: Mesh): Pair<GPUBuffer, GPUBuffer>

@@ -10,12 +10,8 @@ import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
-import org.lwjgl.vulkan.VK10.VK_FORMAT_D16_UNORM
-import org.lwjgl.vulkan.VK10.VK_SHADER_STAGE_FRAGMENT_BIT
-import org.lwjgl.vulkan.VK10.VK_SHADER_STAGE_VERTEX_BIT
 import org.lwjgl.vulkan.VK14.*
 import org.lwjgl.vulkan.VkShaderModuleCreateInfo.calloc
-import party.iroiro.luajava.value.LuaTableValue
 import java.awt.Color
 import java.nio.ByteBuffer
 
@@ -145,49 +141,9 @@ class Renderer (val engineContext: Engine)
 
 	fun init ()
 	{
-		LuaCoyote().use { L ->
-			L.openLibraries()
-			val thing = (L.run(engineContext.testModel) as? LuaTableValue) ?: return@use
-			val verticesTable = requireNotNull(thing["points"] as? LuaTableValue) {
-				"model needs AT LEAST positions >:["
-			}
-			val vertexCount = verticesTable.length()
-			val vertices = verticesTable.flatMap { (_, it) ->
-				check(it is LuaTableValue)
-				listOf(
-					it[1].toNumber().toFloat(),
-					it[2].toNumber().toFloat(),
-					it[3].toNumber().toFloat(),
-				)
-			}.toFloatArray()
-
-			val uvs = ((thing["uvs"] as? LuaTableValue)?.flatMap { (_, it) ->
-				check(it is LuaTableValue)
-				listOf(
-					it[1].toNumber().toFloat(),
-					it[2].toNumber().toFloat(),
-				)
-			}?.toFloatArray()) ?: FloatArray(vertexCount * 2) { 0f }
-
-			val indices = requireNotNull(thing["indices"] as? LuaTableValue) {
-				"I REQUIRE INDICES (for now -.-)"
-			}.map { (_, it) ->
-				it.toInteger().toInt()
-			}.toIntArray()
-
-			meshManager.loadModels(
-				this,
-				currentSwapChainDirector.commandPool,
-				graphicsQueue,
-				thing["temp_name"].toString(),
-				Mesh(
-					positions = vertices,
-					texCoords = uvs,
-					indices = indices
-				),
-			)
-		}
+//		ldMdl(engineContext.testModel)
 	}
+
 
 	private fun submit(cmdBuff: CommandBuffer, currentFrame: Int, imageIndex: Int)
 	{
@@ -309,13 +265,14 @@ class Renderer (val engineContext: Engine)
 			for (i in 0..<numEntities)
 			{
 				val entity = entities[i]
-				val modelId = entity.modelId ?: continue
-				val model = meshManager.modelMap[modelId] ?: continue
+				val modelId = entity.model ?: continue
+				val model = meshManager[modelId] ?: continue
 				entity.updateModelMatrix()
 				viewMatrix.mul(entity.modelMatrix, mvMatrix)
 
 				GPUtil.copyMatrixToBuffer(curMatrixBuffer, projectionMatrix, 0)
 				GPUtil.copyMatrixToBuffer(curMatrixBuffer, mvMatrix, GPUtil.SIZEOF_MAT4)
+
 //				projectionMatrix.get(pushConstantsBuffer)
 //				mvMatrix.get(GPUtil.SIZEOF_MAT4, pushConstantsBuffer)
 
@@ -492,6 +449,7 @@ class Renderer (val engineContext: Engine)
 				this,
 				swapChainExtent.width(),
 				swapChainExtent.height(),
+//				VK_FORMAT_D32_SFLOAT,
 				VK_FORMAT_D16_UNORM,
 				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
 			)
