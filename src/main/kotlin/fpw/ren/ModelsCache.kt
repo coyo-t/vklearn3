@@ -10,9 +10,6 @@ import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO
 import org.lwjgl.vulkan.VK14.*
 import org.lwjgl.vulkan.VkBufferCopy
 import party.iroiro.luajava.value.LuaTableValue
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.use
 
 
 class ModelsCache (val context: Renderer)
@@ -75,7 +72,7 @@ class ModelsCache (val context: Renderer)
 				context.currentSwapChainDirector.commandPool,
 				context.graphicsQueue,
 				mRlrl,
-				Mesh(
+				InputMesh(
 					positions = vertices,
 					texCoords = uvs,
 					indices = indices
@@ -89,7 +86,7 @@ class ModelsCache (val context: Renderer)
 		commandPool: CommandPool,
 		queue: CommandSequence,
 		id: ResourceLocation,
-		meshData: fpw.ren.Mesh,
+		meshData: InputMesh,
 	): Mesh
 	{
 		val stagingBufferList = mutableListOf<GPUBuffer>()
@@ -115,7 +112,7 @@ class ModelsCache (val context: Renderer)
 		return outs
 	}
 
-	private fun createIndicesBuffers(context: Renderer, meshData: fpw.ren.Mesh): Pair<GPUBuffer, GPUBuffer>
+	private fun createIndicesBuffers(context: Renderer, meshData: InputMesh): Pair<GPUBuffer, GPUBuffer>
 	{
 		val indices = meshData.indices
 		val numIndices = indices.size
@@ -145,7 +142,7 @@ class ModelsCache (val context: Renderer)
 		return srcBuffer to dstBuffer
 	}
 
-	private fun createVerticesBuffers(context: Renderer, meshData: fpw.ren.Mesh): Pair<GPUBuffer, GPUBuffer>
+	private fun createVerticesBuffers(context: Renderer, meshData: InputMesh): Pair<GPUBuffer, GPUBuffer>
 	{
 		val positions = meshData.positions
 		var texCoords = meshData.texCoords

@@ -1,6 +1,6 @@
 package fpw.ren
 
-class Mesh (
+class InputMesh (
 	val positions: FloatArray,
 	val texCoords: FloatArray,
 	val indices: IntArray,
