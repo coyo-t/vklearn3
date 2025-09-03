@@ -45,7 +45,7 @@ class TextureManager (val renderer: Renderer)
 		textureMap.clear()
 	}
 
-	fun uploadTextures (cmd: CommandPool, queue: CommandQueue, vararg textures: Texture)
+	fun uploadTextures (cmd: CommandPool, queue: CommandSequence, vararg textures: Texture)
 	{
 		val c = CommandBuffer(renderer, cmd, oneTimeSubmit = true)
 		c.beginRecording()

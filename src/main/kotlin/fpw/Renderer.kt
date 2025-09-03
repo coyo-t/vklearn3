@@ -40,6 +40,7 @@ class Renderer (val engineContext: Engine)
 	)
 
 	val memAlloc = MemAlloc(instance, gpu.hardwareDevice, gpu.logicalDevice)
+	val descAlloc = DescriptorAllocator(gpu.hardwareDevice, gpu.logicalDevice)
 
 	var displaySurface = DisplaySurface(instance, gpu.hardwareDevice, engineContext.window)
 	var swapChain = SwapChain(
@@ -55,8 +56,8 @@ class Renderer (val engineContext: Engine)
 	var currentFrame = 0
 		private set
 
-	val graphicsQueue = CommandQueue.createGraphics(this, 0)
-	val presentQueue = CommandQueue.createPresentation(this, 0)
+	val graphicsQueue = CommandSequence.createGraphics(this, 0)
+	val presentQueue = CommandSequence.createPresentation(this, 0)
 
 	val swapChainDirectors = List(maxInFlightFrameCount) {
 		SwapChainDirector(this)
@@ -66,13 +67,10 @@ class Renderer (val engineContext: Engine)
 	private var doResize = false
 
 
-	val descAllocator = DescriptorAllocator(gpu.hardwareDevice, gpu.logicalDevice)
 
-	val mvMatrix = Matrix4f()
-
-	val descriptorLayoutVertexStage = DescriptorLayout(
+	val descriptorLayoutVertexStage = DescriptorSetLayout(
 		this,
-		DescriptorLayout.Info(
+		DescriptorSetLayout.Info(
 			DescriptorType.UNIFORM_BUFFER,
 			0,
 			1,
@@ -80,9 +78,8 @@ class Renderer (val engineContext: Engine)
 		),
 	)
 
+
 	var viewPoint: ViewPoint = IdentityViewPoint()
-
-
 	val shaderMatrixBuffer = createHostVisibleBuffs(
 		GPUtil.SIZEOF_MAT4 * 2L,
 		maxInFlightFrameCount,
@@ -90,6 +87,7 @@ class Renderer (val engineContext: Engine)
 		"MATRIX",
 		descriptorLayoutVertexStage,
 	)
+	val mvMatrix = Matrix4f()
 
 	val pipeline = run {
 		val shPath = ResourceLocation.create("shader/scene.lua")
@@ -212,7 +210,7 @@ class Renderer (val engineContext: Engine)
 			vkCmdBeginRendering(cmdHandle, renInf)
 			vkCmdBindPipeline(cmdHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vkPipeline)
 			val descr = stack.longs(
-				descAllocator.getDescSet("MATRIX").vkDescriptorSet,
+				descAlloc.getDescSet("MATRIX").vkDescriptorSet,
 			)
 			vkCmdBindDescriptorSets(
 				cmdHandle,
@@ -366,10 +364,10 @@ class Renderer (val engineContext: Engine)
 		numBuffs: Int,
 		usage: Int,
 		id: String,
-		layout: DescriptorLayout,
+		layout: DescriptorSetLayout,
 	): List<GPUBuffer>
 	{
-		descAllocator.addDescSets(id, layout, numBuffs)
+		descAlloc.addDescSets(id, layout, numBuffs)
 		val first = layout.layoutInfos.first()
 		return List(numBuffs) {
 			val r = GPUBuffer(
@@ -380,7 +378,7 @@ class Renderer (val engineContext: Engine)
 				VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 			)
-			val descSet = descAllocator.getDescSet(id, it)
+			val descSet = descAlloc.getDescSet(id, it)
 			descSet.setBuffer(
 				gpu.logicalDevice,
 				r,
@@ -395,10 +393,10 @@ class Renderer (val engineContext: Engine)
 		buffSize: Long,
 		usage: Int,
 		id: String,
-		layout: DescriptorLayout,
+		layout: DescriptorSetLayout,
 	): GPUBuffer
 	{
-		val descSet = descAllocator.addDescSets(id, layout, 1).first()
+		val descSet = descAlloc.addDescSets(id, layout, 1).first()
 		val buff = GPUBuffer(
 			this,
 			buffSize,
@@ -426,7 +424,7 @@ class Renderer (val engineContext: Engine)
 		descriptorLayoutVertexStage.free()
 		shaderMatrixBuffer.forEach { it.free() }
 
-		descAllocator.free()
+		descAlloc.free()
 		pipeline.free()
 		clrValueColor.free()
 		clrValueDepth.free()

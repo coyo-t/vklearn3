@@ -14,7 +14,7 @@ class SwapChainDirector (val renderer: Renderer)
 		= Semaphore(renderer)
 
 	val fence
-		= GPUFence(renderer, signaled = true)
+		= Fence(renderer, signaled = true)
 
 
 	fun onResize ()

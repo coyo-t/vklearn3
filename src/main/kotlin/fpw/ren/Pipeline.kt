@@ -4,7 +4,6 @@ import fpw.Renderer
 import fpw.ren.GPUtil.gpuCheck
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.VK10.VK_CULL_MODE_NONE
 import org.lwjgl.vulkan.VK10.VK_POLYGON_MODE_FILL
 import org.lwjgl.vulkan.VK10.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
 import org.lwjgl.vulkan.VK10.vkCreateGraphicsPipelines
@@ -19,7 +18,7 @@ class Pipeline (
 	vertexFormat: VkPipelineVertexInputStateCreateInfo,
 	depthFormat: Int = VK_FORMAT_UNDEFINED,
 	pushConstRange: List<Triple<Int, Int, Int>> = emptyList(),
-	descriptorSetLayouts: List<DescriptorLayout> = emptyList(),
+	descriptorSetLayouts: List<DescriptorSetLayout> = emptyList(),
 )
 {
 	val vkPipeline: Long

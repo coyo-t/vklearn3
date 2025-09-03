@@ -17,7 +17,7 @@ class DescriptorSet
 	constructor (
 		device: LogicalDevice,
 		descPool: DescriptorPool,
-		descSetLayout: DescriptorLayout,
+		descSetLayout: DescriptorSetLayout,
 	)
 	{
 		MemoryStack.stackPush().use { stack ->

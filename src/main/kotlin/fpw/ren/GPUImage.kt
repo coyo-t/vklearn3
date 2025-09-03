@@ -24,34 +24,32 @@ class GPUImage (val vkCtx: Renderer, imageData: Data)
 			this.format = imageData.format
 			this.mipCount = imageData.mipCount
 
-			val imageCreateInfo = VkImageCreateInfo.calloc(stack)
-				.`sType$Default`()
-				.imageType(VK_IMAGE_TYPE_2D)
-				.format(format)
-				.extent {
-					it
-						.width(imageData.wide)
-						.height(imageData.tall)
-						.depth(1)
-				}
-				.mipLevels(1)
-				.arrayLayers(imageData.arrayLayerCount)
-				.samples(imageData.sampleCount)
-				.initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
-				.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
-				.tiling(VK_IMAGE_TILING_OPTIMAL)
-				.usage(imageData.usage)
+			val ic = VkImageCreateInfo.calloc(stack)
+			ic.`sType$Default`()
+			ic.imageType(VK_IMAGE_TYPE_2D)
+			ic.format(format)
+			ic.extent {
+				it.width(imageData.wide)
+				it.height(imageData.tall)
+				it.depth(1)
+			}
+			ic.mipLevels(1)
+			ic.arrayLayers(imageData.arrayLayerCount)
+			ic.samples(imageData.sampleCount)
+			ic.initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
+			ic.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
+			ic.tiling(VK_IMAGE_TILING_OPTIMAL)
+			ic.usage(imageData.usage)
 
-			val allocCreateInfo = VmaAllocationCreateInfo.calloc(1, stack)
-				.get(0)
-				.usage(VMA_MEMORY_USAGE_AUTO)
-				.flags(imageData.memUsage)
-				.priority(1.0f)
+			val ac = VmaAllocationCreateInfo.calloc(stack)
+			ac.usage(VMA_MEMORY_USAGE_AUTO)
+			ac.flags(imageData.memUsage)
+			ac.priority(1.0f)
 
 			val pAllocation = stack.callocPointer(1)
 			val lp = stack.mallocLong(1)
 			gpuCheck(
-				vmaCreateImage(vkCtx.memAlloc.vmaAlloc, imageCreateInfo, allocCreateInfo, lp, pAllocation, null),
+				vmaCreateImage(vkCtx.memAlloc.vmaAlloc, ic, ac, lp, pAllocation, null),
 				"Failed to create image"
 			)
 			vkImage = lp.get(0)

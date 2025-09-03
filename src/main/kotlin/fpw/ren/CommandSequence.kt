@@ -13,7 +13,7 @@ import org.lwjgl.vulkan.VkQueue
 import org.lwjgl.vulkan.VkSemaphoreSubmitInfo
 import org.lwjgl.vulkan.VkSubmitInfo2
 
-open class CommandQueue (
+open class CommandSequence (
 	val vkCtx: Renderer,
 	val queueFamilyIndex: Int,
 	queueIndex: Int,
@@ -40,7 +40,7 @@ open class CommandQueue (
 		commandBuffers: VkCommandBufferSubmitInfo.Buffer?,
 		waitSemaphores: VkSemaphoreSubmitInfo.Buffer?,
 		signalSemaphores: VkSemaphoreSubmitInfo.Buffer?,
-		fence: GPUFence?
+		fence: Fence?
 	)
 	{
 		MemoryStack.stackPush().use { stack ->
@@ -63,10 +63,10 @@ open class CommandQueue (
 	companion object
 	{
 		fun createPresentation (r: Renderer, q: Int)
-			= CommandQueue(r, r.getPresentQueueFamilyIndex(), q)
+			= CommandSequence(r, r.getPresentQueueFamilyIndex(), q)
 
 		fun createGraphics (r: Renderer, q: Int)
-			= CommandQueue(r, r.getGraphicsQueueFamilyIndex(), q)
+			= CommandSequence(r, r.getGraphicsQueueFamilyIndex(), q)
 
 		internal fun Renderer.getGraphicsQueueFamilyIndex(): Int
 		{

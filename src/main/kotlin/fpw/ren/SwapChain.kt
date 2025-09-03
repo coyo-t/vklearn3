@@ -149,7 +149,7 @@ class SwapChain (
 	}
 
 
-	fun presentImage(queue: CommandQueue, imageIndex: Int): Boolean
+	fun presentImage(queue: CommandSequence, imageIndex: Int): Boolean
 	{
 		MemoryStack.stackPush().use { stack ->
 			val present = VkPresentInfoKHR.calloc(stack)

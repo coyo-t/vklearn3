@@ -46,7 +46,7 @@ class DescriptorAllocator (
 
 	fun addDescSets (
 		id: String,
-		descSetLayout: DescriptorLayout,
+		descSetLayout: DescriptorSetLayout,
 		count: Int=1,
 	): List<DescriptorSet>
 	{
@@ -105,7 +105,6 @@ class DescriptorAllocator (
 
 	fun free ()
 	{
-//		Logger.debug("Destroying descriptor allocator")
 		descSetInfoMap.clear()
 		descPoolList.forEach { it.descPool.free() }
 	}

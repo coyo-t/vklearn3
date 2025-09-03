@@ -100,9 +100,9 @@ class CommandBuffer
 		vkResetCommandBuffer(vkCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
 	}
 
-	fun submitAndWait(vkCtx: Renderer, queue: CommandQueue)
+	fun submitAndWait(vkCtx: Renderer, queue: CommandSequence)
 	{
-		val fence = GPUFence(vkCtx, signaled = true)
+		val fence = Fence(vkCtx, signaled = true)
 		fence.reset()
 		MemoryStack.stackPush().use { stack ->
 			val cmds = VkCommandBufferSubmitInfo.calloc(1, stack)

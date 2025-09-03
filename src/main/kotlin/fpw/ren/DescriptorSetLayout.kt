@@ -9,7 +9,7 @@ import org.lwjgl.vulkan.VkDescriptorSetLayoutBinding
 import org.lwjgl.vulkan.VkDescriptorSetLayoutCreateInfo
 
 
-class DescriptorLayout (
+class DescriptorSetLayout (
 	val vkCtx: Renderer,
 	vararg layoutInfos: Info,
 )
@@ -25,21 +25,25 @@ class DescriptorLayout (
 			for (i in 0..<count)
 			{
 				val layoutInfo = layoutInfos[i]
-				layoutBindings.get(i)
-					.binding(layoutInfo.binding)
-					.descriptorType(layoutInfo.descType.vk)
-					.descriptorCount(layoutInfo.descCount)
-					.stageFlags(layoutInfo.stage)
+				val f = layoutBindings[i]
+				f.binding(layoutInfo.binding)
+				f.descriptorType(layoutInfo.descType.vk)
+				f.descriptorCount(layoutInfo.descCount)
+				f.stageFlags(layoutInfo.stage)
 			}
 
-			val vkLayoutInfo = VkDescriptorSetLayoutCreateInfo
-			.calloc(stack)
-			.`sType$Default`()
-			.pBindings(layoutBindings)
+			val vkLayoutInfo = VkDescriptorSetLayoutCreateInfo.calloc(stack)
+			vkLayoutInfo.`sType$Default`()
+			vkLayoutInfo.pBindings(layoutBindings)
 
 			val pSetLayout = stack.mallocLong(1)
 			gpuCheck(
-				vkCreateDescriptorSetLayout(vkCtx.gpu.logicalDevice.vkDevice, vkLayoutInfo, null, pSetLayout),
+				vkCreateDescriptorSetLayout(
+					vkCtx.gpu.logicalDevice.vkDevice,
+					vkLayoutInfo,
+					null,
+					pSetLayout,
+				),
 				"Failed to create descriptor set layout"
 			)
 			vkDescLayout = pSetLayout.get(0)

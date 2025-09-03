@@ -3,8 +3,6 @@ package fpw.ren
 import fpw.LuaCoyote
 import fpw.Renderer
 import fpw.ResourceLocation
-import fpw.ren.*
-import fpw.ren.CommandQueue
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
@@ -19,7 +17,7 @@ import kotlin.use
 
 class ModelsCache (val context: Renderer)
 {
-	val modelMap = mutableMapOf<ResourceLocation, GPUMesh>()
+	val modelMap = mutableMapOf<ResourceLocation, Mesh>()
 
 
 	fun free ()
@@ -31,7 +29,7 @@ class ModelsCache (val context: Renderer)
 		modelMap.clear()
 	}
 
-	operator fun get (rl: ResourceLocation): GPUMesh?
+	operator fun get (rl: ResourceLocation): Mesh?
 	{
 		if (rl in modelMap)
 		{
@@ -40,7 +38,7 @@ class ModelsCache (val context: Renderer)
 		return ldMdl(rl)
 	}
 
-	private fun ldMdl (mRlrl: ResourceLocation): GPUMesh?
+	private fun ldMdl (mRlrl: ResourceLocation): Mesh?
 	{
 		LuaCoyote().use { L ->
 			L.openLibraries()
@@ -89,10 +87,10 @@ class ModelsCache (val context: Renderer)
 	fun loadModels (
 		context: Renderer,
 		commandPool: CommandPool,
-		queue: CommandQueue,
+		queue: CommandSequence,
 		id: ResourceLocation,
-		meshData: Mesh,
-	): GPUMesh
+		meshData: fpw.ren.Mesh,
+	): Mesh
 	{
 		val stagingBufferList = mutableListOf<GPUBuffer>()
 
@@ -104,7 +102,7 @@ class ModelsCache (val context: Renderer)
 		stagingBufferList.add(isrc)
 		recordTransferCommand(cmd, vsrc, vdst)
 		recordTransferCommand(cmd, isrc, idst)
-		val outs = GPUMesh(
+		val outs = Mesh(
 			vdst,
 			idst,
 			meshData.indices.size,
@@ -117,7 +115,7 @@ class ModelsCache (val context: Renderer)
 		return outs
 	}
 
-	private fun createIndicesBuffers(context: Renderer, meshData: Mesh): Pair<GPUBuffer, GPUBuffer>
+	private fun createIndicesBuffers(context: Renderer, meshData: fpw.ren.Mesh): Pair<GPUBuffer, GPUBuffer>
 	{
 		val indices = meshData.indices
 		val numIndices = indices.size
@@ -147,7 +145,7 @@ class ModelsCache (val context: Renderer)
 		return srcBuffer to dstBuffer
 	}
 
-	private fun createVerticesBuffers(context: Renderer, meshData: Mesh): Pair<GPUBuffer, GPUBuffer>
+	private fun createVerticesBuffers(context: Renderer, meshData: fpw.ren.Mesh): Pair<GPUBuffer, GPUBuffer>
 	{
 		val positions = meshData.positions
 		var texCoords = meshData.texCoords
@@ -208,4 +206,10 @@ class ModelsCache (val context: Renderer)
 			vkCmdCopyBuffer(cmd.vkCommandBuffer, from.bufferStruct, to.bufferStruct, copyRegion)
 		}
 	}
+
+	class Mesh(
+		val verticesBuffer: GPUBuffer,
+		val indicesBuffer: GPUBuffer,
+		val numIndices: Int
+	)
 }

@@ -8,7 +8,7 @@ import org.lwjgl.vulkan.VkFenceCreateInfo
 import kotlin.use
 
 
-class GPUFence (
+class Fence (
 	val context: Renderer,
 	signaled: Boolean = true
 )
