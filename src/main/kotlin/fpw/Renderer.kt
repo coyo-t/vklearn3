@@ -1,7 +1,6 @@
 package fpw
 
 import fpw.ren.*
-import fpw.ren.GPUtil.gpuCheck
 import fpw.ren.GPUtil.imageBarrier
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
@@ -10,9 +9,7 @@ import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.VK14.*
-import org.lwjgl.vulkan.VkShaderModuleCreateInfo.calloc
 import java.awt.Color
-import java.nio.ByteBuffer
 
 
 class Renderer (val engineContext: Engine)
@@ -66,8 +63,6 @@ class Renderer (val engineContext: Engine)
 	private val meshManager = ModelsCache(this)
 	private var doResize = false
 
-
-
 	val descriptorLayoutVertexStage = DescriptorSetLayout(
 		this,
 		DescriptorSetLayout.Info(
@@ -77,7 +72,6 @@ class Renderer (val engineContext: Engine)
 			VK_SHADER_STAGE_VERTEX_BIT
 		),
 	)
-
 
 	var viewPoint: ViewPoint = IdentityViewPoint()
 	val shaderMatrixBuffer = createHostVisibleBuffs(
@@ -93,16 +87,18 @@ class Renderer (val engineContext: Engine)
 		val shPath = ResourceLocation.create("shader/scene.lua")
 		val srcs = ShaderAssetThinger.loadFromLuaScript(shPath)
 		val shaderModules = listOf(
-			createShaderModule(
-				VK_SHADER_STAGE_VERTEX_BIT,
-				ShaderAssetThinger.compileSPIRV(
+			ShaderModule(
+				this,
+				shaderStage = VK_SHADER_STAGE_VERTEX_BIT,
+				spirv = ShaderAssetThinger.compileSPIRV(
 					srcs.vertex,
 					ShaderAssetThinger.ShaderType.Vertex,
 				),
 			),
-			createShaderModule(
-				VK_SHADER_STAGE_FRAGMENT_BIT,
-				ShaderAssetThinger.compileSPIRV(
+			ShaderModule(
+				this,
+				shaderStage = VK_SHADER_STAGE_FRAGMENT_BIT,
+				spirv = ShaderAssetThinger.compileSPIRV(
 					srcs.fragment,
 					ShaderAssetThinger.ShaderType.Fragment,
 				),
@@ -336,27 +332,6 @@ class Renderer (val engineContext: Engine)
 		val extent = swapChain.extents
 		engineContext.lens.resize(extent.width(), extent.height())
 
-	}
-
-	fun createShaderModule (shaderStage: Int, spirv: ByteBuffer): ShaderModule
-	{
-		val handle = MemoryStack.stackPush().use { stack ->
-			val moduleCreateInfo = calloc(stack)
-				.`sType$Default`()
-				.pCode(spirv)
-
-			val lp = stack.mallocLong(1)
-			gpuCheck(
-				vkCreateShaderModule(gpu.logicalDevice.vkDevice, moduleCreateInfo, null, lp),
-				"Failed to create shader module"
-			)
-			lp.get(0)
-		}
-		return ShaderModule(
-			this,
-			handle = handle,
-			shaderStage = shaderStage,
-		)
 	}
 
 	fun createHostVisibleBuffs(
