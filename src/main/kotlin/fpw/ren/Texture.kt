@@ -3,8 +3,8 @@ package fpw.ren
 import fpw.FUtil
 import fpw.Image
 import fpw.Renderer
-import fpw.ren.gpu.*
-import fpw.ren.gpu.GPUtil.imageBarrier
+import fpw.ren.*
+import fpw.ren.GPUtil.imageBarrier
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
 import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO

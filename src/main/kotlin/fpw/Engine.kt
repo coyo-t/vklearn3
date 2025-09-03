@@ -8,9 +8,9 @@ import kotlin.math.sin
 
 class Engine (val window: Window)
 {
-	val testTexture = ResourceLocation.withDefaultNameSpace("image/cros.png")
-	val testShader = ResourceLocation.withDefaultNameSpace("shader/scene.lua")
-	val testModel = ResourceLocation.withDefaultNameSpace("mesh/test cube.lua")
+	val testTexture = ResourceLocation.create("image/cros.png")
+	val testShader = ResourceLocation.create("shader/scene.lua")
+	val testModel = ResourceLocation.create("mesh/test cube.lua")
 	val updatesPerSecond = 120
 
 	val entities = mutableListOf<RenderEntity>()
@@ -62,7 +62,7 @@ class Engine (val window: Window)
 			}
 		}
 
-		render.init(this)
+		render.init()
 		render.viewPoint = viewPoint
 
 		try
@@ -93,7 +93,7 @@ class Engine (val window: Window)
 					ticks--
 				}
 
-				render.render(this)
+				render.render()
 
 				initialTime = now
 			}

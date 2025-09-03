@@ -1,8 +1,8 @@
 package fpw.ren
 
 import fpw.Renderer
-import fpw.ren.gpu.*
-import fpw.ren.gpu.CommandQueue
+import fpw.ren.*
+import fpw.ren.CommandQueue
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
@@ -19,7 +19,10 @@ class ModelsCache (val context: Renderer)
 
 	fun free ()
 	{
-		modelMap.values.forEach { it.free(context) }
+		modelMap.values.forEach {
+			it.verticesBuffer.free()
+			it.indicesBuffer.free()
+		}
 		modelMap.clear()
 	}
 

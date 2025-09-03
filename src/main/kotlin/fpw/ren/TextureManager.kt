@@ -4,9 +4,9 @@ import fpw.FUtil
 import fpw.Image
 import fpw.Renderer
 import fpw.ResourceLocation
-import fpw.ren.gpu.CommandBuffer
-import fpw.ren.gpu.CommandPool
-import fpw.ren.gpu.CommandQueue
+import fpw.ren.CommandBuffer
+import fpw.ren.CommandPool
+import fpw.ren.CommandQueue
 import org.lwjgl.vulkan.VK10.VK_FORMAT_R8G8B8A8_SRGB
 import kotlin.io.path.div
 

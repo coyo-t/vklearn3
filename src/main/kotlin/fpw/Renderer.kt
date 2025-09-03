@@ -4,15 +4,13 @@ import fpw.ren.ModelsCache
 import fpw.ren.ShaderAssetThinger
 import fpw.ren.Texture
 import fpw.ren.TextureManager
-import fpw.ren.gpu.*
-import fpw.ren.gpu.GPUtil.freeAll
-import fpw.ren.gpu.GPUtil.gpuCheck
-import fpw.ren.gpu.GPUtil.imageBarrier
-import fpw.ren.gpu.Pipeline
+import fpw.ren.*
+import fpw.ren.GPUtil.freeAll
+import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.GPUtil.imageBarrier
+import fpw.ren.Pipeline
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.util.shaderc.Shaderc.shaderc_glsl_fragment_shader
-import org.lwjgl.util.shaderc.Shaderc.shaderc_glsl_vertex_shader
 import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
 import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE
 import org.lwjgl.vulkan.*
@@ -28,7 +26,7 @@ import java.awt.Color
 import java.nio.ByteBuffer
 
 
-class Renderer (engineContext: Engine)
+class Renderer (val engineContext: Engine)
 {
 
 	val maxInFlightFrameCount = 2
@@ -36,7 +34,6 @@ class Renderer (engineContext: Engine)
 	var useVerticalSync = false
 	var preferredPhysicalDevice: String? = null
 	var useValidationLayers = true
-
 
 	val instance = GPUInstance(
 		validate = useValidationLayers,
@@ -114,7 +111,7 @@ class Renderer (engineContext: Engine)
 	)
 
 	val pipeline = run {
-		val shPath = ResourceLocation.withDefaultNameSpace("shader/scene.lua")
+		val shPath = ResourceLocation.create("shader/scene.lua")
 		val srcs = ShaderAssetThinger.loadFromLuaScript(shPath)
 		val shaderModules = listOf(
 			createShaderModule(
@@ -152,13 +149,13 @@ class Renderer (engineContext: Engine)
 
 	val currentSwapChainDirector get() = swapChainDirectors[currentFrame]
 
-	fun init (engine: Engine)
+	fun init ()
 	{
-		textureTerrain = textureManager[ResourceLocation.withDefaultNameSpace("image/terrain.png")]
+		textureTerrain = textureManager[ResourceLocation.create("image/terrain.png")]
 
 		LuaCoyote().use { L ->
 			L.openLibraries()
-			val thing = (L.run(engine.testModel) as? LuaTableValue) ?: return@use
+			val thing = (L.run(engineContext.testModel) as? LuaTableValue) ?: return@use
 			val verticesTable = requireNotNull(thing["points"] as? LuaTableValue) {
 				"model needs AT LEAST positions >:["
 			}
@@ -221,7 +218,7 @@ class Renderer (engineContext: Engine)
 		}
 	}
 
-	fun render (engineContext: Engine)
+	fun render ()
 	{
 		val director = swapChainDirectors[currentFrame]
 		director.fence.wait(this)
@@ -233,25 +230,26 @@ class Renderer (engineContext: Engine)
 
 		if (doResize)
 		{
-			resize(engineContext)
+			resize()
 			return
 		}
 		val imageIndex = swapChain.acquireNextImage(device, director.imageAcquiredSemaphore)
 		if (imageIndex < 0)
 		{
-			resize(engineContext)
+			resize()
 			return
 		}
 		// scene render
 		MemoryStack.stackPush().use { stack ->
 			val swapChain = swapChain
-			val swapChainImage = swapChain.imageViews[imageIndex].vkImage
+			val swapChainVisualImage = swapChain.imageViews[imageIndex].vkImage
+			val swapChainDepthImage = attDepth[imageIndex].image.vkImage
 			val cmdHandle = cmdBuffer.vkCommandBuffer
 
 			imageBarrier(
 				stack,
 				cmdHandle,
-				swapChainImage,
+				swapChainVisualImage,
 				VK_IMAGE_LAYOUT_UNDEFINED,
 				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
@@ -263,7 +261,7 @@ class Renderer (engineContext: Engine)
 			imageBarrier(
 				stack,
 				cmdHandle,
-				attDepth[imageIndex].image.vkImage,
+				swapChainDepthImage,
 				VK_IMAGE_LAYOUT_UNDEFINED,
 				VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
 				VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT or VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
@@ -354,15 +352,12 @@ class Renderer (engineContext: Engine)
 			imageBarrier(
 				stack,
 				cmdHandle,
-				swapChainImage,
+				swapChainVisualImage,
 				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 				VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
 				VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
-				(
-					VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT or
-					VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT
-				),
+				VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT or VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
 				VK_PIPELINE_STAGE_2_NONE,
 				VK_IMAGE_ASPECT_COLOR_BIT,
 			)
@@ -377,9 +372,9 @@ class Renderer (engineContext: Engine)
 		currentFrame = (currentFrame + 1) % maxInFlightFrameCount
 	}
 
-	private fun resize (engCtx: Engine)
+	private fun resize ()
 	{
-		val window = engCtx.window
+		val window = engineContext.window
 		if (window.wide == 0 || window.tall == 0)
 		{
 			return
@@ -407,7 +402,7 @@ class Renderer (engineContext: Engine)
 		}
 
 		val extent = swapChain.extents
-		engCtx.lens.resize(extent.width(), extent.height())
+		engineContext.lens.resize(extent.width(), extent.height())
 
 		renderInfo.forEach { it.free() }
 		attInfoDepth.forEach { it.free() }
@@ -561,12 +556,15 @@ class Renderer (engineContext: Engine)
 	}
 
 	fun createHostVisibleBuffs(
-		buffSize: Long, numBuffs: Int, usage: Int,
-		id: String, layout: DescriptorLayout
+		buffSize: Long,
+		numBuffs: Int,
+		usage: Int,
+		id: String,
+		layout: DescriptorLayout,
 	): List<GPUBuffer>
 	{
 		descAllocator.addDescSets(id, layout, numBuffs)
-		val layoutInfo: DescriptorLayout.Info = layout.layoutInfos.first()
+		val first = layout.layoutInfos.first()
 		return List(numBuffs) {
 			val r = GPUBuffer(
 				this,
@@ -581,8 +579,8 @@ class Renderer (engineContext: Engine)
 				device,
 				r,
 				r.requestedSize,
-				layoutInfo.binding,
-				layoutInfo.descType.vk,
+				first.binding,
+				first.descType.vk,
 			)
 			r
 		}
@@ -594,6 +592,7 @@ class Renderer (engineContext: Engine)
 		layout: DescriptorLayout,
 	): GPUBuffer
 	{
+		val descSet = descAllocator.addDescSets(id, layout, 1).first()
 		val buff = GPUBuffer(
 			this,
 			buffSize,
@@ -602,10 +601,9 @@ class Renderer (engineContext: Engine)
 			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 		)
-		val descSet = descAllocator.addDescSets(id, layout, 1).first()
 		val first = layout.layoutInfos.first()
 		descSet.setBuffer(
-			this.device,
+			device,
 			buff,
 			buff.requestedSize,
 			first.binding,

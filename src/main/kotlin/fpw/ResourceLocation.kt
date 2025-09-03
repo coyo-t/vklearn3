@@ -30,26 +30,24 @@ private constructor (
 	{
 		var DEFAULT_NAMESPACE = "fpw"
 
-		@JvmStatic
 		fun fromParts (ns:String, p:String): ResourceLocation
 		{
 			return ResourceLocation(ns, p)
 		}
 
-		@JvmStatic
-		fun withDefaultNameSpace (p:String): ResourceLocation
+		/// create a resource location using the default namespace
+		fun create (p:String): ResourceLocation
 		{
 			return fromParts(DEFAULT_NAMESPACE, p)
 		}
 
-		@JvmStatic
 		fun tryParse (n:String): ResourceLocation
 		{
 			val sl = n.split(':')
 
 			if (sl.size == 1)
 			{
-				return withDefaultNameSpace(sl.first())
+				return create(sl.first())
 			}
 			return fromParts(sl[0], sl[1])
 		}
