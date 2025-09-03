@@ -22,7 +22,7 @@ class MemAlloc
 
 			val createInfo = VmaAllocatorCreateInfo.calloc(stack)
 				.instance(instance.vkInstance)
-				.vulkanApiVersion(VK_API_VERSION_1_3)
+				.vulkanApiVersion(instance.apiVersion)
 				.device(device.vkDevice)
 				.physicalDevice(physDevice.vkPhysicalDevice)
 				.pVulkanFunctions(vmaVulkanFunctions)

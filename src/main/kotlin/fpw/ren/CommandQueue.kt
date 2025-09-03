@@ -25,9 +25,9 @@ open class CommandQueue (
 	{
 		MemoryStack.stackPush().use { stack ->
 			val pQueue = stack.mallocPointer(1)
-			VK10.vkGetDeviceQueue(vkCtx.device.vkDevice, queueFamilyIndex, queueIndex, pQueue)
+			VK10.vkGetDeviceQueue(vkCtx.gpu.logicalDevice.vkDevice, queueFamilyIndex, queueIndex, pQueue)
 			val queue = pQueue.get(0)
-			vkQueue = VkQueue(queue, vkCtx.device.vkDevice)
+			vkQueue = VkQueue(queue, vkCtx.gpu.logicalDevice.vkDevice)
 		}
 	}
 
@@ -53,7 +53,10 @@ open class CommandQueue (
 				submitInfo.pWaitSemaphoreInfos(waitSemaphores)
 			}
 			val fenceHandle = fence?.vkFence ?: VK10.VK_NULL_HANDLE
-			gpuCheck(VK13.vkQueueSubmit2(vkQueue, submitInfo, fenceHandle), "Failed to submit command to queue")
+			gpuCheck(
+				VK13.vkQueueSubmit2(vkQueue, submitInfo, fenceHandle),
+				"Failed to submit command to queue",
+			)
 		}
 	}
 
@@ -67,7 +70,7 @@ open class CommandQueue (
 
 		internal fun Renderer.getGraphicsQueueFamilyIndex(): Int
 		{
-			val queuePropsBuff = hardware.vkQueueFamilyProps
+			val queuePropsBuff = gpu.hardwareDevice.vkQueueFamilyProps
 			val uhh = queuePropsBuff.indexOfFirst { (it.queueFlags() and VK_QUEUE_GRAPHICS_BIT) != 0 }
 			require(uhh >= 0) {
 				"Failed to get graphics Queue family index"
@@ -78,13 +81,13 @@ open class CommandQueue (
 		internal fun Renderer.getPresentQueueFamilyIndex(): Int
 		{
 			MemoryStack.stackPush().use { stack ->
-				val queuePropsBuff = hardware.vkQueueFamilyProps
+				val queuePropsBuff = gpu.hardwareDevice.vkQueueFamilyProps
 				val numQueuesFamilies: Int = queuePropsBuff.capacity()
 				val intBuff = stack.mallocInt(1)
 				for (i in 0..<numQueuesFamilies)
 				{
 					KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR(
-						hardware.vkPhysicalDevice,
+						gpu.hardwareDevice.vkPhysicalDevice,
 						i, displaySurface.vkSurface, intBuff
 					)
 					if (intBuff.get(0) == VK_TRUE)

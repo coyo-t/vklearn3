@@ -5,6 +5,7 @@ import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
+import org.lwjgl.vulkan.EXTDebugUtils.*
 import org.lwjgl.vulkan.VK13.*
 import java.awt.Color
 import java.lang.foreign.ValueLayout.JAVA_FLOAT
@@ -13,6 +14,22 @@ import java.lang.foreign.ValueLayout.JAVA_INT
 
 object GPUtil
 {
+	const val MESSAGE_SEVERITY_BITMASK = (
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT or
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT or
+		0
+	)
+	const val MESSAGE_TYPE_BITMASK = (
+		VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT or
+		VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT or
+		VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT or
+		0
+	)
+	const val DBG_CALL_BACK_PREF = "VkDebugUtilsCallback\n%s\n"
+	const val PORTABILITY_EXTENSION = "VK_KHR_portability_enumeration"
+	const val VALIDATION_LAYER = "VK_LAYER_KHRONOS_validation"
+
+
 	const val CW_MASK_RGBA = (
 		VK_COLOR_COMPONENT_R_BIT or
 		VK_COLOR_COMPONENT_G_BIT or
@@ -23,10 +40,32 @@ object GPUtil
 	val SIZEOF_FLOAT = JAVA_FLOAT.byteSize().toInt()
 	val SIZEOF_MAT4 = SIZEOF_FLOAT*4*4
 
+	val ERROR_NAMETABLE = mapOf(
+		VK_SUCCESS to "SUCCESS??? THIS IS BOGUS!!!!!!",
+		VK_NOT_READY to "not ready",
+		VK_TIMEOUT to "timed out",
+		VK_EVENT_SET to "event set",
+		VK_EVENT_RESET to "event reset",
+		VK_INCOMPLETE to "incomplete",
+		VK_ERROR_OUT_OF_HOST_MEMORY to "host out of memory",
+		VK_ERROR_OUT_OF_DEVICE_MEMORY to "device out of memory",
+		VK_ERROR_INITIALIZATION_FAILED to "initialization failed",
+		VK_ERROR_DEVICE_LOST to "lost device",
+		VK_ERROR_MEMORY_MAP_FAILED to "memory mapping failed",
+		VK_ERROR_LAYER_NOT_PRESENT to "layer isn't present",
+		VK_ERROR_EXTENSION_NOT_PRESENT to "extension isn't present",
+		VK_ERROR_FEATURE_NOT_PRESENT to "feature isn't present",
+		VK_ERROR_INCOMPATIBLE_DRIVER to "driver's incompatible",
+		VK_ERROR_TOO_MANY_OBJECTS to "too many objects",
+		VK_ERROR_FORMAT_NOT_SUPPORTED to "unsupported format",
+		VK_ERROR_FRAGMENTED_POOL to "fragmented pool",
+		VK_ERROR_UNKNOWN to "unknown",
+	).withDefault { "unmapped??? #$it" }
+
 	fun memoryTypeFromProperties(vkCtx: Renderer, typeBits: Int, reqsMask: Int): Int
 	{
 		var typeBits = typeBits
-		val memoryTypes: VkMemoryType.Buffer = vkCtx.hardware.vkMemoryProperties.memoryTypes()
+		val memoryTypes: VkMemoryType.Buffer = vkCtx.gpu.hardwareDevice.vkMemoryProperties.memoryTypes()
 		for (i in 0..<VK_MAX_MEMORY_TYPES)
 		{
 			if ((typeBits and 1) == 1 && (memoryTypes[i].propertyFlags() and reqsMask) == reqsMask)
@@ -76,29 +115,6 @@ object GPUtil
 
 		vkCmdPipelineBarrier2(cmdHandle, dependencyInfo)
 	}
-
-
-	val ERROR_NAMETABLE = mapOf(
-		VK_SUCCESS to "SUCCESS??? THIS IS BOGUS!!!!!!",
-		VK_NOT_READY to "not ready",
-		VK_TIMEOUT to "timed out",
-		VK_EVENT_SET to "event set",
-		VK_EVENT_RESET to "event reset",
-		VK_INCOMPLETE to "incomplete",
-		VK_ERROR_OUT_OF_HOST_MEMORY to "host out of memory",
-		VK_ERROR_OUT_OF_DEVICE_MEMORY to "device out of memory",
-		VK_ERROR_INITIALIZATION_FAILED to "initialization failed",
-		VK_ERROR_DEVICE_LOST to "lost device",
-		VK_ERROR_MEMORY_MAP_FAILED to "memory mapping failed",
-		VK_ERROR_LAYER_NOT_PRESENT to "layer isn't present",
-		VK_ERROR_EXTENSION_NOT_PRESENT to "extension isn't present",
-		VK_ERROR_FEATURE_NOT_PRESENT to "feature isn't present",
-		VK_ERROR_INCOMPATIBLE_DRIVER to "driver's incompatible",
-		VK_ERROR_TOO_MANY_OBJECTS to "too many objects",
-		VK_ERROR_FORMAT_NOT_SUPPORTED to "unsupported format",
-		VK_ERROR_FRAGMENTED_POOL to "fragmented pool",
-		VK_ERROR_UNKNOWN to "unknown",
-	).withDefault { "unmapped??? #$it" }
 
 	fun gpuCheck(err:Int, messageProvider:(Int)->String?)
 	{

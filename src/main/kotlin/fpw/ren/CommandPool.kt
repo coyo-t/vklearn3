@@ -28,7 +28,7 @@ class CommandPool (
 
 			val lp = stack.mallocLong(1)
 			gpuCheck(
-				vkCreateCommandPool(vkCtx.device.vkDevice, cmdPoolInfo, null, lp),
+				vkCreateCommandPool(vkCtx.gpu.logicalDevice.vkDevice, cmdPoolInfo, null, lp),
 				"Failed to create command pool"
 			)
 			vkCommandPool = lp[0]
@@ -37,11 +37,11 @@ class CommandPool (
 
 	fun reset ()
 	{
-		vkResetCommandPool(vkCtx.device.vkDevice, vkCommandPool, 0)
+		vkResetCommandPool(vkCtx.gpu.logicalDevice.vkDevice, vkCommandPool, 0)
 	}
 
 	fun free ()
 	{
-		vkDestroyCommandPool(vkCtx.device.vkDevice, vkCommandPool, null)
+		vkDestroyCommandPool(vkCtx.gpu.logicalDevice.vkDevice, vkCommandPool, null)
 	}
 }

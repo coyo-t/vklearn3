@@ -29,12 +29,9 @@ class SwapChain (
 	vsync: Boolean,
 )
 {
-//	val imageViews: List<ImageView>
 	val extents: VkExtent2D
 	val vkSwapChain: Long
 	val renderThinger: List<InProgressRenderThinger>
-
-	val imageCount get() = renderThinger.size
 
 	init
 	{
@@ -95,30 +92,28 @@ class SwapChain (
 			vkSwapChain = lp.get(0)
 //			imageViews = emptyList()
 
-			renderThinger = run {
-				val ip = stack.mallocInt(1)
-				gpuCheck(
-					vkGetSwapchainImagesKHR(device.vkDevice, vkSwapChain, ip, null),
-					"failed to get number of surface images"
+			val ip = stack.mallocInt(1)
+			gpuCheck(
+				vkGetSwapchainImagesKHR(device.vkDevice, vkSwapChain, ip, null),
+				"failed to get number of surface images"
+			)
+			val numImages = ip.get(0)
+			val swapChainImages = stack.mallocLong(numImages)
+			gpuCheck(
+				vkGetSwapchainImagesKHR(device.vkDevice, vkSwapChain, ip, swapChainImages),
+				"failed to get surface images"
+			)
+			val imageViewData = Data(
+				format = surfaceFormat.imageFormat,
+				aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+			)
+			renderThinger = List(numImages) {
+				val im = ImageView(device, swapChainImages[it], imageViewData, false)
+				InProgressRenderThinger(
+					renderer,
+					this,
+					im,
 				)
-				val numImages = ip.get(0)
-				val swapChainImages = stack.mallocLong(numImages)
-				gpuCheck(
-					vkGetSwapchainImagesKHR(device.vkDevice, vkSwapChain, ip, swapChainImages),
-					"failed to get surface images"
-				)
-				val imageViewData = Data(
-					format = surfaceFormat.imageFormat,
-					aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-				)
-				List(numImages) {
-					val im = ImageView(device, swapChainImages[it], imageViewData, false)
-					InProgressRenderThinger(
-						renderer,
-						this,
-						im,
-					)
-				}
 			}
 		}
 	}

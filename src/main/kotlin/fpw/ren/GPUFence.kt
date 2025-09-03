@@ -22,7 +22,7 @@ class GPUFence (
 				.flags(if (signaled) VK_FENCE_CREATE_SIGNALED_BIT else 0)
 			val lp = stack.mallocLong(1)
 			gpuCheck(
-				vkCreateFence(context.vkDevice, fenceCreateInfo, null, lp),
+				vkCreateFence(context.gpu.logicalDevice.vkDevice, fenceCreateInfo, null, lp),
 				"Failed to create fence",
 			)
 			vkFence = lp[0]
@@ -32,16 +32,16 @@ class GPUFence (
 
 	fun free ()
 	{
-		vkDestroyFence(context.vkDevice, vkFence, null)
+		vkDestroyFence(context.gpu.logicalDevice.vkDevice, vkFence, null)
 	}
 
 	fun waitForFences()
 	{
-		vkWaitForFences(context.vkDevice, vkFence, true, Long.MAX_VALUE)
+		vkWaitForFences(context.gpu.logicalDevice.vkDevice, vkFence, true, Long.MAX_VALUE)
 	}
 
 	fun reset()
 	{
-		vkResetFences(context.vkDevice, vkFence)
+		vkResetFences(context.gpu.logicalDevice.vkDevice, vkFence)
 	}
 }

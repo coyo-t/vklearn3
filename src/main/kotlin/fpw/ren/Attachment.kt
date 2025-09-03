@@ -45,7 +45,7 @@ class Attachment (
 
 		)
 		imageView = ImageView(
-			context.device,
+			context.gpu.logicalDevice,
 			image.vkImage,
 			imageViewData,
 			isDepthImage = isDepthAttachment,

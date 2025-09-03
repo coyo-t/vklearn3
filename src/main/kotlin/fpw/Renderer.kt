@@ -9,7 +9,6 @@ import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE
 import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
 import org.lwjgl.vulkan.VK14.*
 import org.lwjgl.vulkan.VkShaderModuleCreateInfo.calloc
 import java.awt.Color
@@ -18,7 +17,6 @@ import java.nio.ByteBuffer
 
 class Renderer (val engineContext: Engine)
 {
-
 	val maxInFlightFrameCount = 2
 	val preferredImageBufferingCount = 3
 	var useVerticalSync = false
@@ -31,28 +29,28 @@ class Renderer (val engineContext: Engine)
 	}
 
 	val instance = GPUInstance(
+		this,
+		VK_API_VERSION_1_3,
 		validate = useValidationLayers,
 	)
-	val hardware = HardwareDevice.createPhysicalDevice(
-		instance,
-		prefDeviceName = preferredPhysicalDevice,
+
+	val gpu = GPUDevice(
+		this,
+		preferredPhysicalDevice,
 	)
-	val device = LogicalDevice(hardware)
 
-	val memAlloc = MemAlloc(instance, hardware, device)
+	val memAlloc = MemAlloc(instance, gpu.hardwareDevice, gpu.logicalDevice)
 
-	var displaySurface = DisplaySurface(instance, hardware, engineContext.window)
+	var displaySurface = DisplaySurface(instance, gpu.hardwareDevice, engineContext.window)
 	var swapChain = SwapChain(
 		this,
-		device,
+		gpu.logicalDevice,
 		engineContext.window.wide,
 		engineContext.window.tall,
 		displaySurface,
 		preferredImageBufferingCount,
 		useVerticalSync,
 	)
-
-	val vkDevice get() = device.vkDevice
 
 	val pipelineCache = createPipelineCache()
 
@@ -70,7 +68,7 @@ class Renderer (val engineContext: Engine)
 	private var doResize = false
 
 
-	val descAllocator = DescriptorAllocator(hardware, device)
+	val descAllocator = DescriptorAllocator(gpu.hardwareDevice, gpu.logicalDevice)
 
 	val mvMatrix = Matrix4f()
 
@@ -322,14 +320,14 @@ class Renderer (val engineContext: Engine)
 			return
 		}
 		doResize = false
-		device.waitIdle()
+		gpu.logicalDevice.waitIdle()
 
 		swapChain.free()
 		displaySurface.free(instance)
-		displaySurface = DisplaySurface(instance, hardware, window)
+		displaySurface = DisplaySurface(instance, gpu.hardwareDevice, window)
 		swapChain = SwapChain(
 			this,
-			device,
+			gpu.logicalDevice,
 			window.wide,
 			window.tall,
 			displaySurface,
@@ -353,7 +351,7 @@ class Renderer (val engineContext: Engine)
 
 			val lp = stack.mallocLong(1)
 			gpuCheck(
-				vkCreateShaderModule(vkDevice, moduleCreateInfo, null, lp),
+				vkCreateShaderModule(gpu.logicalDevice.vkDevice, moduleCreateInfo, null, lp),
 				"Failed to create shader module"
 			)
 			lp.get(0)
@@ -386,7 +384,7 @@ class Renderer (val engineContext: Engine)
 			)
 			val descSet = descAllocator.getDescSet(id, it)
 			descSet.setBuffer(
-				device,
+				gpu.logicalDevice,
 				r,
 				r.requestedSize,
 				first.binding,
@@ -413,7 +411,7 @@ class Renderer (val engineContext: Engine)
 		)
 		val first = layout.layoutInfos.first()
 		descSet.setBuffer(
-			device,
+			gpu.logicalDevice,
 			buff,
 			buff.requestedSize,
 			first.binding,
@@ -428,7 +426,7 @@ class Renderer (val engineContext: Engine)
 			val createInfo = VkPipelineCacheCreateInfo.calloc(stack).`sType$Default`()
 			val lp = stack.mallocLong(1)
 			gpuCheck(
-				vkCreatePipelineCache(device.vkDevice, createInfo, null, lp),
+				vkCreatePipelineCache(gpu.logicalDevice.vkDevice, createInfo, null, lp),
 				"Error creating pipeline cache"
 			)
 			lp.get(0)
@@ -438,7 +436,7 @@ class Renderer (val engineContext: Engine)
 
 	fun free()
 	{
-		device.waitIdle()
+		gpu.logicalDevice.waitIdle()
 		textureManager.free()
 
 		descriptorLayoutVertexStage.free()
@@ -456,8 +454,7 @@ class Renderer (val engineContext: Engine)
 		swapChain.free()
 		displaySurface.free(instance)
 		memAlloc.free()
-		device.free()
-		hardware.free()
-		instance.close()
+		gpu.free()
+		instance.free()
 	}
 }

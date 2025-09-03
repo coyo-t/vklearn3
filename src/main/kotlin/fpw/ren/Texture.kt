@@ -62,7 +62,7 @@ class Texture
 			),
 		)
 		imageView = ImageView(
-			vkCtx.device,
+			vkCtx.gpu.logicalDevice,
 			image.vkImage,
 			ImageView.Data(
 				format = image.format,

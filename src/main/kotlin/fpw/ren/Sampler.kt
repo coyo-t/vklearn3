@@ -40,14 +40,14 @@ class Sampler (
 //			}
 
 		val lp = stack.mallocLong(1)
-		gpuCheck(vkCreateSampler(vkCtx.vkDevice, samplerInfo, null, lp), "Failed to create sampler")
+		gpuCheck(vkCreateSampler(vkCtx.gpu.logicalDevice.vkDevice, samplerInfo, null, lp), "Failed to create sampler")
 		lp[0]
 	}
 
 
 	fun free ()
 	{
-		vkDestroySampler(vkCtx.vkDevice, vkSampler, null)
+		vkDestroySampler(vkCtx.gpu.logicalDevice.vkDevice, vkSampler, null)
 	}
 }
 

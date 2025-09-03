@@ -20,7 +20,7 @@ class Semaphore (
 			val semaphoreCreateInfo = VkSemaphoreCreateInfo.calloc(stack).`sType$Default`()
 			val lp = stack.mallocLong(1)
 			gpuCheck(
-				vkCreateSemaphore(context.vkDevice, semaphoreCreateInfo, null, lp),
+				vkCreateSemaphore(context.gpu.logicalDevice.vkDevice, semaphoreCreateInfo, null, lp),
 				"Failed to create semaphore"
 			)
 			vkSemaphore = lp[0]
@@ -29,6 +29,6 @@ class Semaphore (
 
 	fun free ()
 	{
-		vkDestroySemaphore(context.vkDevice, vkSemaphore, null)
+		vkDestroySemaphore(context.gpu.logicalDevice.vkDevice, vkSemaphore, null)
 	}
 }

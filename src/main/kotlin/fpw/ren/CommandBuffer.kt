@@ -21,7 +21,7 @@ class CommandBuffer
 	)
 	{
 		this.oneTimeSubmit = oneTimeSubmit
-		val vkDevice = vkCtx.vkDevice
+		val vkDevice = vkCtx.gpu.logicalDevice.vkDevice
 		inheritanceInfo = inherit
 
 		MemoryStack.stackPush().use { stack ->
@@ -82,7 +82,7 @@ class CommandBuffer
 	fun free(vkCtx: Renderer, cmdPool: CommandPool)
 	{
 		vkFreeCommandBuffers(
-			vkCtx.device.vkDevice, cmdPool.vkCommandPool,
+			vkCtx.gpu.logicalDevice.vkDevice, cmdPool.vkCommandPool,
 			vkCommandBuffer
 		)
 	}

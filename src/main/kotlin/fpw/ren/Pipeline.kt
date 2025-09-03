@@ -27,7 +27,7 @@ class Pipeline (
 
 	init
 	{
-		val device = renderer.device
+		val device = renderer.gpu.logicalDevice
 		MemoryStack.stackPush().use { stack ->
 			val lp = stack.mallocLong(1)
 			val main = stack.UTF8("main")
@@ -56,7 +56,7 @@ class Pipeline (
 			val rasterState = VkPipelineRasterizationStateCreateInfo.calloc(stack)
 			rasterState.`sType$Default`()
 			rasterState.polygonMode(VK_POLYGON_MODE_FILL)
-			rasterState.cullMode(VK_CULL_MODE_NONE)
+			rasterState.cullMode(VK_CULL_MODE_BACK_BIT)
 			rasterState.frontFace(VK_FRONT_FACE_CLOCKWISE)
 			rasterState.lineWidth(1f)
 
@@ -179,7 +179,7 @@ class Pipeline (
 
 	fun free ()
 	{
-		val vkDevice = renderer.vkDevice
+		val vkDevice = renderer.gpu.logicalDevice.vkDevice
 		vkDestroyPipelineLayout(vkDevice, vkPipelineLayout, null)
 		vkDestroyPipeline(vkDevice, vkPipeline, null)
 	}

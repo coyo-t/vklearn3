@@ -39,7 +39,7 @@ class DescriptorLayout (
 
 			val pSetLayout = stack.mallocLong(1)
 			gpuCheck(
-				vkCreateDescriptorSetLayout(vkCtx.vkDevice, vkLayoutInfo, null, pSetLayout),
+				vkCreateDescriptorSetLayout(vkCtx.gpu.logicalDevice.vkDevice, vkLayoutInfo, null, pSetLayout),
 				"Failed to create descriptor set layout"
 			)
 			vkDescLayout = pSetLayout.get(0)
@@ -48,7 +48,7 @@ class DescriptorLayout (
 
 	fun free ()
 	{
-		vkDestroyDescriptorSetLayout(vkCtx.vkDevice, vkDescLayout, null)
+		vkDestroyDescriptorSetLayout(vkCtx.gpu.logicalDevice.vkDevice, vkDescLayout, null)
 	}
 
 	data class Info(

@@ -1,6 +1,12 @@
 package fpw.ren
 
 import fpw.FUtil
+import fpw.Renderer
+import fpw.ren.GPUtil.DBG_CALL_BACK_PREF
+import fpw.ren.GPUtil.MESSAGE_SEVERITY_BITMASK
+import fpw.ren.GPUtil.MESSAGE_TYPE_BITMASK
+import fpw.ren.GPUtil.PORTABILITY_EXTENSION
+import fpw.ren.GPUtil.VALIDATION_LAYER
 import fpw.ren.GPUtil.gpuCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFWVulkan
@@ -12,7 +18,11 @@ import org.lwjgl.vulkan.KHRPortabilityEnumeration.VK_INSTANCE_CREATE_ENUMERATE_P
 import org.lwjgl.vulkan.VK13.*
 
 
-class GPUInstance (validate: Boolean)
+class GPUInstance (
+	val renderer: Renderer,
+	val apiVersion: Int,
+	validate: Boolean,
+)
 {
 	var vkInstance: VkInstance
 		private set
@@ -21,17 +31,16 @@ class GPUInstance (validate: Boolean)
 
 	init
 	{
-//		Main.logDebug("Creating Vulkan instance")
 		MemoryStack.stackPush().use { stack ->
 			// Create application information
-			val appShortName = stack.UTF8("VulkanBook")
+			val appShortName = stack.UTF8("MACHINE WITNESS")
 			val appInfo = VkApplicationInfo.calloc(stack)
-				.`sType$Default`()
-				.pApplicationName(appShortName)
-				.applicationVersion(1)
-				.pEngineName(appShortName)
-				.engineVersion(0)
-				.apiVersion(VK_API_VERSION_1_3)
+			appInfo.`sType$Default`()
+			appInfo.pApplicationName(appShortName)
+			appInfo.applicationVersion(1)
+			appInfo.pEngineName(appShortName)
+			appInfo.engineVersion(0)
+			appInfo.apiVersion(apiVersion)
 
 			// Validation layers
 			val validationLayers = getSupportedValidationLayers()
@@ -42,9 +51,7 @@ class GPUInstance (validate: Boolean)
 				supportsValidation = false
 				FUtil.logWarn("requested validation but no supported validation layers found :[")
 			}
-//			Main.logDebug("gpu validation: $supportsValidation")
 
-			// Set required  layers
 			var requiredLayers: PointerBuffer? = null
 			if (supportsValidation)
 			{
@@ -52,7 +59,6 @@ class GPUInstance (validate: Boolean)
 				for (i in 0..<numValidationLayers)
 				{
 					val args = validationLayers[i]
-//					Main.logDebug("using validation layer [$args]")
 					requiredLayers.put(i, stack.ASCII(args))
 				}
 			}
@@ -161,18 +167,9 @@ class GPUInstance (validate: Boolean)
 			val numExtensions = numExtensionsBuf.get(0)
 			val instanceExtensionsProps = VkExtensionProperties.calloc(numExtensions, stack)
 			vkEnumerateInstanceExtensionProperties(null as String?, numExtensionsBuf, instanceExtensionsProps)
-			return buildSet {
-//				val sb = StringBuilder()
-//				sb.append("Instance supports [$numExtensions] extensions")
-				for (i in 0..<numExtensions)
-				{
-					val props = instanceExtensionsProps.get(i)
-					val extensionName = props.extensionNameString()
-					add(extensionName)
-//					sb.appendLine("\t$extensionName")
-				}
-//				Main.logDebug(sb.toString())
-			}
+			return List(numExtensions) {
+				instanceExtensionsProps.get(it).extensionNameString()
+			}.toSet()
 		}
 	}
 
@@ -184,19 +181,9 @@ class GPUInstance (validate: Boolean)
 			val numLayers = numLayersArr[0]
 			val propsBuf = VkLayerProperties.calloc(numLayers, stack)
 			vkEnumerateInstanceLayerProperties(numLayersArr, propsBuf)
-			val supportedLayers = buildList {
-//				val sb = StringBuilder()
-//				sb.append("Instance supports [$numLayers] layers")
-				for (i in 0..<numLayers)
-				{
-					val props = propsBuf.get(i)
-					val layerName = props.layerNameString()
-					add(layerName)
-//					sb.appendLine("\t$layerName")
-				}
-//				Main.logDebug(sb.toString())
+			val supportedLayers = List(numLayers) {
+				propsBuf.get(it).layerNameString()
 			}
-
 			// Main validation layer
 			return buildList {
 				if (supportedLayers.contains(VALIDATION_LAYER))
@@ -207,9 +194,8 @@ class GPUInstance (validate: Boolean)
 		}
 	}
 
-	fun close()
+	fun free ()
 	{
-//		Main.logDebug("Destroying Vulkan instance")
 		if (vkDebugHandle != VK_NULL_HANDLE)
 		{
 			vkDestroyDebugUtilsMessengerEXT(vkInstance, vkDebugHandle, null)
@@ -220,24 +206,4 @@ class GPUInstance (validate: Boolean)
 			free()
 		}
 	}
-
-	companion object
-	{
-		const val MESSAGE_SEVERITY_BITMASK = (
-			VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT or
-			VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT or
-			0
-		)
-		const val MESSAGE_TYPE_BITMASK = (
-			VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT or
-			VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT or
-			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT or
-			0
-		)
-		const val DBG_CALL_BACK_PREF = "VkDebugUtilsCallback\n%s\n"
-		const val PORTABILITY_EXTENSION = "VK_KHR_portability_enumeration"
-		const val VALIDATION_LAYER = "VK_LAYER_KHRONOS_validation"
-
-	}
-
 }

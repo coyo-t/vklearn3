@@ -11,6 +11,6 @@ class PipelineCache (
 {
 	fun free ()
 	{
-		vkDestroyPipelineCache(context.vkDevice, vkPipelineCache, null)
+		vkDestroyPipelineCache(context.gpu.logicalDevice.vkDevice, vkPipelineCache, null)
 	}
 }

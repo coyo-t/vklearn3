@@ -12,6 +12,6 @@ class ShaderModule (
 {
 	fun free()
 	{
-		vkDestroyShaderModule(renderer.vkDevice, handle, null)
+		vkDestroyShaderModule(renderer.gpu.logicalDevice.vkDevice, handle, null)
 	}
 }
