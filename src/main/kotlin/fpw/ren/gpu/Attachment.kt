@@ -1,6 +1,7 @@
 package fpw.ren.gpu
 
 import fpw.Renderer
+import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT
 import org.lwjgl.vulkan.VK14.*
 
 
@@ -25,6 +26,7 @@ class Attachment (
 			tall = height,
 			usage = usage or VK_IMAGE_USAGE_SAMPLED_BIT,
 			format = format,
+			memUsage = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
 		)
 		image = GPUImage(context, imageData)
 
@@ -53,7 +55,7 @@ class Attachment (
 
 	{
 		imageView.free(context.device)
-		image.free(context)
+		image.free()
 	}
 
 	companion object

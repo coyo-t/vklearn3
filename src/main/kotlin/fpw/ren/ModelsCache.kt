@@ -5,6 +5,8 @@ import fpw.ren.gpu.*
 import fpw.ren.gpu.CommandQueue
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO
 import org.lwjgl.vulkan.VK14.*
 import org.lwjgl.vulkan.VkBufferCopy
 import kotlin.use
@@ -60,13 +62,17 @@ class ModelsCache (val context: Renderer)
 			context,
 			bufferSize,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+			VMA_MEMORY_USAGE_AUTO,
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 		)
 		val dstBuffer = GPUBuffer(
 			context,
 			bufferSize,
 			VK_BUFFER_USAGE_TRANSFER_DST_BIT or VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+			VMA_MEMORY_USAGE_AUTO,
+			0,
+			0,
 		)
 
 		srcBuffer.doMapped { mapped ->
@@ -92,13 +98,17 @@ class ModelsCache (val context: Renderer)
 			context,
 			bufferSize,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			VMA_MEMORY_USAGE_AUTO,
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 		)
 		val dstBuffer = GPUBuffer(
 			context,
 			bufferSize,
 			VK_BUFFER_USAGE_TRANSFER_DST_BIT or VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+			VMA_MEMORY_USAGE_AUTO,
+			0,
+			0,
 		)
 
 		srcBuffer.doMapped { mappedMemory ->

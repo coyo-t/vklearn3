@@ -11,6 +11,8 @@ import fpw.ren.gpu.GPUtil.imageBarrier
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.shaderc.Shaderc
+import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
@@ -31,6 +33,7 @@ class Renderer (engineContext: Engine)
 	var preferredPhysicalDevice: String? = null
 	var useValidationLayers = true
 
+
 	val instance = GPUInstance(
 		validate = useValidationLayers,
 	)
@@ -39,6 +42,9 @@ class Renderer (engineContext: Engine)
 		prefDeviceName = preferredPhysicalDevice,
 	)
 	val device = LogicalDevice(hardware)
+
+	val memAlloc = MemAlloc(instance, hardware, device)
+
 	var displaySurface = DisplaySurface(instance, hardware, engineContext.window)
 	var swapChain = SwapChain(
 		engineContext.window.wide,
@@ -598,7 +604,9 @@ class Renderer (engineContext: Engine)
 				this,
 				buffSize,
 				usage,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+				VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+				VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 			)
 			val descSet = descAllocator.getDescSet(id, it)
 			descSet.setBuffer(
@@ -622,7 +630,9 @@ class Renderer (engineContext: Engine)
 			this,
 			buffSize,
 			usage,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 		)
 		val descSet = descAllocator.addDescSets(id, layout, 1).first()
 		val first = layout.layoutInfos.first()

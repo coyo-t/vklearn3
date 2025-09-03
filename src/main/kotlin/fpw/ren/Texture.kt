@@ -4,14 +4,12 @@ import fpw.FUtil
 import fpw.Image
 import fpw.Renderer
 import fpw.ren.gpu.*
-import fpw.ren.gpu.GPUBuffer
 import fpw.ren.gpu.GPUtil.imageBarrier
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.vulkan.VK10.VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO
 import org.lwjgl.vulkan.VK10.VK_IMAGE_ASPECT_COLOR_BIT
 import org.lwjgl.vulkan.VK10.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-import org.lwjgl.vulkan.VK10.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-import org.lwjgl.vulkan.VK10.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
 import org.lwjgl.vulkan.VK10.vkCmdCopyBufferToImage
 import org.lwjgl.vulkan.VK14.*
 import org.lwjgl.vulkan.VkBufferImageCopy.calloc
@@ -41,12 +39,11 @@ class Texture
 				vkCtx,
 				size,
 				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				(
-					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or
-					VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-				)
+				VMA_MEMORY_USAGE_AUTO,
+				VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 			)
-			stgBuffer.doMapped() {
+			stgBuffer.doMapped {
 				val buffer = FUtil.createMemoryAt(it, stgBuffer.requestedSize)
 				buffer.copyFrom(srcImage.data)
 			}
@@ -80,7 +77,7 @@ class Texture
 	{
 		cleanupStgBuffer(vkCtx)
 		imageView.free(vkCtx.device)
-		image.free(vkCtx)
+		image.free()
 	}
 
 	fun cleanupStgBuffer(vkCtx: Renderer)
