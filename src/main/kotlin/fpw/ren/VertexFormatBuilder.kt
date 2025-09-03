@@ -1,6 +1,5 @@
 package fpw.ren
 
-import fpw.ren.VertexFormat
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription

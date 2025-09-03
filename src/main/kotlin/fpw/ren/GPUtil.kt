@@ -1,15 +1,19 @@
 package fpw.ren
 
+import fpw.FUtil
 import fpw.Renderer
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.nmemFree
+import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugUtils.*
 import org.lwjgl.vulkan.VK13.*
 import java.awt.Color
 import java.lang.foreign.ValueLayout.JAVA_FLOAT
 import java.lang.foreign.ValueLayout.JAVA_INT
+import java.lang.ref.Cleaner
 
 
 object GPUtil
@@ -61,6 +65,55 @@ object GPUtil
 		VK_ERROR_FRAGMENTED_POOL to "fragmented pool",
 		VK_ERROR_UNKNOWN to "unknown",
 	).withDefault { "unmapped??? #$it" }
+
+	val CLEANER = Cleaner.create()
+
+	class PointerCleanerUpper (
+		val nameTag: String?,
+		val ptrs: LongArray,
+	): Runnable
+	{
+		constructor(nameTag: String?, addr: Long):
+			this(nameTag, longArrayOf(addr))
+
+		override fun run()
+		{
+			nameTag?.run {
+				FUtil.logInfo("FREEING $nameTag :)")
+			}
+			for (it in ptrs)
+			{
+				nmemFree(it)
+			}
+		}
+	}
+
+	fun <T: Pointer.Default> registerPointerForCleanup (who: T): T
+	{
+		CLEANER.register(who, PointerCleanerUpper(null, who.address()))
+		return who
+	}
+
+	fun registerPointersForCleanup (who: Any, vararg ptr: Long)
+	{
+		CLEANER.register(who, PointerCleanerUpper(who.javaClass.toString(), ptr))
+	}
+
+	fun registerPointersForCleanup (who:Any, vararg ptr: Pointer.Default)
+	{
+		CLEANER.register(
+			who,
+			PointerCleanerUpper(
+				who.javaClass.toString(),
+				ptr.map { it.address() }.toLongArray()
+			)
+		)
+	}
+
+	fun forceCleanup ()
+	{
+		System.gc()
+	}
 
 	fun memoryTypeFromProperties(vkCtx: Renderer, typeBits: Int, reqsMask: Int): Int
 	{
@@ -134,9 +187,14 @@ object GPUtil
 		}
 	}
 
-	fun clearTintFrom (c: Color): VkClearValue
+	fun createClearValue (): VkClearValue
 	{
-		return VkClearValue.calloc().color {
+		return registerPointerForCleanup(VkClearValue.calloc())
+	}
+
+	fun createClearValue (c: Color): VkClearValue
+	{
+		return createClearValue().color {
 			it
 			.float32(0, c.red / 255f)
 			.float32(1, c.green / 255f)

@@ -1,5 +1,7 @@
 package fpw.ren
 
+import fpw.FUtil
+import org.lwjgl.system.MemoryUtil.nmemFree
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
@@ -12,10 +14,13 @@ class VertexFormat (
 	val stride: Int,
 )
 {
-	fun free ()
+	init
 	{
-		viBindings.free()
-		viAttrs.free()
-		vi.free()
+		GPUtil.registerPointersForCleanup(
+			this,
+			vi,
+			viAttrs,
+			viBindings,
+		)
 	}
 }

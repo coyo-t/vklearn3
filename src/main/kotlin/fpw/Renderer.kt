@@ -2,6 +2,7 @@ package fpw
 
 import fpw.ren.*
 import fpw.ren.GPUtil.imageBarrier
+import fpw.ren.VertexFormatBuilder.Companion.buildVertexFormat
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
@@ -20,8 +21,8 @@ class Renderer (val engineContext: Engine)
 	var preferredPhysicalDevice: String? = null
 	var useValidationLayers = true
 
-	val clrValueColor = GPUtil.clearTintFrom(Color(0x7FB2E5))
-	val clrValueDepth = VkClearValue.calloc().color {
+	val clrValueColor = GPUtil.createClearValue(Color(0x7FB2E5))
+	val clrValueDepth = GPUtil.createClearValue().color {
 		it.float32(0, 1f)
 	}
 
@@ -126,6 +127,13 @@ class Renderer (val engineContext: Engine)
 
 	fun init ()
 	{
+		val test = buildVertexFormat {
+			location3D()
+			texcoord2D()
+			normal()
+			tint8()
+		}
+
 	}
 
 
