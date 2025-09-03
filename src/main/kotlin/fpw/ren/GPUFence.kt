@@ -4,7 +4,7 @@ import fpw.Renderer
 import org.lwjgl.vulkan.VK10.*
 
 
-class GPUFence(val vkFence: Long)
+class GPUFence (val vkFence: Long)
 {
 	fun free (context: Renderer)
 	{

@@ -32,82 +32,79 @@ class Pipeline (
 			val lp = stack.mallocLong(1)
 			val main = stack.UTF8("main")
 
-			val shaderModules = shaderModules
 			val numModules = shaderModules.size
 			val shaderStages = VkPipelineShaderStageCreateInfo.calloc(numModules, stack)
 			for (i in 0..<numModules)
 			{
 				val shaderModule = shaderModules[i]
-				shaderStages.get(i)
-					.`sType$Default`()
-					.stage(shaderModule.shaderStage)
-					.module(shaderModule.handle)
-					.pName(main)
+				val shStage = shaderStages.get(i)
+				shStage.`sType$Default`()
+				shStage.stage(shaderModule.shaderStage)
+				shStage.module(shaderModule.handle)
+				shStage.pName(main)
 			}
 
-			val assemblyStateCreateInfo = VkPipelineInputAssemblyStateCreateInfo.calloc(stack)
-				.`sType$Default`()
-				.topology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+			val assemblyState = VkPipelineInputAssemblyStateCreateInfo.calloc(stack)
+			assemblyState.`sType$Default`()
+			assemblyState.topology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
 
-			val viewportStateCreateInfo = VkPipelineViewportStateCreateInfo.calloc(stack)
-				.`sType$Default`()
-				.viewportCount(1)
-				.scissorCount(1)
+			val viewportState = VkPipelineViewportStateCreateInfo.calloc(stack)
+			viewportState.`sType$Default`()
+			viewportState.viewportCount(1)
+			viewportState.scissorCount(1)
 
-			val rasterizationStateCreateInfo = VkPipelineRasterizationStateCreateInfo.calloc(stack)
-				.`sType$Default`()
-				.polygonMode(VK_POLYGON_MODE_FILL)
-				.cullMode(VK_CULL_MODE_NONE)
-				.frontFace(VK_FRONT_FACE_CLOCKWISE)
-				.lineWidth(1.0f)
+			val rasterState = VkPipelineRasterizationStateCreateInfo.calloc(stack)
+			rasterState.`sType$Default`()
+			rasterState.polygonMode(VK_POLYGON_MODE_FILL)
+			rasterState.cullMode(VK_CULL_MODE_NONE)
+			rasterState.frontFace(VK_FRONT_FACE_CLOCKWISE)
+			rasterState.lineWidth(1f)
 
-			val multisampleStateCreateInfo = VkPipelineMultisampleStateCreateInfo.calloc(stack)
-				.`sType$Default`()
-				.rasterizationSamples(VK_SAMPLE_COUNT_1_BIT)
+			val multisampleState = VkPipelineMultisampleStateCreateInfo.calloc(stack)
+			multisampleState.`sType$Default`()
+			multisampleState.rasterizationSamples(VK_SAMPLE_COUNT_1_BIT)
 
-			val dynamicStateCreateInfo = VkPipelineDynamicStateCreateInfo.calloc(stack)
-				.`sType$Default`()
-				.pDynamicStates(
-					stack.ints(
-						VK_DYNAMIC_STATE_VIEWPORT,
-						VK_DYNAMIC_STATE_SCISSOR
-					)
+			val dynamicState = VkPipelineDynamicStateCreateInfo.calloc(stack)
+			dynamicState.`sType$Default`()
+			dynamicState.pDynamicStates(
+				stack.ints(
+					VK_DYNAMIC_STATE_VIEWPORT,
+					VK_DYNAMIC_STATE_SCISSOR,
 				)
+			)
 
-			val blendAttState = VkPipelineColorBlendAttachmentState.calloc(1, stack)
-				.colorWriteMask(
-					GPUtil.CW_MASK_RGBA
-				)
-				.blendEnable(false)
+			val blendAttachState = VkPipelineColorBlendAttachmentState.calloc(1, stack)
+			blendAttachState.colorWriteMask(GPUtil.CW_MASK_RGBA)
+			blendAttachState.blendEnable(false)
 
 			val colorBlendState = VkPipelineColorBlendStateCreateInfo.calloc(stack)
-				.`sType$Default`()
-				.pAttachments(blendAttState)
+			colorBlendState.`sType$Default`()
+			colorBlendState.pAttachments(blendAttachState)
 
 			val ds = if (depthFormat != VK_FORMAT_UNDEFINED)
 			{
-				VkPipelineDepthStencilStateCreateInfo.calloc(stack)
-					.`sType$Default`()
-					.depthTestEnable(true)
-					.depthWriteEnable(true)
-					.depthCompareOp(VK_COMPARE_OP_LESS_OR_EQUAL)
-					.depthBoundsTestEnable(false)
-					.stencilTestEnable(false)
+				val it = VkPipelineDepthStencilStateCreateInfo.calloc(stack)
+				it.`sType$Default`()
+				it.depthTestEnable(true)
+				it.depthWriteEnable(true)
+				it.depthCompareOp(VK_COMPARE_OP_LESS_OR_EQUAL)
+				it.depthBoundsTestEnable(false)
+				it.stencilTestEnable(false)
+				it
 			}
 			else
 			{
 				null
 			}
 
-			val pushConstRanges = pushConstRange
-			val numPushConstants = pushConstRanges.size
+			val numPushConstants = pushConstRange.size
 			val vpcr: VkPushConstantRange.Buffer?
 			if (numPushConstants > 0)
 			{
 				vpcr = VkPushConstantRange.calloc(numPushConstants, stack)
 				for (i in 0..<numPushConstants)
 				{
-					val (stage, offset, size) = pushConstRanges[i]
+					val (stage, offset, size) = pushConstRange[i]
 					vpcr[i]
 						.stageFlags(stage)
 						.offset(offset)
@@ -119,27 +116,26 @@ class Pipeline (
 				vpcr = null
 			}
 
-			val descSetLayouts = descriptorSetLayouts
-			val numLayouts = descSetLayouts.size
+			val numLayouts = descriptorSetLayouts.size
 			val ppLayout = stack.mallocLong(numLayouts)
 			for (i in 0..<numLayouts)
 			{
-				ppLayout.put(i, descSetLayouts[i].vkDescLayout)
+				ppLayout.put(i, descriptorSetLayouts[i].vkDescLayout)
 			}
 
 			val rendCreateInfo = VkPipelineRenderingCreateInfo.calloc(stack)
-				.`sType$Default`()
-				.colorAttachmentCount(1)
-				.pColorAttachmentFormats(stack.mallocInt(1).put(0, colorFormat))
+			rendCreateInfo.`sType$Default`()
+			rendCreateInfo.colorAttachmentCount(1)
+			rendCreateInfo.pColorAttachmentFormats(stack.mallocInt(1).put(0, colorFormat))
 			if (ds != null)
 			{
 				rendCreateInfo.depthAttachmentFormat(depthFormat)
 			}
 
 			val pPipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo.calloc(stack)
-				.`sType$Default`()
-				.pSetLayouts(ppLayout)
-				.pPushConstantRanges(vpcr)
+			pPipelineLayoutCreateInfo.`sType$Default`()
+			pPipelineLayoutCreateInfo.pSetLayouts(ppLayout)
+			pPipelineLayoutCreateInfo.pPushConstantRanges(vpcr)
 
 			gpuCheck(
 				vkCreatePipelineLayout(device.vkDevice, pPipelineLayoutCreateInfo, null, lp),
@@ -148,18 +144,18 @@ class Pipeline (
 			vkPipelineLayout = lp.get(0)
 
 			val createInfo = VkGraphicsPipelineCreateInfo.calloc(1, stack)
-				.`sType$Default`()
-				.renderPass(VK_NULL_HANDLE)
-				.pStages(shaderStages)
-				.pVertexInputState(vi)
-				.pInputAssemblyState(assemblyStateCreateInfo)
-				.pViewportState(viewportStateCreateInfo)
-				.pRasterizationState(rasterizationStateCreateInfo)
-				.pColorBlendState(colorBlendState)
-				.pMultisampleState(multisampleStateCreateInfo)
-				.pDynamicState(dynamicStateCreateInfo)
-				.layout(vkPipelineLayout)
-				.pNext(rendCreateInfo)
+			createInfo.`sType$Default`()
+			createInfo.renderPass(VK_NULL_HANDLE)
+			createInfo.pStages(shaderStages)
+			createInfo.pVertexInputState(vi)
+			createInfo.pInputAssemblyState(assemblyState)
+			createInfo.pViewportState(viewportState)
+			createInfo.pRasterizationState(rasterState)
+			createInfo.pColorBlendState(colorBlendState)
+			createInfo.pMultisampleState(multisampleState)
+			createInfo.pDynamicState(dynamicState)
+			createInfo.layout(vkPipelineLayout)
+			createInfo.pNext(rendCreateInfo)
 			if (ds != null)
 			{
 				createInfo.pDepthStencilState(ds)

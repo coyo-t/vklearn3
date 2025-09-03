@@ -6,13 +6,10 @@ import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.util.vma.Vma.vmaCreateBuffer
-import org.lwjgl.util.vma.Vma.vmaDestroyBuffer
-import org.lwjgl.util.vma.Vma.vmaFlushAllocation
-import org.lwjgl.util.vma.Vma.vmaMapMemory
-import org.lwjgl.util.vma.Vma.vmaUnmapMemory
+import org.lwjgl.util.vma.Vma.*
 import org.lwjgl.util.vma.VmaAllocationCreateInfo
-import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VK10.VK_SHARING_MODE_EXCLUSIVE
+import org.lwjgl.vulkan.VK10.VK_WHOLE_SIZE
 import org.lwjgl.vulkan.VkBufferCreateInfo
 
 

@@ -89,7 +89,7 @@ class Renderer (val engineContext: Engine)
 
 	val mvMatrix = Matrix4f()
 
-	val descLayoutVtxUniform = DescriptorLayout(
+	val descriptorLayoutVertexStage = DescriptorLayout(
 		this,
 		DescriptorLayout.Info(
 			DescriptorType.UNIFORM_BUFFER,
@@ -107,7 +107,7 @@ class Renderer (val engineContext: Engine)
 		maxInFlightFrameCount,
 		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		"MATRIX",
-		descLayoutVtxUniform,
+		descriptorLayoutVertexStage,
 	)
 
 	val pipeline = run {
@@ -136,7 +136,7 @@ class Renderer (val engineContext: Engine)
 			colorFormat = displaySurface.surfaceFormat.imageFormat,
 			depthFormat = VK_FORMAT_D16_UNORM,
 			descriptorSetLayouts = listOf(
-				descLayoutVtxUniform,
+				descriptorLayoutVertexStage,
 			),
 		)
 		shaderModules.forEach { it.free() }
@@ -617,7 +617,7 @@ class Renderer (val engineContext: Engine)
 		device.waitIdle()
 		textureManager.free()
 
-		descLayoutVtxUniform.free()
+		descriptorLayoutVertexStage.free()
 //		descLayoutTexture.free()
 		shaderMatrixBuffer.freeAll()
 
