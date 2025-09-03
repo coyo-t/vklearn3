@@ -90,13 +90,13 @@ object GPUtil
 
 	fun <T: Pointer.Default> registerPointerForCleanup (who: T): T
 	{
-		CLEANER.register(who, PointerCleanerUpper(who.javaClass.toString(), who.address()))
+		CLEANER.register(who, PointerCleanerUpper(null, who.address()))
 		return who
 	}
 
 	fun registerPointersForCleanup (who: Any, vararg ptr: Long)
 	{
-		CLEANER.register(who, PointerCleanerUpper(who.javaClass.toString(), ptr))
+		CLEANER.register(who, PointerCleanerUpper(null, ptr))
 	}
 
 	fun registerPointersForCleanup (who:Any, vararg ptr: Pointer.Default)
@@ -104,7 +104,8 @@ object GPUtil
 		CLEANER.register(
 			who,
 			PointerCleanerUpper(
-				who.javaClass.toString(),
+				null,
+//				who.javaClass.toString(),
 				ptr.map { it.address() }.toLongArray()
 			)
 		)

@@ -38,7 +38,7 @@ class Pipeline (
 				val shaderModule = shaderModules[i]
 				val shStage = shaderStages.get(i)
 				shStage.`sType$Default`()
-				shStage.stage(shaderModule.shaderStage)
+				shStage.stage(shaderModule.shaderStage.vkFlag)
 				shStage.module(shaderModule.handle)
 				shStage.pName(main)
 			}

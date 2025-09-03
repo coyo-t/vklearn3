@@ -90,7 +90,7 @@ class Renderer (val engineContext: Engine)
 		val shaderModules = listOf(
 			ShaderModule(
 				this,
-				shaderStage = VK_SHADER_STAGE_VERTEX_BIT,
+				shaderStage = ShaderAssetThinger.ShaderType.Vertex,
 				spirv = ShaderAssetThinger.compileSPIRV(
 					srcs.vertex,
 					ShaderAssetThinger.ShaderType.Vertex,
@@ -98,7 +98,7 @@ class Renderer (val engineContext: Engine)
 			),
 			ShaderModule(
 				this,
-				shaderStage = VK_SHADER_STAGE_FRAGMENT_BIT,
+				shaderStage = ShaderAssetThinger.ShaderType.Fragment,
 				spirv = ShaderAssetThinger.compileSPIRV(
 					srcs.fragment,
 					ShaderAssetThinger.ShaderType.Fragment,
@@ -401,7 +401,7 @@ class Renderer (val engineContext: Engine)
 
 	fun free()
 	{
-		gpu.logicalDevice.waitIdle()
+		gpu.waitIdle()
 		textureManager.free()
 
 		descriptorLayoutVertexStage.free()
