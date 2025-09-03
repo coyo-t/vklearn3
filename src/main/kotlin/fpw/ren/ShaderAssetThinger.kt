@@ -2,10 +2,11 @@ package fpw.ren
 
 import fpw.FUtil
 import fpw.LuaCoyote
+import fpw.ResourceLocation
 import org.lwjgl.util.shaderc.Shaderc.*
 import party.iroiro.luajava.Lua
 import java.nio.ByteBuffer
-import java.nio.file.Path
+import kotlin.io.path.div
 
 
 object ShaderAssetThinger
@@ -14,9 +15,16 @@ object ShaderAssetThinger
 		openLibraries()
 	}
 
+	enum class ShaderType (val scEnum: Int)
+	{
+		Vertex(shaderc_vertex_shader),
+		Fragment(shaderc_fragment_shader),
+		Compute(shaderc_compute_shader),
+	}
+
 	var doGenerateShaderDebugSymbols = true
 
-	fun compileSPIRV (shaderCode: String, shaderType: Int): ByteBuffer
+	fun compileSPIRV (shaderCode: String, shaderType: ShaderType): ByteBuffer
 	{
 		var compiler = 0L
 		var options = 0L
@@ -35,7 +43,7 @@ object ShaderAssetThinger
 			val result = shaderc_compile_into_spv(
 				compiler,
 				shaderCode,
-				shaderType,
+				shaderType.scEnum,
 				"shader.glsl",
 				"main",
 				options
@@ -53,11 +61,12 @@ object ShaderAssetThinger
 		}
 	}
 
-	fun loadFromLuaScript (at: Path): Sources
+	fun loadFromLuaScript (at: ResourceLocation): Sources
 	{
 		try
 		{
-			L.run(FUtil.getFileBytes(at), "")
+			val rp = FUtil.ASSETS_PATH/at.path
+			L.run(FUtil.getFileBytes(rp), "")
 			val result = L.get()
 			check(result.type() == Lua.LuaType.TABLE) {
 				"expecting a table, got ${result.type()}"

@@ -10,14 +10,15 @@ import org.lwjgl.vulkan.VkDescriptorPoolCreateInfo
 import org.lwjgl.vulkan.VkDescriptorPoolSize
 
 
-class DescriptorPool
+class DescriptorPool (
+	val device: LogicalDevice,
+	val descTypeCounts: MutableList<DescTypeCount>,
+)
 {
 	val vkDescPool: Long
-	val descTypeCounts: MutableList<DescTypeCount>
 
-	constructor (device: LogicalDevice, descTypeCounts: MutableList<DescTypeCount>)
+	init
 	{
-		this.descTypeCounts = descTypeCounts
 		MemoryStack.stackPush().use { stack ->
 			var maxSets = 0
 			val numTypes = descTypeCounts.size
@@ -45,16 +46,16 @@ class DescriptorPool
 		}
 	}
 
-	fun free(device: LogicalDevice)
+	fun free ()
 	{
 		vkDestroyDescriptorPool(device.vkDevice, vkDescPool, null)
 	}
 
-	fun freeDescriptorSet (device: LogicalDevice, vkDescriptorSet: Long)
+	fun freeDescriptorSet (vkDescriptorSet: DescriptorSet)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val longBuffer = stack.mallocLong(1)
-			longBuffer.put(0, vkDescriptorSet)
+			longBuffer.put(0, vkDescriptorSet.vkDescriptorSet)
 			gpuCheck(
 				vkFreeDescriptorSets(device.vkDevice, vkDescPool, longBuffer),
 				"Failed to free descriptor set"

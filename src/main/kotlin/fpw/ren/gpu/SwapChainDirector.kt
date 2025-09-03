@@ -26,7 +26,7 @@ class SwapChainDirector (val renderer: Renderer)
 	fun free ()
 	{
 		commandBuffer.free(renderer, commandPool)
-		commandPool.free(renderer)
+		commandPool.free()
 		imageAcquiredSemaphore.free()
 		fence.free(renderer)
 	}

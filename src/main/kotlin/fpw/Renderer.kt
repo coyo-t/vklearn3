@@ -8,20 +8,24 @@ import fpw.ren.gpu.*
 import fpw.ren.gpu.GPUtil.freeAll
 import fpw.ren.gpu.GPUtil.gpuCheck
 import fpw.ren.gpu.GPUtil.imageBarrier
+import fpw.ren.gpu.Pipeline
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.util.shaderc.Shaderc
+import org.lwjgl.util.shaderc.Shaderc.shaderc_glsl_fragment_shader
+import org.lwjgl.util.shaderc.Shaderc.shaderc_glsl_vertex_shader
 import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
 import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
+import org.lwjgl.vulkan.VK10.VK_FORMAT_D16_UNORM
+import org.lwjgl.vulkan.VK10.VK_SHADER_STAGE_FRAGMENT_BIT
+import org.lwjgl.vulkan.VK10.VK_SHADER_STAGE_VERTEX_BIT
 import org.lwjgl.vulkan.VK14.*
 import org.lwjgl.vulkan.VkShaderModuleCreateInfo.calloc
 import party.iroiro.luajava.value.LuaTableValue
 import java.awt.Color
 import java.nio.ByteBuffer
-import kotlin.io.path.Path
 
 
 class Renderer (engineContext: Engine)
@@ -96,31 +100,10 @@ class Renderer (engineContext: Engine)
 			1,
 			VK_SHADER_STAGE_VERTEX_BIT
 		),
-		DescriptorLayout.Info(
-			DescriptorType.COMBINED_IMAGE_SAMPLER,
-			0,
-			1,
-			VK_SHADER_STAGE_FRAGMENT_BIT
-		)
-	)
-
-	val descLayoutTexture = DescriptorLayout(
-		this,
-		DescriptorLayout.Info(
-			DescriptorType.COMBINED_IMAGE_SAMPLER,
-			0,
-			1,
-			VK_SHADER_STAGE_FRAGMENT_BIT
-		)
 	)
 
 	var viewPoint: ViewPoint = IdentityViewPoint()
 
-	val textureSampler = Sampler(
-		this,
-		filter = SamplerFilter.NEAREST,
-		wrapping = SamplerWrapping.REPEAT,
-	)
 
 	val shaderMatrixBuffer = createHostVisibleBuffs(
 		GPUtil.SIZEOF_MAT4 * 2L,
@@ -129,23 +112,36 @@ class Renderer (engineContext: Engine)
 		"MATRIX",
 		descLayoutVtxUniform,
 	)
-	val shaderTextureUniform = descAllocator.addDescSets(
-		"TEXTURE",
-		descLayoutVtxUniform,
-		maxInFlightFrameCount,
-//		descLayoutTexture,
-	)
 
 	val pipeline = run {
-		val shaderModules = createShaderModules()
-		val outs = createPipeline(
-			shaderModules,
-			listOf(
-				descLayoutVtxUniform,
-				descLayoutTexture,
-			)
+		val shPath = ResourceLocation.withDefaultNameSpace("shader/scene.lua")
+		val srcs = ShaderAssetThinger.loadFromLuaScript(shPath)
+		val shaderModules = listOf(
+			createShaderModule(
+				VK_SHADER_STAGE_VERTEX_BIT,
+				ShaderAssetThinger.compileSPIRV(
+					srcs.vertex,
+					ShaderAssetThinger.ShaderType.Vertex,
+				),
+			),
+			createShaderModule(
+				VK_SHADER_STAGE_FRAGMENT_BIT,
+				ShaderAssetThinger.compileSPIRV(
+					srcs.fragment,
+					ShaderAssetThinger.ShaderType.Fragment,
+				),
+			),
 		)
-
+		val outs = Pipeline(
+			this,
+			shaderModules = shaderModules,
+			vi = TestCube.format.vi,
+			colorFormat = displaySurface.surfaceFormat.imageFormat,
+			depthFormat = VK_FORMAT_D16_UNORM,
+			descriptorSetLayouts = listOf(
+				descLayoutVtxUniform,
+			),
+		)
 		shaderModules.forEach { it.free() }
 		outs
 	}
@@ -232,7 +228,7 @@ class Renderer (engineContext: Engine)
 		val cmdPool = director.commandPool
 		val cmdBuffer = director.commandBuffer
 
-		cmdPool.reset(this)
+		cmdPool.reset()
 		cmdBuffer.beginRecording()
 
 		if (doResize)
@@ -279,6 +275,18 @@ class Renderer (engineContext: Engine)
 			val renInf = renderInfo[imageIndex]
 			vkCmdBeginRendering(cmdHandle, renInf)
 			vkCmdBindPipeline(cmdHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vkPipeline)
+			val descr = stack.mallocLong(2).apply {
+				put(0, descAllocator.getDescSet("MATRIX").vkDescriptorSet)
+//				put(1, descAllocator.getDescSet("TEXTURE").vkDescriptorSet)
+			}
+			vkCmdBindDescriptorSets(
+				cmdHandle,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				pipeline.vkPipelineLayout,
+				0,
+				descr,
+				null,
+			)
 			val swapChainExtent: VkExtent2D = swapChain.extents
 			val width = swapChainExtent.width()
 			val height = swapChainExtent.height()
@@ -296,20 +304,8 @@ class Renderer (engineContext: Engine)
 				.offset { it.x(0).y(0) }
 			vkCmdSetScissor(cmdHandle, 0, scissor)
 
-			val descr = stack.mallocLong(2).apply {
-				put(0, descAllocator.getDescSet("MATRIX").vkDescriptorSet)
-				put(1, descAllocator.getDescSet("TEXTURE").vkDescriptorSet)
-			}
-			shaderTextureUniform[currentFrame].setImages(device, textureSampler, 1, textureTerrain.imageView)
+//			shaderTextureUniform[currentFrame].setImages(device, textureSampler, 1, textureTerrain.imageView)
 
-			vkCmdBindDescriptorSets(
-				cmdHandle,
-				VK_PIPELINE_BIND_POINT_GRAPHICS,
-				pipeline.vkPipelineLayout,
-				0,
-				descr,
-				null,
-			)
 
 			val vbCount = 1
 			val offsets = stack.mallocLong(vbCount).put(0, 0L)
@@ -478,7 +474,7 @@ class Renderer (engineContext: Engine)
 				vkCreateCommandPool(device.vkDevice, cmdPoolInfo, null, lp),
 				"Failed to create command pool"
 			)
-			return CommandPool(lp[0])
+			return CommandPool(this, lp[0])
 		}
 	}
 
@@ -549,24 +545,6 @@ class Renderer (engineContext: Engine)
 		}
 	}
 
-	fun createPipeline (
-		shaderModules: List<ShaderModule>,
-		descLayouts: List<DescriptorLayout>,
-	): Pipeline
-	{
-		val buildInfo = Pipeline.Info(
-			shaderModules = shaderModules,
-			vi = TestCube.format.vi,
-			colorFormat = displaySurface.surfaceFormat.imageFormat,
-			depthFormat = VK_FORMAT_D16_UNORM,
-			pushConstRange = listOf(
-//				Triple(VK_SHADER_STAGE_VERTEX_BIT, 0, 128),
-			),
-			descriptorSetLayouts = descLayouts,
-		)
-		return Pipeline(this, buildInfo)
-	}
-
 	fun createDepthAttachments (): List<Attachment>
 	{
 		val numImages = swapChain.numImages
@@ -582,16 +560,6 @@ class Renderer (engineContext: Engine)
 		}
 	}
 
-	fun createShaderModules(): List<ShaderModule>
-	{
-		val srcs = ShaderAssetThinger.loadFromLuaScript(Path("resources/assets/shader/scene.lua"))
-		val v = ShaderAssetThinger.compileSPIRV(srcs.vertex, Shaderc.shaderc_glsl_vertex_shader)
-		val f = ShaderAssetThinger.compileSPIRV(srcs.fragment, Shaderc.shaderc_glsl_fragment_shader)
-		return listOf(
-			createShaderModule(VK_SHADER_STAGE_VERTEX_BIT, v),
-			createShaderModule(VK_SHADER_STAGE_FRAGMENT_BIT, f),
-		)
-	}
 	fun createHostVisibleBuffs(
 		buffSize: Long, numBuffs: Int, usage: Int,
 		id: String, layout: DescriptorLayout
@@ -652,10 +620,10 @@ class Renderer (engineContext: Engine)
 		textureManager.free()
 
 		descLayoutVtxUniform.free()
-		descLayoutTexture.free()
+//		descLayoutTexture.free()
 		shaderMatrixBuffer.freeAll()
 
-		textureSampler.free()
+//		textureSampler.free()
 		descAllocator.free()
 		pipeline.cleanup()
 		renderInfo.forEach(VkRenderingInfo::free)

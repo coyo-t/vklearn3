@@ -48,7 +48,6 @@ class DescriptorLayout (
 
 	fun free ()
 	{
-//		Logger.debug("Destroying descriptor set layout")
 		vkDestroyDescriptorSetLayout(vkCtx.vkDevice, vkDescLayout, null)
 	}
 

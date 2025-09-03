@@ -12,7 +12,15 @@ import org.lwjgl.vulkan.VK10.vkDestroyPipeline
 import org.lwjgl.vulkan.VK14.*
 
 
-class Pipeline (val renderer: Renderer, buildInfo: Info)
+class Pipeline (
+	val renderer: Renderer,
+	colorFormat: Int,
+	shaderModules: List<ShaderModule>,
+	vi: VkPipelineVertexInputStateCreateInfo,
+	depthFormat: Int = VK_FORMAT_UNDEFINED,
+	pushConstRange: List<Triple<Int, Int, Int>> = emptyList(),
+	descriptorSetLayouts: List<DescriptorLayout> = emptyList(),
+)
 {
 	val vkPipeline: Long
 	val vkPipelineLayout: Long
@@ -24,7 +32,7 @@ class Pipeline (val renderer: Renderer, buildInfo: Info)
 			val lp = stack.mallocLong(1)
 			val main = stack.UTF8("main")
 
-			val shaderModules = buildInfo.shaderModules
+			val shaderModules = shaderModules
 			val numModules = shaderModules.size
 			val shaderStages = VkPipelineShaderStageCreateInfo.calloc(numModules, stack)
 			for (i in 0..<numModules)
@@ -76,7 +84,7 @@ class Pipeline (val renderer: Renderer, buildInfo: Info)
 				.`sType$Default`()
 				.pAttachments(blendAttState)
 
-			val ds = if (buildInfo.depthFormat != VK_FORMAT_UNDEFINED)
+			val ds = if (depthFormat != VK_FORMAT_UNDEFINED)
 			{
 				VkPipelineDepthStencilStateCreateInfo.calloc(stack)
 					.`sType$Default`()
@@ -91,7 +99,7 @@ class Pipeline (val renderer: Renderer, buildInfo: Info)
 				null
 			}
 
-			val pushConstRanges = buildInfo.pushConstRange
+			val pushConstRanges = pushConstRange
 			val numPushConstants = pushConstRanges.size
 			val vpcr: VkPushConstantRange.Buffer?
 			if (numPushConstants > 0)
@@ -111,7 +119,7 @@ class Pipeline (val renderer: Renderer, buildInfo: Info)
 				vpcr = null
 			}
 
-			val descSetLayouts = buildInfo.descriptorSetLayouts
+			val descSetLayouts = descriptorSetLayouts
 			val numLayouts = descSetLayouts.size
 			val ppLayout = stack.mallocLong(numLayouts)
 			for (i in 0..<numLayouts)
@@ -122,10 +130,10 @@ class Pipeline (val renderer: Renderer, buildInfo: Info)
 			val rendCreateInfo = VkPipelineRenderingCreateInfo.calloc(stack)
 				.`sType$Default`()
 				.colorAttachmentCount(1)
-				.pColorAttachmentFormats(stack.mallocInt(1).put(0, buildInfo.colorFormat))
+				.pColorAttachmentFormats(stack.mallocInt(1).put(0, colorFormat))
 			if (ds != null)
 			{
-				rendCreateInfo.depthAttachmentFormat(buildInfo.depthFormat)
+				rendCreateInfo.depthAttachmentFormat(depthFormat)
 			}
 
 			val pPipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo.calloc(stack)
@@ -143,7 +151,7 @@ class Pipeline (val renderer: Renderer, buildInfo: Info)
 				.`sType$Default`()
 				.renderPass(VK_NULL_HANDLE)
 				.pStages(shaderStages)
-				.pVertexInputState(buildInfo.vi)
+				.pVertexInputState(vi)
 				.pInputAssemblyState(assemblyStateCreateInfo)
 				.pViewportState(viewportStateCreateInfo)
 				.pRasterizationState(rasterizationStateCreateInfo)
@@ -178,12 +186,4 @@ class Pipeline (val renderer: Renderer, buildInfo: Info)
 		vkDestroyPipeline(vkDevice, vkPipeline, null)
 	}
 
-	class Info(
-		val colorFormat: Int,
-		val shaderModules: List<ShaderModule>,
-		val vi: VkPipelineVertexInputStateCreateInfo,
-		val depthFormat: Int = VK_FORMAT_UNDEFINED,
-		var pushConstRange: List<Triple<Int, Int, Int>> = emptyList(),
-		var descriptorSetLayouts: List<DescriptorLayout> = emptyList(),
-	)
 }

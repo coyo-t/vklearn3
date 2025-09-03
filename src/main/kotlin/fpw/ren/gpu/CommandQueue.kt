@@ -13,15 +13,16 @@ import org.lwjgl.vulkan.VkQueue
 import org.lwjgl.vulkan.VkSemaphoreSubmitInfo
 import org.lwjgl.vulkan.VkSubmitInfo2
 
-open class CommandQueue
+open class CommandQueue (
+	val vkCtx: Renderer,
+	val queueFamilyIndex: Int,
+	queueIndex: Int,
+)
 {
-	val queueFamilyIndex: Int
 	val vkQueue: VkQueue
 
-	constructor (vkCtx: Renderer, queueFamilyIndex: Int, queueIndex: Int)
+	init
 	{
-
-		this.queueFamilyIndex = queueFamilyIndex
 		MemoryStack.stackPush().use { stack ->
 			val pQueue = stack.mallocPointer(1)
 			VK10.vkGetDeviceQueue(vkCtx.device.vkDevice, queueFamilyIndex, queueIndex, pQueue)
