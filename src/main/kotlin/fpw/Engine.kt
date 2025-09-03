@@ -107,7 +107,6 @@ class Engine (val window: Window)
 		{
 			FUtil.logError(t) { "SOMETHING THREW HARDER THAN ELI FUCK" }
 		}
-
 		render.free()
 		window.free()
 	}

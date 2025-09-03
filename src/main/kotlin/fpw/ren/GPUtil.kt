@@ -90,7 +90,7 @@ object GPUtil
 
 	fun <T: Pointer.Default> registerPointerForCleanup (who: T): T
 	{
-		CLEANER.register(who, PointerCleanerUpper(null, who.address()))
+		CLEANER.register(who, PointerCleanerUpper(who.javaClass.toString(), who.address()))
 		return who
 	}
 

@@ -24,7 +24,7 @@ class InProgressRenderThinger(
 		f.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
 		f.storeOp(VK_ATTACHMENT_STORE_OP_STORE)
 		f.clearValue(renderer.clrValueColor)
-		f
+		GPUtil.registerPointerForCleanup(f)
 	}
 
 	val depthAttachment = Attachment(
@@ -44,7 +44,7 @@ class InProgressRenderThinger(
 		f.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
 		f.storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)
 		f.clearValue(renderer.clrValueDepth)
-		f
+		GPUtil.registerPointerForCleanup(f)
 	}
 
 	val renderInfo = run {
@@ -57,7 +57,7 @@ class InProgressRenderThinger(
 			f.layerCount(1)
 			f.pColorAttachments(colorInfo)
 			f.pDepthAttachment(depthInfo)
-			f
+			GPUtil.registerPointerForCleanup(f)
 		}
 	}
 
@@ -65,10 +65,7 @@ class InProgressRenderThinger(
 	{
 		renderCompleteFlag.free()
 
-		colorInfo.free()
 		depthAttachment.free()
-		depthInfo.free()
-		renderInfo.free()
 		imageView.free()
 	}
 }
