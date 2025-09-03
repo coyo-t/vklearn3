@@ -1,19 +1,26 @@
 package fpw.ren
 
+import fpw.Renderer
 import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.ImageView.Data
 import org.joml.Math.clamp
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSurface.*
-import org.lwjgl.vulkan.KHRSwapchain.VK_ERROR_OUT_OF_DATE_KHR
-import org.lwjgl.vulkan.KHRSwapchain.VK_SUBOPTIMAL_KHR
-import org.lwjgl.vulkan.VK14.*
+import org.lwjgl.vulkan.KHRSwapchain.*
+import org.lwjgl.vulkan.VK10.VK_IMAGE_ASPECT_COLOR_BIT
+import org.lwjgl.vulkan.VK14.VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+import org.lwjgl.vulkan.VK14.VK_SUCCESS
+import org.lwjgl.vulkan.VkExtent2D
+import org.lwjgl.vulkan.VkExtent2D.calloc
+import org.lwjgl.vulkan.VkPresentInfoKHR
+import org.lwjgl.vulkan.VkSwapchainCreateInfoKHR
 import kotlin.math.max
 import kotlin.math.min
 
 
 class SwapChain (
+	val renderer: Renderer,
 	val device: LogicalDevice,
 	var wide: Int,
 	var tall: Int,
@@ -22,17 +29,44 @@ class SwapChain (
 	vsync: Boolean,
 )
 {
-	val imageViews: List<ImageView>
-	val numImages: Int
+//	val imageViews: List<ImageView>
 	val extents: VkExtent2D
 	val vkSwapChain: Long
+	val renderThinger: List<InProgressRenderThinger>
+
+	val imageCount get() = renderThinger.size
 
 	init
 	{
 		MemoryStack.stackPush().use { stack ->
 			val surfaceCaps = displaySurface.surfaceCaps
-			val reqImages = calcNumImages(surfaceCaps, requestedImages)
-			extents = calcSwapChainExtent(surfaceCaps)
+			val reqImages = run {
+				val maxImages = surfaceCaps.maxImageCount()
+				val minImages = surfaceCaps.minImageCount()
+				var result = minImages
+				if (maxImages != 0)
+				{
+					result = min(requestedImages, maxImages)
+				}
+				max(result, minImages)
+			}
+			extents = run {
+				val result1 = calloc()
+				if (surfaceCaps.currentExtent().width() == -0x1)
+				{
+					// Surface size undefined. Set to the window size if within bounds
+					val minn = surfaceCaps.minImageExtent()
+					val maxx = surfaceCaps.maxImageExtent()
+					result1.width(clamp(wide, minn.width(), maxx.width()))
+					result1.height(clamp(tall, minn.height(), maxx.height()))
+				}
+				else
+				{
+					// Surface already defined, just use that for the swap chain
+					result1.set(surfaceCaps.currentExtent())
+				}
+				result1
+			}
 
 			val surfaceFormat = displaySurface.surfaceFormat
 			val createInfo = VkSwapchainCreateInfoKHR.calloc(stack)
@@ -55,69 +89,37 @@ class SwapChain (
 
 			val lp = stack.mallocLong(1)
 			gpuCheck(
-				KHRSwapchain.vkCreateSwapchainKHR(device.vkDevice, createInfo, null, lp),
+				vkCreateSwapchainKHR(device.vkDevice, createInfo, null, lp),
 				"Failed to create swap chain"
 			)
 			vkSwapChain = lp.get(0)
+//			imageViews = emptyList()
 
-			imageViews = createImageViews(stack, vkSwapChain, surfaceFormat.imageFormat)
-			numImages = imageViews.size
-		}
-	}
-
-	private fun calcNumImages(surfCapabilities: VkSurfaceCapabilitiesKHR, requestedImages: Int): Int
-	{
-		val maxImages = surfCapabilities.maxImageCount()
-		val minImages = surfCapabilities.minImageCount()
-		var result = minImages
-		if (maxImages != 0)
-		{
-			result = min(requestedImages, maxImages)
-		}
-		result = max(result, minImages)
-		return result
-	}
-
-	private fun calcSwapChainExtent(surfCapabilities: VkSurfaceCapabilitiesKHR): VkExtent2D
-	{
-		val result = VkExtent2D.calloc()
-		if (surfCapabilities.currentExtent().width() == -0x1)
-		{
-			// Surface size undefined. Set to the window size if within bounds
-			val minn = surfCapabilities.minImageExtent()
-			val maxx = surfCapabilities.maxImageExtent()
-			result.width(clamp(this.wide, minn.width(), maxx.width()))
-			result.height(clamp(this.tall, minn.height(), maxx.height()))
-		}
-		else
-		{
-			// Surface already defined, just use that for the swap chain
-			result.set(surfCapabilities.currentExtent())
-		}
-		return result
-	}
-
-	private fun createImageViews(stack: MemoryStack, swapChain: Long, format: Int): List<ImageView>
-	{
-		val ip = stack.mallocInt(1)
-		gpuCheck(
-			KHRSwapchain.vkGetSwapchainImagesKHR(device.vkDevice, swapChain, ip, null),
-			"Failed to get number of surface images"
-		)
-		val numImages = ip.get(0)
-
-		val swapChainImages = stack.mallocLong(numImages)
-		gpuCheck(
-			KHRSwapchain.vkGetSwapchainImagesKHR(device.vkDevice, swapChain, ip, swapChainImages),
-			"Failed to get surface images"
-		)
-
-		val imageViewData = ImageView.Data(
-			format = format,
-			aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-		)
-		return List(numImages) {
-			ImageView(device, swapChainImages[it], imageViewData, false)
+			renderThinger = run {
+				val ip = stack.mallocInt(1)
+				gpuCheck(
+					vkGetSwapchainImagesKHR(device.vkDevice, vkSwapChain, ip, null),
+					"failed to get number of surface images"
+				)
+				val numImages = ip.get(0)
+				val swapChainImages = stack.mallocLong(numImages)
+				gpuCheck(
+					vkGetSwapchainImagesKHR(device.vkDevice, vkSwapChain, ip, swapChainImages),
+					"failed to get surface images"
+				)
+				val imageViewData = Data(
+					format = surfaceFormat.imageFormat,
+					aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+				)
+				List(numImages) {
+					val im = ImageView(device, swapChainImages[it], imageViewData, false)
+					InProgressRenderThinger(
+						renderer,
+						this,
+						im,
+					)
+				}
+			}
 		}
 	}
 
@@ -126,7 +128,7 @@ class SwapChain (
 		val imageIndex: Int
 		MemoryStack.stackPush().use { stack ->
 			val ip = stack.mallocInt(1)
-			val err = KHRSwapchain.vkAcquireNextImageKHR(
+			val err = vkAcquireNextImageKHR(
 				device.vkDevice,
 				vkSwapChain,
 				0L.inv(),
@@ -138,51 +140,53 @@ class SwapChain (
 			{
 				return -1
 			}
-			else if (err == VK_SUBOPTIMAL_KHR)
-			{
-				// Not optimal but swapchain can still be used
-			}
 			else if (err != VK_SUCCESS)
 			{
-				throw RuntimeException("Failed to acquire image: $err")
+				// Not optimal but swapchain can still be used
+				if (err != VK_SUBOPTIMAL_KHR)
+				{
+					throw RuntimeException("Failed to acquire image: $err")
+				}
 			}
 			imageIndex = ip.get(0)
 		}
 		return imageIndex
 	}
 
-	fun free()
-	{
-		extents.free()
-		imageViews.forEach { it.free() }
-		KHRSwapchain.vkDestroySwapchainKHR(device.vkDevice, vkSwapChain, null)
-	}
 
-	fun presentImage(queue: CommandQueue, renderCompleteSem: Semaphore, imageIndex: Int): Boolean
+	fun presentImage(queue: CommandQueue, imageIndex: Int): Boolean
 	{
-		var resize = false
 		MemoryStack.stackPush().use { stack ->
 			val present = VkPresentInfoKHR.calloc(stack)
 				.`sType$Default`()
-				.pWaitSemaphores(stack.longs(renderCompleteSem.vkSemaphore))
+				.pWaitSemaphores(stack.longs(
+					renderThinger[imageIndex].renderCompleteFlag.vkSemaphore,
+				))
 				.swapchainCount(1)
 				.pSwapchains(stack.longs(vkSwapChain))
 				.pImageIndices(stack.ints(imageIndex))
-			val err = KHRSwapchain.vkQueuePresentKHR(queue.vkQueue, present)
+			val err = vkQueuePresentKHR(queue.vkQueue, present)
 			if (err == VK_ERROR_OUT_OF_DATE_KHR)
 			{
-				resize = true
-			}
-			else if (err == VK_SUBOPTIMAL_KHR)
-			{
-				// Not optimal but swap chain can still be used
+				return true
 			}
 			else if (err != VK_SUCCESS)
 			{
-				throw RuntimeException("Failed to present KHR: $err")
+				// Not optimal but swap chain can still be used
+				if (err != VK_SUBOPTIMAL_KHR)
+				{
+					throw RuntimeException("Failed to present KHR: $err")
+				}
 			}
 		}
-		return resize
+		return false
 	}
 
+	fun free()
+	{
+		extents.free()
+		renderThinger.forEach { it.free() }
+//		imageViews.forEach { it.free() }
+		vkDestroySwapchainKHR(device.vkDevice, vkSwapChain, null)
+	}
 }

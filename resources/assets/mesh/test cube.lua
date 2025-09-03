@@ -1,5 +1,4 @@
 return {
-	temp_name = 'test cube',
 	points = {
 		{ -0.5,  0.5,  0.5 },
 		{ -0.5, -0.5,  0.5 },

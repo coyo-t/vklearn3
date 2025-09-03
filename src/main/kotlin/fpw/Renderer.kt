@@ -25,6 +25,11 @@ class Renderer (val engineContext: Engine)
 	var preferredPhysicalDevice: String? = null
 	var useValidationLayers = true
 
+	val clrValueColor = GPUtil.clearTintFrom(Color(0x7FB2E5))
+	val clrValueDepth = VkClearValue.calloc().color {
+		it.float32(0, 1f)
+	}
+
 	val instance = GPUInstance(
 		validate = useValidationLayers,
 	)
@@ -38,6 +43,7 @@ class Renderer (val engineContext: Engine)
 
 	var displaySurface = DisplaySurface(instance, hardware, engineContext.window)
 	var swapChain = SwapChain(
+		this,
 		device,
 		engineContext.window.wide,
 		engineContext.window.tall,
@@ -60,20 +66,9 @@ class Renderer (val engineContext: Engine)
 		SwapChainDirector(this)
 	}
 
-	var renderCompleteSemphs = List(swapChain.numImages) {
-		Semaphore(this)
-	}
 	private val meshManager = ModelsCache(this)
 	private var doResize = false
 
-	val clrValueColor = GPUtil.clearTintFrom(Color(0x7FB2E5))
-	val clrValueDepth = VkClearValue.calloc().color {
-		it.float32(0, 1f)
-	}
-	var attDepth = createDepthAttachments()
-	var attInfoColor = createColorAttachmentsInfo(clrValueColor)
-	var attInfoDepth = createDepthAttachmentsInfo(attDepth, clrValueDepth)
-	var renderInfo = createRenderInfo(attInfoColor, attInfoDepth)
 
 	val descAllocator = DescriptorAllocator(hardware, device)
 
@@ -141,7 +136,6 @@ class Renderer (val engineContext: Engine)
 
 	fun init ()
 	{
-//		ldMdl(engineContext.testModel)
 	}
 
 
@@ -161,7 +155,7 @@ class Renderer (val engineContext: Engine)
 			val signals = VkSemaphoreSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
 				.stageMask(VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)
-				.semaphore(renderCompleteSemphs[imageIndex].vkSemaphore)
+				.semaphore(swapChain.renderThinger[imageIndex].renderCompleteFlag.vkSemaphore)
 			graphicsQueue.submit(commands, waits, signals, fence)
 		}
 	}
@@ -189,9 +183,9 @@ class Renderer (val engineContext: Engine)
 		}
 		// scene render
 		MemoryStack.stackPush().use { stack ->
-			val swapChain = swapChain
-			val swapChainVisualImage = swapChain.imageViews[imageIndex].vkImage
-			val swapChainDepthImage = attDepth[imageIndex].image.vkImage
+			val thinger = swapChain.renderThinger[imageIndex]
+			val swapChainVisualImage = thinger.imageView.vkImage
+			val swapChainDepthImage = thinger.depthAttachment.image.vkImage
 			val cmdHandle = cmdBuffer.vkCommandBuffer
 
 			imageBarrier(
@@ -218,7 +212,7 @@ class Renderer (val engineContext: Engine)
 				VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT or VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
 				VK_IMAGE_ASPECT_DEPTH_BIT,
 			)
-			val renInf = renderInfo[imageIndex]
+			val renInf = thinger.renderInfo
 			vkCmdBeginRendering(cmdHandle, renInf)
 			vkCmdBindPipeline(cmdHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vkPipeline)
 			val descr = stack.longs(
@@ -232,7 +226,7 @@ class Renderer (val engineContext: Engine)
 				descr,
 				null,
 			)
-			val swapChainExtent = swapChain.extents
+			val swapChainExtent = this.swapChain.extents
 			val width = swapChainExtent.width()
 			val height = swapChainExtent.height()
 			val viewport = VkViewport.calloc(1, stack)
@@ -315,7 +309,7 @@ class Renderer (val engineContext: Engine)
 
 		submit(cmdBuffer, currentFrame, imageIndex)
 
-		doResize = swapChain.presentImage(presentQueue, renderCompleteSemphs[imageIndex], imageIndex)
+		doResize = swapChain.presentImage(presentQueue, imageIndex)
 
 		currentFrame = (currentFrame + 1) % maxInFlightFrameCount
 	}
@@ -334,6 +328,7 @@ class Renderer (val engineContext: Engine)
 		displaySurface.free(instance)
 		displaySurface = DisplaySurface(instance, hardware, window)
 		swapChain = SwapChain(
+			this,
 			device,
 			window.wide,
 			window.tall,
@@ -344,60 +339,9 @@ class Renderer (val engineContext: Engine)
 
 		swapChainDirectors.forEach(SwapChainDirector::onResize)
 
-		renderCompleteSemphs.forEach { it.free() }
-		renderCompleteSemphs = List(swapChain.numImages) {
-			Semaphore(this)
-		}
-
 		val extent = swapChain.extents
 		engineContext.lens.resize(extent.width(), extent.height())
 
-		renderInfo.forEach { it.free() }
-		attInfoDepth.forEach { it.free() }
-		attInfoColor.forEach { it.free() }
-		attDepth.forEach { it.free() }
-		attDepth = createDepthAttachments()
-		attInfoColor = createColorAttachmentsInfo(clrValueColor)
-		attInfoDepth = createDepthAttachmentsInfo(attDepth, clrValueDepth)
-		renderInfo = createRenderInfo(attInfoColor, attInfoDepth)
-	}
-
-	fun createColorAttachmentsInfo(
-		clearValue: VkClearValue
-	): List<VkRenderingAttachmentInfo.Buffer>
-	{
-		val swapChain = swapChain
-		return List(swapChain.numImages) {
-			val inf = VkRenderingAttachmentInfo.calloc(1)
-			inf.`sType$Default`()
-			inf.imageView(swapChain.imageViews[it].vkImageView)
-			inf.imageLayout(VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR)
-			inf.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
-			inf.storeOp(VK_ATTACHMENT_STORE_OP_STORE)
-			inf.clearValue(clearValue)
-			inf
-		}
-	}
-
-	fun createRenderInfo(
-		colorAttachments: List<VkRenderingAttachmentInfo.Buffer>,
-		depthAttachments: List<VkRenderingAttachmentInfo>,
-	): List<VkRenderingInfo>
-	{
-
-		MemoryStack.stackPush().use { stack ->
-			val extent = this.swapChain.extents
-			val renderArea = VkRect2D.calloc(stack).extent(extent)
-			return List(swapChain.numImages) {
-				val inf = VkRenderingInfo.calloc()
-				inf.`sType$Default`()
-				inf.renderArea(renderArea)
-				inf.layerCount(1)
-				inf.pColorAttachments(colorAttachments[it])
-				inf.pDepthAttachment(depthAttachments[it])
-				inf
-			}
-		}
 	}
 
 	fun createShaderModule (shaderStage: Int, spirv: ByteBuffer): ShaderModule
@@ -419,41 +363,6 @@ class Renderer (val engineContext: Engine)
 			handle = handle,
 			shaderStage = shaderStage,
 		)
-	}
-
-	fun createDepthAttachmentsInfo(
-		depthAttachments: List<Attachment>,
-		clearValue: VkClearValue
-	): List<VkRenderingAttachmentInfo>
-	{
-		val swapChain = swapChain
-		val numImages = swapChain.numImages
-		return List(numImages) {
-			val inf = VkRenderingAttachmentInfo.calloc()
-			inf.`sType$Default`()
-			inf.imageView(depthAttachments[it].imageView.vkImageView)
-			inf.imageLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-			inf.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
-			inf.storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)
-			inf.clearValue(clearValue)
-			inf
-		}
-	}
-
-	fun createDepthAttachments (): List<Attachment>
-	{
-		val numImages = swapChain.numImages
-		val swapChainExtent = swapChain.extents
-		return List(numImages) {
-			Attachment(
-				this,
-				swapChainExtent.width(),
-				swapChainExtent.height(),
-//				VK_FORMAT_D32_SFLOAT,
-				VK_FORMAT_D16_UNORM,
-				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-			)
-		}
 	}
 
 	fun createHostVisibleBuffs(
@@ -533,21 +442,14 @@ class Renderer (val engineContext: Engine)
 		textureManager.free()
 
 		descriptorLayoutVertexStage.free()
-//		descLayoutTexture.free()
 		shaderMatrixBuffer.forEach { it.free() }
 
-//		textureSampler.free()
 		descAllocator.free()
 		pipeline.free()
-		renderInfo.forEach { it.free() }
-		attInfoColor.forEach { it.free() }
-		attInfoDepth.forEach { it.free() }
-		attDepth.forEach { it.free() }
 		clrValueColor.free()
 		clrValueDepth.free()
 
 		meshManager.free()
-		renderCompleteSemphs.forEach { it.free() }
 		swapChainDirectors.forEach { it.free() }
 
 		pipelineCache.free()
