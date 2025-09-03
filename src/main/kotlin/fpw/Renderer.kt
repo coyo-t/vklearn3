@@ -89,6 +89,12 @@ class Renderer (engineContext: Engine)
 			0,
 			1,
 			VK_SHADER_STAGE_VERTEX_BIT
+		),
+		DescriptorLayout.Info(
+			DescriptorType.COMBINED_IMAGE_SAMPLER,
+			0,
+			1,
+			VK_SHADER_STAGE_FRAGMENT_BIT
 		)
 	)
 
@@ -119,7 +125,9 @@ class Renderer (engineContext: Engine)
 	)
 	val shaderTextureUniform = descAllocator.addDescSets(
 		"TEXTURE",
-		descLayoutTexture,
+		descLayoutVtxUniform,
+		maxInFlightFrameCount,
+//		descLayoutTexture,
 	)
 
 	val pipeline = run {
@@ -286,7 +294,7 @@ class Renderer (engineContext: Engine)
 				put(0, descAllocator.getDescSet("MATRIX").vkDescriptorSet)
 				put(1, descAllocator.getDescSet("TEXTURE").vkDescriptorSet)
 			}
-			shaderTextureUniform.first().setImages(device, textureSampler, 1, textureTerrain.imageView)
+			shaderTextureUniform[currentFrame].setImages(device, textureSampler, 1, textureTerrain.imageView)
 
 			vkCmdBindDescriptorSets(
 				cmdHandle,
