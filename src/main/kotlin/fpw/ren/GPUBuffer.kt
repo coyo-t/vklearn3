@@ -27,33 +27,34 @@ class GPUBuffer (
 //	val bufferStruct: Long
 	val bufferStruct: Long
 	val pb: PointerBuffer
-	val requestedSize: Long
+	val requestedSize = size
 
 	var mappedMemory: Long
 		private set
 
 	init
 	{
-		requestedSize = size
 		mappedMemory = NULL
 		MemoryStack.stackPush().use { stack ->
 			val bufferCreateInfo = VkBufferCreateInfo.calloc(stack)
-				.`sType$Default`()
-				.size(size)
-				.usage(bufferUsage)
-				.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
+			bufferCreateInfo.`sType$Default`()
+			bufferCreateInfo.size(size)
+			bufferCreateInfo.usage(bufferUsage)
+			bufferCreateInfo.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
 			val allocInfo = VmaAllocationCreateInfo.calloc(stack)
-				.usage(vmaUsage)
-				.flags(vmaFlags)
-				.requiredFlags(reqFlags)
+			allocInfo.usage(vmaUsage)
+			allocInfo.flags(vmaFlags)
+			allocInfo.requiredFlags(reqFlags)
 
 			val pAllocation = stack.callocPointer(1)
 			val lp = stack.mallocLong(1)
 			gpuCheck(
 				vmaCreateBuffer(
 					vkCtx.memAlloc.vmaAlloc, bufferCreateInfo, allocInfo, lp,
-					pAllocation, null
-				), "Failed to create buffer"
+					pAllocation,
+					null
+				),
+				"Failed to create buffer"
 			)
 			bufferStruct = lp.get(0)
 			allocation = pAllocation.get(0)

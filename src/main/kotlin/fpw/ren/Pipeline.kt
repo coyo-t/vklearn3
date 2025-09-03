@@ -16,7 +16,7 @@ class Pipeline (
 	val renderer: Renderer,
 	colorFormat: Int,
 	shaderModules: List<ShaderModule>,
-	vi: VkPipelineVertexInputStateCreateInfo,
+	vertexFormat: VkPipelineVertexInputStateCreateInfo,
 	depthFormat: Int = VK_FORMAT_UNDEFINED,
 	pushConstRange: List<Triple<Int, Int, Int>> = emptyList(),
 	descriptorSetLayouts: List<DescriptorLayout> = emptyList(),
@@ -97,45 +97,37 @@ class Pipeline (
 				null
 			}
 
-			val numPushConstants = pushConstRange.size
-			val vpcr: VkPushConstantRange.Buffer?
-			if (numPushConstants > 0)
-			{
-				vpcr = VkPushConstantRange.calloc(numPushConstants, stack)
-				for (i in 0..<numPushConstants)
-				{
-					val (stage, offset, size) = pushConstRange[i]
-					vpcr[i]
-						.stageFlags(stage)
-						.offset(offset)
-						.size(size)
-				}
-			}
-			else
-			{
-				vpcr = null
-			}
+//			val numPushConstants = pushConstRange.size
+//			val vpcr: VkPushConstantRange.Buffer?
+//			if (numPushConstants > 0)
+//			{
+//				vpcr = VkPushConstantRange.calloc(numPushConstants, stack)
+//				for (i in 0..<numPushConstants)
+//				{
+//					val (stage, offset, size) = pushConstRange[i]
+//					vpcr[i]
+//						.stageFlags(stage)
+//						.offset(offset)
+//						.size(size)
+//				}
+//			}
+//			else
+//			{
+//				vpcr = null
+//			}
 
 			val numLayouts = descriptorSetLayouts.size
+
 			val ppLayout = stack.mallocLong(numLayouts)
 			for (i in 0..<numLayouts)
 			{
 				ppLayout.put(i, descriptorSetLayouts[i].vkDescLayout)
 			}
 
-			val rendCreateInfo = VkPipelineRenderingCreateInfo.calloc(stack)
-			rendCreateInfo.`sType$Default`()
-			rendCreateInfo.colorAttachmentCount(1)
-			rendCreateInfo.pColorAttachmentFormats(stack.mallocInt(1).put(0, colorFormat))
-			if (ds != null)
-			{
-				rendCreateInfo.depthAttachmentFormat(depthFormat)
-			}
-
 			val pPipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo.calloc(stack)
 			pPipelineLayoutCreateInfo.`sType$Default`()
 			pPipelineLayoutCreateInfo.pSetLayouts(ppLayout)
-			pPipelineLayoutCreateInfo.pPushConstantRanges(vpcr)
+//			pPipelineLayoutCreateInfo.pPushConstantRanges(vpcr)
 
 			gpuCheck(
 				vkCreatePipelineLayout(device.vkDevice, pPipelineLayoutCreateInfo, null, lp),
@@ -147,7 +139,7 @@ class Pipeline (
 			createInfo.`sType$Default`()
 			createInfo.renderPass(VK_NULL_HANDLE)
 			createInfo.pStages(shaderStages)
-			createInfo.pVertexInputState(vi)
+			createInfo.pVertexInputState(vertexFormat)
 			createInfo.pInputAssemblyState(assemblyState)
 			createInfo.pViewportState(viewportState)
 			createInfo.pRasterizationState(rasterState)
@@ -155,6 +147,16 @@ class Pipeline (
 			createInfo.pMultisampleState(multisampleState)
 			createInfo.pDynamicState(dynamicState)
 			createInfo.layout(vkPipelineLayout)
+
+			val rendCreateInfo = VkPipelineRenderingCreateInfo.calloc(stack)
+			rendCreateInfo.`sType$Default`()
+			rendCreateInfo.colorAttachmentCount(1)
+			rendCreateInfo.pColorAttachmentFormats(stack.ints(colorFormat))
+			if (ds != null)
+			{
+				rendCreateInfo.depthAttachmentFormat(depthFormat)
+			}
+
 			createInfo.pNext(rendCreateInfo)
 			if (ds != null)
 			{
@@ -175,7 +177,7 @@ class Pipeline (
 		}
 	}
 
-	fun cleanup ()
+	fun free ()
 	{
 		val vkDevice = renderer.vkDevice
 		vkDestroyPipelineLayout(vkDevice, vkPipelineLayout, null)

@@ -132,7 +132,7 @@ class Renderer (val engineContext: Engine)
 		val outs = Pipeline(
 			this,
 			shaderModules = shaderModules,
-			vi = TestCube.format.vi,
+			vertexFormat = TestCube.format.vi,
 			colorFormat = displaySurface.surfaceFormat.imageFormat,
 			depthFormat = VK_FORMAT_D16_UNORM,
 			descriptorSetLayouts = listOf(
@@ -623,7 +623,7 @@ class Renderer (val engineContext: Engine)
 
 //		textureSampler.free()
 		descAllocator.free()
-		pipeline.cleanup()
+		pipeline.free()
 		renderInfo.forEach(VkRenderingInfo::free)
 		attInfoColor.forEach(VkRenderingAttachmentInfo.Buffer::free)
 		attInfoDepth.forEach(VkRenderingAttachmentInfo::free)

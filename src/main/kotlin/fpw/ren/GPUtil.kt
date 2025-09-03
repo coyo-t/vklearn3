@@ -57,30 +57,29 @@ object GPUtil
 	)
 	{
 		val imageBarrier = VkImageMemoryBarrier2.calloc(1, stack)
-			.`sType$Default`()
-			.oldLayout(oldLayout)
-			.newLayout(newLayout)
-			.srcStageMask(srcStage)
-			.dstStageMask(dstStage)
-			.srcAccessMask(srcAccess)
-			.dstAccessMask(dstAccess)
-			.srcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-			.dstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-			.subresourceRange {
-				it
-					.aspectMask(aspectMask)
-					.baseMipLevel(0)
-					.levelCount(VK_REMAINING_MIP_LEVELS)
-					.baseArrayLayer(0)
-					.layerCount(VK_REMAINING_ARRAY_LAYERS)
-			}
-			.image(image)
+		imageBarrier.`sType$Default`()
+		imageBarrier.oldLayout(oldLayout)
+		imageBarrier.newLayout(newLayout)
+		imageBarrier.srcStageMask(srcStage)
+		imageBarrier.dstStageMask(dstStage)
+		imageBarrier.srcAccessMask(srcAccess)
+		imageBarrier.dstAccessMask(dstAccess)
+		imageBarrier.srcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+		imageBarrier.dstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+		imageBarrier.subresourceRange {
+			it.aspectMask(aspectMask)
+			it.baseMipLevel(0)
+			it.levelCount(VK_REMAINING_MIP_LEVELS)
+			it.baseArrayLayer(0)
+			it.layerCount(VK_REMAINING_ARRAY_LAYERS)
+		}
+		imageBarrier.image(image)
 
-		val depInfo = VkDependencyInfo.calloc(stack)
-			.`sType$Default`()
-			.pImageMemoryBarriers(imageBarrier)
+		val dependencyInfo = VkDependencyInfo.calloc(stack)
+		dependencyInfo.`sType$Default`()
+		dependencyInfo.pImageMemoryBarriers(imageBarrier)
 
-		vkCmdPipelineBarrier2(cmdHandle, depInfo)
+		vkCmdPipelineBarrier2(cmdHandle, dependencyInfo)
 	}
 
 
@@ -110,7 +109,7 @@ object GPUtil
 	{
 		if (err != VK_SUCCESS)
 		{
-			throwGpuCheck(err, messageProvider(err))
+			gpuCheck(err, messageProvider(err))
 		}
 	}
 
@@ -118,7 +117,9 @@ object GPUtil
 	{
 		if (err != VK_SUCCESS)
 		{
-			throwGpuCheck(err, errMsg)
+			val errName = ERROR_NAMETABLE.getValue(err)
+			val msg = if (errMsg != null) " '$errMsg'" else ""
+			throw RuntimeException("gpu check failed$msg: #$err - $errName")
 		}
 	}
 
@@ -139,13 +140,6 @@ object GPUtil
 		val matrixBuffer = MemoryUtil.memByteBuffer(mappedMemory, vkBuffer.requestedSize.toInt())
 		matrix.get(offset, matrixBuffer)
 		vkBuffer.unMap()
-	}
-
-	private fun throwGpuCheck (er:Int, ms:String?): Nothing
-	{
-		val errName = ERROR_NAMETABLE.getValue(er)
-		val msg = if (ms != null) " '$ms'" else ""
-		throw RuntimeException("gpu check failed$msg: #$er - $errName")
 	}
 
 }
