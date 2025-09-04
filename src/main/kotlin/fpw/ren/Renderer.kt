@@ -5,6 +5,7 @@ import fpw.ren.command.CommandBuffer
 import fpw.ren.command.CommandPool
 import fpw.ren.command.CommandSequence
 import fpw.ren.descriptor.*
+import fpw.ren.descriptor.DescriptorAllocatorGrowable.DescSet
 import fpw.ren.device.GPUDevice
 import fpw.ren.enums.ShaderType
 import fpw.ren.enums.VkFormat
@@ -19,8 +20,11 @@ import fpw.ren.texture.SamplerWrapping
 import fpw.ren.texture.TextureManager
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.util.vma.Vma
+import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE
 import org.lwjgl.vulkan.*
+import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VK13.*
 import java.awt.Color
 
 class Renderer (val engineContext: Engine)
@@ -41,7 +45,7 @@ class Renderer (val engineContext: Engine)
 
 	val instance = GPUInstance(
 		this,
-		VK13.VK_API_VERSION_1_3,
+		VK_API_VERSION_1_3,
 		validate = useValidationLayers,
 	)
 
@@ -67,7 +71,6 @@ class Renderer (val engineContext: Engine)
 		useVerticalSync,
 	)
 
-
 	val SCDcommandPool
 		= CommandPool(this, graphicsQueue.queueFamilyIndex, false)
 
@@ -86,57 +89,68 @@ class Renderer (val engineContext: Engine)
 	var viewPoint: ViewPoint = IdentityViewPoint()
 	val mvMatrix = Matrix4f()
 
-
-	val descriptorLayoutVertexStage = DescriptorSetLayout(
-		this,
-		DescriptorSetLayout.Info(
-			DescriptorType.UniformBuffer,
-			0,
-			1,
-			VK10.VK_SHADER_STAGE_VERTEX_BIT
-		),
-	)
-
-	val descriptorLayoutFragmentStage = DescriptorSetLayout(
-		this,
-		DescriptorSetLayout.Info(
-			DescriptorType.CombinedImageSampler,
-			1,
-			1,
-			VK10.VK_SHADER_STAGE_FRAGMENT_BIT
-		),
-	)
-
-
-	val shaderMatrixBuffer = createHostVisibleBuff(
-		GPUtil.SIZEOF_MAT4 * 2L,
-		VK10.VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-		"MATRIX",
-		descriptorLayoutVertexStage,
-	)
-	val shaderTextureShit = descAlloc.addDescSets(
-		"TEXTURE",
-		descriptorLayoutFragmentStage,
-		1,
-	)
-
-	init
-	{
-		val writer = DescWriter()
-//		writer.writeBuffer()
-	}
-
-	val descriptors = DescriptorAllocatorGrowable(gpu)
-
-	init
-	{
-		descriptors.init(
+	val descriptors = DescriptorAllocatorGrowable(gpu).apply {
+		init(
 			1000,
 			DescriptorType.StorageImage to 3,
 			DescriptorType.StorageBuffer to 3,
 			DescriptorType.UniformBuffer to 3,
 			DescriptorType.CombinedImageSampler to 4,
 		)
+	}
+
+//	val descriptorLayoutVertexStage = DescriptorSetLayout(
+//		this,
+//		DescriptorSetLayout.Info(
+//			DescriptorType.UniformBuffer,
+//			0,
+//			1,
+//			VK_SHADER_STAGE_VERTEX_BIT
+//		),
+//	)
+//
+//	val descriptorLayoutFragmentStage = DescriptorSetLayout(
+//		this,
+//		DescriptorSetLayout.Info(
+//			DescriptorType.CombinedImageSampler,
+//			1,
+//			1,
+//			VK_SHADER_STAGE_FRAGMENT_BIT
+//		),
+//	)
+
+
+//	val shaderMatrixBuffer = createHostVisibleBuff(
+//		GPUtil.SIZEOF_MAT4 * 2L,
+//		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+//		"MATRIX",
+//		descriptorLayoutVertexStage,
+//	)
+//	val shaderTextureShit = descAlloc.addDescSets(
+//		"TEXTURE",
+//		descriptorLayoutFragmentStage,
+//		1,
+//	)
+
+	val shaderUniformBuffer = GPUBuffer(
+		this,
+		GPUtil.SIZEOF_MAT4 * 2L,
+		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+		VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+	)
+
+	init
+	{
+//		val writer = DescWriter()
+//		writer.writeBuffer(
+//			0,
+//			shaderUniformBuffer,
+//			GPUtil.SIZEOF_MAT4 * 2L,
+//			0L,
+//			DescriptorType.UniformBuffer,
+//		)
 	}
 
 	val pipeline = run {
@@ -160,8 +174,8 @@ class Renderer (val engineContext: Engine)
 			colorFormat = displaySurface.surfaceFormat.imageFormat,
 			depthFormat = VkFormat.D16_UNORM,
 			descriptorSetLayouts = listOf(
-				descriptorLayoutVertexStage,
-				descriptorLayoutFragmentStage,
+//				descriptorLayoutVertexStage,
+//				descriptorLayoutFragmentStage,
 			),
 		)
 		shaderModules.forEach { it.free() }
@@ -179,15 +193,7 @@ class Renderer (val engineContext: Engine)
 
 	fun init ()
 	{
-		buildVertexFormat {
-			location3D()
-			texcoord2D()
-			normal()
-			tint8()
-		}
-
 	}
-
 
 	private fun submit(cmdBuff: CommandBuffer, imageIndex: Int)
 	{
@@ -199,11 +205,11 @@ class Renderer (val engineContext: Engine)
 				.commandBuffer(cmdBuff.vkCommandBuffer)
 			val waits = VkSemaphoreSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
-				.stageMask(VK13.VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT)
+				.stageMask(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT)
 				.semaphore(SCDimageAcquiredSemaphore.vkSemaphore)
 			val signals = VkSemaphoreSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
-				.stageMask(VK13.VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)
+				.stageMask(VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)
 				.semaphore(swapChain.renderThinger[imageIndex].renderCompleteFlag.vkSemaphore)
 			graphicsQueue.submit(commands, waits, signals, fence)
 		}
@@ -241,41 +247,41 @@ class Renderer (val engineContext: Engine)
 				stack,
 				cmdHandle,
 				swapChainVisualImage,
-				VK10.VK_IMAGE_LAYOUT_UNDEFINED,
-				VK10.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-				VK13.VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-				VK13.VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-				VK13.VK_ACCESS_2_NONE,
-				VK13.VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-				VK10.VK_IMAGE_ASPECT_COLOR_BIT,
+				VK_IMAGE_LAYOUT_UNDEFINED,
+				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_ACCESS_2_NONE,
+				VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+				VK_IMAGE_ASPECT_COLOR_BIT,
 			)
 			GPUtil.imageBarrier(
 				stack,
 				cmdHandle,
 				swapChainDepthImage,
-				VK10.VK_IMAGE_LAYOUT_UNDEFINED,
-				VK12.VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-				VK13.VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT or VK13.VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
-				VK13.VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT or VK13.VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
-				VK13.VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-				VK13.VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT or VK13.VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-				VK10.VK_IMAGE_ASPECT_DEPTH_BIT,
+				VK_IMAGE_LAYOUT_UNDEFINED,
+				VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+				VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT or VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+				VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT or VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+				VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+				VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT or VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+				VK_IMAGE_ASPECT_DEPTH_BIT,
 			)
 			val renInf = thinger.renderInfo
-			VK13.vkCmdBeginRendering(cmdHandle, renInf)
-			VK10.vkCmdBindPipeline(cmdHandle, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vkPipeline)
-			val descr = stack.longs(
-				descAlloc.getDescSet("MATRIX").vkDescriptorSet,
-				descAlloc.getDescSet("TEXTURE").vkDescriptorSet,
-			)
-			VK10.vkCmdBindDescriptorSets(
-				cmdHandle,
-				VK10.VK_PIPELINE_BIND_POINT_GRAPHICS,
-				pipeline.vkPipelineLayout,
-				0,
-				descr,
-				null,
-			)
+			vkCmdBeginRendering(cmdHandle, renInf)
+			vkCmdBindPipeline(cmdHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vkPipeline)
+//			val descr = stack.longs(
+//				descAlloc.getDescSet("MATRIX").vkDescriptorSet,
+//				descAlloc.getDescSet("TEXTURE").vkDescriptorSet,
+//			)
+//			VK10.vkCmdBindDescriptorSets(
+//				cmdHandle,
+//				VK10.VK_PIPELINE_BIND_POINT_GRAPHICS,
+//				pipeline.vkPipelineLayout,
+//				0,
+//				descr,
+//				null,
+//			)
 			val swapChainExtent = this.swapChain.extents
 			val width = swapChainExtent.width()
 			val height = swapChainExtent.height()
@@ -286,27 +292,26 @@ class Renderer (val engineContext: Engine)
 			viewport.width(width.toFloat())
 			viewport.minDepth(0.0f)
 			viewport.maxDepth(1.0f)
-			VK10.vkCmdSetViewport(cmdHandle, 0, viewport)
+			vkCmdSetViewport(cmdHandle, 0, viewport)
 
 			val scissor = VkRect2D.calloc(1, stack)
 			scissor.extent { it.width(width).height(height) }
 			scissor.offset { it.x(0).y(0) }
-			VK10.vkCmdSetScissor(cmdHandle, 0, scissor)
+			vkCmdSetScissor(cmdHandle, 0, scissor)
 
 
-			shaderTextureShit[0].setImages(textureSampler, 1, textureTerrain.imageView)
+//			shaderTextureShit[0].setImages(textureSampler, 1, textureTerrain.imageView)
 
 
-			val vbCount = 1
-			val offsets = stack.mallocLong(vbCount).put(0, 0L)
-			val vbAddress = stack.mallocLong(vbCount)
+			val offsets = stack.longs(0L)
+			val vbAddress = stack.longs(0L)
 
 			viewPoint.updateMatricies()
 			val viewMatrix = viewPoint.viewMatrix
 			val projectionMatrix = viewPoint.projectionMatrix
 			val entities = engineContext.entities
 			val numEntities = entities.size
-			val curMatrixBuffer = shaderMatrixBuffer
+//			val curMatrixBuffer = shaderMatrixBuffer
 			for (i in 0..<numEntities)
 			{
 				val entity = entities[i]
@@ -315,8 +320,8 @@ class Renderer (val engineContext: Engine)
 				entity.updateModelMatrix()
 				viewMatrix.mul(entity.modelMatrix, mvMatrix)
 
-				GPUtil.copyMatrixToBuffer(curMatrixBuffer, projectionMatrix, 0)
-				GPUtil.copyMatrixToBuffer(curMatrixBuffer, mvMatrix, GPUtil.SIZEOF_MAT4)
+//				GPUtil.copyMatrixToBuffer(curMatrixBuffer, projectionMatrix, 0)
+//				GPUtil.copyMatrixToBuffer(curMatrixBuffer, mvMatrix, GPUtil.SIZEOF_MAT4)
 
 //				projectionMatrix.get(pushConstantsBuffer)
 //				mvMatrix.get(GPUtil.SIZEOF_MAT4, pushConstantsBuffer)
@@ -327,32 +332,32 @@ class Renderer (val engineContext: Engine)
 //					pushConstantsBuffer
 //				)
 				vbAddress.put(0, model.verticesBuffer.bufferStruct)
-				VK10.vkCmdBindVertexBuffers(
+				vkCmdBindVertexBuffers(
 					cmdHandle,
 					0,
 					vbAddress,
 					offsets,
 				)
-				VK10.vkCmdBindIndexBuffer(
+				vkCmdBindIndexBuffer(
 					cmdHandle,
 					model.indicesBuffer.bufferStruct,
 					0,
-					VK10.VK_INDEX_TYPE_UINT32
+					VK_INDEX_TYPE_UINT32
 				)
-				VK10.vkCmdDrawIndexed(cmdHandle, model.numIndices, 1, 0, 0, 0)
+				vkCmdDrawIndexed(cmdHandle, model.numIndices, 1, 0, 0, 0)
 			}
-			VK13.vkCmdEndRendering(cmdHandle)
+			vkCmdEndRendering(cmdHandle)
 			GPUtil.imageBarrier(
 				stack,
 				cmdHandle,
 				swapChainVisualImage,
-				VK10.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 				KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-				VK13.VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-				VK13.VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
-				VK13.VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT or VK13.VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-				VK13.VK_PIPELINE_STAGE_2_NONE,
-				VK10.VK_IMAGE_ASPECT_COLOR_BIT,
+				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
+				VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT or VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+				VK_PIPELINE_STAGE_2_NONE,
+				VK_IMAGE_ASPECT_COLOR_BIT,
 			)
 		}
 
@@ -406,9 +411,9 @@ class Renderer (val engineContext: Engine)
 			this,
 			buffSize,
 			usage,
-			Vma.VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
-			Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-			VK10.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+			VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 		)
 		val first = layout.layoutInfos.first()
 		descSet.setBuffer(
@@ -427,9 +432,9 @@ class Renderer (val engineContext: Engine)
 		textureManager.free()
 		shaderManager.free()
 
-		descriptorLayoutVertexStage.free()
-		descriptorLayoutFragmentStage.free()
-		shaderMatrixBuffer.free()
+//		descriptorLayoutVertexStage.free()
+//		descriptorLayoutFragmentStage.free()
+//		shaderMatrixBuffer.free()
 		textureSampler.free()
 
 		descriptors.free()

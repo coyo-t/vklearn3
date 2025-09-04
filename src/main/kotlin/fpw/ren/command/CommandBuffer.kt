@@ -104,7 +104,10 @@ class CommandBuffer
 
 	fun reset()
 	{
-		VK10.vkResetCommandBuffer(vkCommandBuffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
+		VK10.vkResetCommandBuffer(
+			vkCommandBuffer,
+			VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT,
+		)
 	}
 
 	fun submitAndWait(vkCtx: Renderer, queue: CommandSequence)
