@@ -49,7 +49,7 @@ class SwapChain (
 				}
 				max(result, minImages)
 			}
-			extents = GPUtil.registerPointerForCleanup(VkExtent2D.calloc())
+			extents = GPUtil.registerForCleanup(VkExtent2D.calloc())
 			if (surfaceCaps.currentExtent().width() == -0x1)
 			{
 				// Surface size undefined. Set to the window size if within bounds

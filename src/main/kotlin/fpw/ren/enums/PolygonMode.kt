@@ -1,0 +1,98 @@
+package fpw.ren.enums
+
+import org.lwjgl.vulkan.VK10.*
+
+enum class PolygonMode(val vk: Int)
+{
+	Filled(VK_POLYGON_MODE_FILL),
+	Lines(VK_POLYGON_MODE_LINE),
+	Points(VK_POLYGON_MODE_POINT),
+}
+
+enum class CullingMode (val vk: Int)
+{
+	None(VK_CULL_MODE_NONE),
+	Front(VK_CULL_MODE_FRONT_BIT),
+	Back(VK_CULL_MODE_BACK_BIT),
+	Both(VK_CULL_MODE_FRONT_AND_BACK),
+}
+
+enum class WindingOrder (val vk: Int)
+{
+	Clockwise(VK_FRONT_FACE_CLOCKWISE),
+	CounterClockwise(VK_FRONT_FACE_COUNTER_CLOCKWISE),
+}
+
+enum class DynamicStates(val vk: Int)
+{
+	Viewport(VK_DYNAMIC_STATE_VIEWPORT),
+	Scissor(VK_DYNAMIC_STATE_SCISSOR),
+	LineSize(VK_DYNAMIC_STATE_LINE_WIDTH),
+	DepthBias(VK_DYNAMIC_STATE_DEPTH_BIAS),
+	BlendConstants(VK_DYNAMIC_STATE_BLEND_CONSTANTS),
+	DepthBounds(VK_DYNAMIC_STATE_DEPTH_BOUNDS),
+	CompareMask(VK_DYNAMIC_STATE_STENCIL_COMPARE_MASK),
+	WriteMask(VK_DYNAMIC_STATE_STENCIL_WRITE_MASK),
+	StencilReference(VK_DYNAMIC_STATE_STENCIL_REFERENCE),
+}
+
+enum class BlendOperation(val vk: Int)
+{
+	Add(VK_BLEND_OP_ADD),
+	Subtract(VK_BLEND_OP_SUBTRACT),
+	InverseSubtract(VK_BLEND_OP_REVERSE_SUBTRACT),
+	Min(VK_BLEND_OP_MIN),
+	Max(VK_BLEND_OP_MAX),
+}
+
+enum class BlendFactor(val vk:Int)
+{
+	Zero(VK_BLEND_FACTOR_ZERO),
+	One(VK_BLEND_FACTOR_ONE),
+
+	SrcColor(VK_BLEND_FACTOR_SRC_COLOR),
+	SrcAlpha(VK_BLEND_FACTOR_SRC_ALPHA),
+	AntiSrcColor(VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR),
+	AntiSrcAlpha(VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA),
+
+	DstColor(VK_BLEND_FACTOR_DST_COLOR),
+	DstAlpha(VK_BLEND_FACTOR_DST_ALPHA),
+	AntiDstColor(VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR),
+	AntiDstAlpha(VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA),
+
+	ConstantColor(VK_BLEND_FACTOR_CONSTANT_COLOR),
+	ConstantAlpha(VK_BLEND_FACTOR_CONSTANT_ALPHA),
+	AntiConstantColor(VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR),
+	AntiConstantAlpha(VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA),
+
+	Src1Color(VK_BLEND_FACTOR_SRC1_COLOR),
+	Src1Alpha(VK_BLEND_FACTOR_SRC1_ALPHA),
+	AntiSrc1Color(VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR),
+	AntiSrc1Alpha(VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA),
+
+	SrcAlphaSaturate(VK_BLEND_FACTOR_SRC_ALPHA_SATURATE),
+}
+
+enum class LogicOperation(val vk:Int)
+{
+	And(VK_LOGIC_OP_AND),
+	NotAnd(VK_LOGIC_OP_NAND),
+	ReversedAnd(VK_LOGIC_OP_AND_REVERSE),
+	InvertedAnd(VK_LOGIC_OP_AND_INVERTED),
+
+	Xor(VK_LOGIC_OP_XOR),
+
+	Or(VK_LOGIC_OP_OR),
+	NotOr(VK_LOGIC_OP_NOR),
+	ReversedOr(VK_LOGIC_OP_OR_REVERSE),
+	InvertedOr(VK_LOGIC_OP_OR_INVERTED),
+
+	Eq(VK_LOGIC_OP_EQUIVALENT),
+	Invert(VK_LOGIC_OP_INVERT),
+
+	Non(VK_LOGIC_OP_NO_OP),
+	Clear(VK_LOGIC_OP_CLEAR),
+	Set(VK_LOGIC_OP_SET),
+	Copy(VK_LOGIC_OP_COPY),
+	InvertedCopy(VK_LOGIC_OP_COPY_INVERTED),
+}

@@ -1,7 +1,6 @@
 package fpw.ren
 
 import fpw.FUtil
-import fpw.ren.Renderer
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
@@ -89,7 +88,21 @@ object GPUtil
 		}
 	}
 
-	fun <T: Pointer.Default> registerPointerForCleanup (who: T): T
+	inline fun <T: Pointer.Default> registerForCleanup (factory:()->T, init:T.()->Unit):T
+	{
+		val outs = registerForCleanup(factory())
+		init(outs)
+		return outs
+	}
+
+	inline fun <T: Pointer.Default> registerForCleanup (who:T, init:T.()->Unit):T
+	{
+		val outs = registerForCleanup(who)
+		init(outs)
+		return outs
+	}
+
+	fun <T: Pointer.Default> registerForCleanup (who: T): T
 	{
 		CLEANER.register(who, PointerCleanerUpper(null, who.address()))
 		return who
@@ -191,7 +204,7 @@ object GPUtil
 
 	fun createClearValue (): VkClearValue
 	{
-		return registerPointerForCleanup(VkClearValue.calloc())
+		return registerForCleanup(VkClearValue.calloc())
 	}
 
 	fun createClearValue (c: Color): VkClearValue

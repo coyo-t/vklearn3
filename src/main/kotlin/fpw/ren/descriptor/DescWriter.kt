@@ -28,13 +28,13 @@ class DescWriter
 		type: DescriptorType
 	)
 	{
-		val info = GPUtil.registerPointerForCleanup(VkDescriptorImageInfo.calloc(1))
+		val info = GPUtil.registerForCleanup(VkDescriptorImageInfo.calloc(1))
 		info.sampler(sampler.vkSampler)
 		info.imageView(image.vkImage)
 		info.imageLayout(layout.vk)
 		imageInfos += info
 
-		val write = GPUtil.registerPointerForCleanup(VkWriteDescriptorSet.calloc())
+		val write = GPUtil.registerForCleanup(VkWriteDescriptorSet.calloc())
 		write.sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET)
 		write.dstBinding(binding)
 		//left empty for now until we need to write it
@@ -56,13 +56,13 @@ class DescWriter
 		check(type.validForBuffer) {
 			"not a valid buffer desc. type"
 		}
-		val info = GPUtil.registerPointerForCleanup(VkDescriptorBufferInfo.calloc(1))
+		val info = GPUtil.registerForCleanup(VkDescriptorBufferInfo.calloc(1))
 		info.buffer(buffer.bufferStruct)
 		info.offset(offset)
 		info.range(size)
 		bufferInfos += info
 
-		val write = GPUtil.registerPointerForCleanup(VkWriteDescriptorSet.calloc())
+		val write = GPUtil.registerForCleanup(VkWriteDescriptorSet.calloc())
 		write.sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET)
 		write.dstBinding(binding)
 		//left empty for now until we need to write it

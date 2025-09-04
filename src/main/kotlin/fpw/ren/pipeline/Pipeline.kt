@@ -1,25 +1,34 @@
-package fpw.ren
+package fpw.ren.pipeline
 
-import fpw.ren.Renderer
-import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.GPUtil
 import fpw.ren.GPUtil.longs
+import fpw.ren.Renderer
+import fpw.ren.ShaderModule
 import fpw.ren.descriptor.DescriptorSetLayout
+import fpw.ren.enums.Pr
 import fpw.ren.model.VertexFormat
+import fpw.ren.topology
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.VK10.VK_POLYGON_MODE_FILL
-import org.lwjgl.vulkan.VK10.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
-import org.lwjgl.vulkan.VK10.vkCreateGraphicsPipelines
-import org.lwjgl.vulkan.VK10.vkDestroyPipeline
-import org.lwjgl.vulkan.VK14.*
-
+import org.lwjgl.vulkan.VK10
+import org.lwjgl.vulkan.VkGraphicsPipelineCreateInfo
+import org.lwjgl.vulkan.VkPipelineColorBlendAttachmentState
+import org.lwjgl.vulkan.VkPipelineColorBlendStateCreateInfo
+import org.lwjgl.vulkan.VkPipelineDepthStencilStateCreateInfo
+import org.lwjgl.vulkan.VkPipelineDynamicStateCreateInfo
+import org.lwjgl.vulkan.VkPipelineInputAssemblyStateCreateInfo
+import org.lwjgl.vulkan.VkPipelineLayoutCreateInfo
+import org.lwjgl.vulkan.VkPipelineMultisampleStateCreateInfo
+import org.lwjgl.vulkan.VkPipelineRasterizationStateCreateInfo
+import org.lwjgl.vulkan.VkPipelineRenderingCreateInfo
+import org.lwjgl.vulkan.VkPipelineShaderStageCreateInfo
+import org.lwjgl.vulkan.VkPipelineViewportStateCreateInfo
 
 class Pipeline (
 	val renderer: Renderer,
 	colorFormat: Int,
 	shaderModules: List<ShaderModule>,
 	vertexFormat: VertexFormat,
-	depthFormat: Int = VK_FORMAT_UNDEFINED,
+	depthFormat: Int = VK10.VK_FORMAT_UNDEFINED,
 	pushConstRange: List<Triple<Int, Int, Int>> = emptyList(),
 	descriptorSetLayouts: List<DescriptorSetLayout> = emptyList(),
 )
@@ -46,7 +55,7 @@ class Pipeline (
 
 			val assemblyState = VkPipelineInputAssemblyStateCreateInfo.calloc(stack)
 			assemblyState.`sType$Default`()
-			assemblyState.topology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+			assemblyState.topology(Pr.TriangleList)
 
 			val viewportState = VkPipelineViewportStateCreateInfo.calloc(stack)
 			viewportState.`sType$Default`()
@@ -55,21 +64,21 @@ class Pipeline (
 
 			val rasterState = VkPipelineRasterizationStateCreateInfo.calloc(stack)
 			rasterState.`sType$Default`()
-			rasterState.polygonMode(VK_POLYGON_MODE_FILL)
-			rasterState.cullMode(VK_CULL_MODE_BACK_BIT)
-			rasterState.frontFace(VK_FRONT_FACE_CLOCKWISE)
+			rasterState.polygonMode(VK10.VK_POLYGON_MODE_FILL)
+			rasterState.cullMode(VK10.VK_CULL_MODE_BACK_BIT)
+			rasterState.frontFace(VK10.VK_FRONT_FACE_CLOCKWISE)
 			rasterState.lineWidth(1f)
 
 			val multisampleState = VkPipelineMultisampleStateCreateInfo.calloc(stack)
 			multisampleState.`sType$Default`()
-			multisampleState.rasterizationSamples(VK_SAMPLE_COUNT_1_BIT)
+			multisampleState.rasterizationSamples(VK10.VK_SAMPLE_COUNT_1_BIT)
 
 			val dynamicState = VkPipelineDynamicStateCreateInfo.calloc(stack)
 			dynamicState.`sType$Default`()
 			dynamicState.pDynamicStates(
 				stack.ints(
-					VK_DYNAMIC_STATE_VIEWPORT,
-					VK_DYNAMIC_STATE_SCISSOR,
+					VK10.VK_DYNAMIC_STATE_VIEWPORT,
+					VK10.VK_DYNAMIC_STATE_SCISSOR,
 				)
 			)
 
@@ -81,13 +90,13 @@ class Pipeline (
 			colorBlendState.`sType$Default`()
 			colorBlendState.pAttachments(blendAttachState)
 
-			val ds = if (depthFormat != VK_FORMAT_UNDEFINED)
+			val ds = if (depthFormat != VK10.VK_FORMAT_UNDEFINED)
 			{
 				val it = VkPipelineDepthStencilStateCreateInfo.calloc(stack)
 				it.`sType$Default`()
 				it.depthTestEnable(true)
 				it.depthWriteEnable(true)
-				it.depthCompareOp(VK_COMPARE_OP_LESS_OR_EQUAL)
+				it.depthCompareOp(VK10.VK_COMPARE_OP_LESS_OR_EQUAL)
 				it.depthBoundsTestEnable(false)
 				it.stencilTestEnable(false)
 				it
@@ -125,15 +134,15 @@ class Pipeline (
 			pPipelineLayoutCreateInfo.pSetLayouts(ppLayout)
 //			pPipelineLayoutCreateInfo.pPushConstantRanges(vpcr)
 
-			gpuCheck(
-				vkCreatePipelineLayout(device.vkDevice, pPipelineLayoutCreateInfo, null, lp),
+			GPUtil.gpuCheck(
+				VK10.vkCreatePipelineLayout(device.vkDevice, pPipelineLayoutCreateInfo, null, lp),
 				"Failed to create pipeline layout"
 			)
 			vkPipelineLayout = lp.get(0)
 
 			val createInfo = VkGraphicsPipelineCreateInfo.calloc(1, stack)
 			createInfo.`sType$Default`()
-			createInfo.renderPass(VK_NULL_HANDLE)
+			createInfo.renderPass(VK10.VK_NULL_HANDLE)
 			createInfo.pStages(shaderStages)
 			createInfo.pVertexInputState(vertexFormat.vi)
 			createInfo.pInputAssemblyState(assemblyState)
@@ -159,10 +168,10 @@ class Pipeline (
 				createInfo.pDepthStencilState(ds)
 			}
 
-			gpuCheck(
-				vkCreateGraphicsPipelines(
+			GPUtil.gpuCheck(
+				VK10.vkCreateGraphicsPipelines(
 					device.vkDevice,
-					VK_NULL_HANDLE,
+					VK10.VK_NULL_HANDLE,
 					createInfo,
 					null,
 					lp
@@ -176,8 +185,8 @@ class Pipeline (
 	fun free ()
 	{
 		val vkDevice = renderer.gpu.logicalDevice.vkDevice
-		vkDestroyPipelineLayout(vkDevice, vkPipelineLayout, null)
-		vkDestroyPipeline(vkDevice, vkPipeline, null)
+		VK10.vkDestroyPipelineLayout(vkDevice, vkPipelineLayout, null)
+		VK10.vkDestroyPipeline(vkDevice, vkPipeline, null)
 	}
 
 }

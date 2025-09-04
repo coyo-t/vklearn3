@@ -16,6 +16,11 @@ class DescriptorAllocatorGrowable(val device: GPUDevice)
 	private val readyPools = mutableListOf<DescPool>()
 	private var setsPerPool = 0
 
+	fun init (maxSets: Int, vararg ratios: Pair<DescriptorType, Number>)
+	{
+		init(maxSets, ratios.map { (type, number) -> PoolSizeRatio(type, number) })
+	}
+
 	fun init (maxSets: Int, poolRatios: List<PoolSizeRatio>)
 	{
 		ratios.clear()
@@ -53,6 +58,11 @@ class DescriptorAllocatorGrowable(val device: GPUDevice)
 			vkDestroyDescriptorPool(dPtr, p.vkDescPool, null)
 		}
 		fullPools.clear()
+	}
+
+	fun free ()
+	{
+		destroyPools()
 	}
 
 	fun allocate (layout: DescriptorSetLayout, pNext:Long=0L): DescSet

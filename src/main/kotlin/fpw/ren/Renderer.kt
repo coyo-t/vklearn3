@@ -1,18 +1,17 @@
 package fpw.ren
 
 import fpw.Engine
-import fpw.ren.goobers.IdentityViewPoint
-import fpw.ren.goobers.ViewPoint
 import fpw.ren.command.CommandBuffer
 import fpw.ren.command.CommandSequence
-import fpw.ren.descriptor.DescriptorAllocator
-import fpw.ren.descriptor.DescriptorSetLayout
-import fpw.ren.descriptor.DescriptorType
+import fpw.ren.descriptor.*
+import fpw.ren.descriptor.DescriptorAllocatorGrowable.PoolSizeRatio
 import fpw.ren.device.GPUDevice
 import fpw.ren.enums.ShaderType
+import fpw.ren.goobers.IdentityViewPoint
+import fpw.ren.goobers.ViewPoint
 import fpw.ren.model.ModelManager
-import fpw.ren.model.VertexFormatBuilder
 import fpw.ren.model.VertexFormatBuilder.Companion.buildVertexFormat
+import fpw.ren.pipeline.Pipeline
 import fpw.ren.texture.Sampler
 import fpw.ren.texture.SamplerFilter
 import fpw.ren.texture.SamplerWrapping
@@ -20,14 +19,7 @@ import fpw.ren.texture.TextureManager
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.vma.Vma
-import org.lwjgl.vulkan.KHRSwapchain
-import org.lwjgl.vulkan.VK10
-import org.lwjgl.vulkan.VK12
-import org.lwjgl.vulkan.VK13
-import org.lwjgl.vulkan.VkCommandBufferSubmitInfo
-import org.lwjgl.vulkan.VkRect2D
-import org.lwjgl.vulkan.VkSemaphoreSubmitInfo
-import org.lwjgl.vulkan.VkViewport
+import org.lwjgl.vulkan.*
 import java.awt.Color
 
 class Renderer (val engineContext: Engine)
@@ -83,6 +75,7 @@ class Renderer (val engineContext: Engine)
 	var viewPoint: ViewPoint = IdentityViewPoint()
 	val mvMatrix = Matrix4f()
 
+
 	val descriptorLayoutVertexStage = DescriptorSetLayout(
 		this,
 		DescriptorSetLayout.Info(
@@ -115,6 +108,25 @@ class Renderer (val engineContext: Engine)
 		descriptorLayoutFragmentStage,
 		1,
 	)
+
+	init
+	{
+		val writer = DescWriter()
+//		writer.writeBuffer()
+	}
+
+	val descriptors = DescriptorAllocatorGrowable(gpu)
+
+	init
+	{
+		descriptors.init(
+			1000,
+			DescriptorType.StorageImage to 3,
+			DescriptorType.StorageBuffer to 3,
+			DescriptorType.UniformBuffer to 3,
+			DescriptorType.CombinedImageSampler to 4,
+		)
+	}
 
 	val pipeline = run {
 		val shCode = shaderManager[engineContext.testShader]
@@ -156,7 +168,7 @@ class Renderer (val engineContext: Engine)
 
 	fun init ()
 	{
-		VertexFormatBuilder.buildVertexFormat {
+		buildVertexFormat {
 			location3D()
 			texcoord2D()
 			normal()
@@ -190,6 +202,7 @@ class Renderer (val engineContext: Engine)
 	{
 		val director = swapChainDirector
 		director.fence.waitForFences()
+		descriptors.clearPools()
 		val cmdPool = director.commandPool
 		val cmdBuffer = director.commandBuffer
 
@@ -370,35 +383,6 @@ class Renderer (val engineContext: Engine)
 		doResize = false
 	}
 
-	fun createHostVisibleBuffs(
-		buffSize: Long,
-		numBuffs: Int,
-		usage: Int,
-		id: String,
-		layout: DescriptorSetLayout,
-	): List<GPUBuffer>
-	{
-		descAlloc.addDescSets(id, layout, numBuffs)
-		val first = layout.layoutInfos.first()
-		return List(numBuffs) {
-			val r = GPUBuffer(
-				this,
-				buffSize,
-				usage,
-				Vma.VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
-				Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-				VK10.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-			)
-			val descSet = descAlloc.getDescSet(id, it)
-			descSet.setBuffer(
-				r,
-				r.requestedSize,
-				first.binding,
-				first.descType.vk,
-			)
-			r
-		}
-	}
 	fun createHostVisibleBuff (
 		buffSize: Long,
 		usage: Int,
@@ -428,6 +412,7 @@ class Renderer (val engineContext: Engine)
 	fun free()
 	{
 		gpu.waitIdle()
+
 		textureManager.free()
 		shaderManager.free()
 
@@ -436,6 +421,7 @@ class Renderer (val engineContext: Engine)
 		shaderMatrixBuffer.free()
 		textureSampler.free()
 
+		descriptors.free()
 		descAlloc.free()
 		pipeline.free()
 		clrValueColor.free()
