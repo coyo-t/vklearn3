@@ -1,10 +1,10 @@
 package fpw.ren
 
-import fpw.ren.Renderer
 import fpw.ren.GPUtil.gpuCheck
 import fpw.ren.image.ImageView.Data
 import fpw.ren.command.CommandSequence
 import fpw.ren.device.GPUDevice
+import fpw.ren.enums.PresentMode
 import fpw.ren.image.ImageView
 import org.joml.Math.clamp
 import org.lwjgl.system.MemoryStack
@@ -15,7 +15,6 @@ import org.lwjgl.vulkan.VK10.VK_IMAGE_ASPECT_COLOR_BIT
 import org.lwjgl.vulkan.VK14.VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
 import org.lwjgl.vulkan.VK14.VK_SUCCESS
 import org.lwjgl.vulkan.VkExtent2D
-import org.lwjgl.vulkan.VkExtent2D.calloc
 import org.lwjgl.vulkan.VkPresentInfoKHR
 import org.lwjgl.vulkan.VkSwapchainCreateInfoKHR
 import kotlin.math.max
@@ -34,7 +33,7 @@ class SwapChain (
 {
 	val extents: VkExtent2D
 	val vkSwapChain: Long
-	val renderThinger: List<InProgressRenderThinger>
+	val renderThinger: List<FrameDataz>
 
 	init
 	{
@@ -50,22 +49,19 @@ class SwapChain (
 				}
 				max(result, minImages)
 			}
-			extents = run {
-				val result1 = calloc()
-				if (surfaceCaps.currentExtent().width() == -0x1)
-				{
-					// Surface size undefined. Set to the window size if within bounds
-					val minn = surfaceCaps.minImageExtent()
-					val maxx = surfaceCaps.maxImageExtent()
-					result1.width(clamp(wide, minn.width(), maxx.width()))
-					result1.height(clamp(tall, minn.height(), maxx.height()))
-				}
-				else
-				{
-					// Surface already defined, just use that for the swap chain
-					result1.set(surfaceCaps.currentExtent())
-				}
-				result1
+			extents = GPUtil.registerPointerForCleanup(VkExtent2D.calloc())
+			if (surfaceCaps.currentExtent().width() == -0x1)
+			{
+				// Surface size undefined. Set to the window size if within bounds
+				val minn = surfaceCaps.minImageExtent()
+				val maxx = surfaceCaps.maxImageExtent()
+				extents.width(clamp(wide, minn.width(), maxx.width()))
+				extents.height(clamp(tall, minn.height(), maxx.height()))
+			}
+			else
+			{
+				// Surface already defined, just use that for the swap chain
+				extents.set(surfaceCaps.currentExtent())
 			}
 
 			val surfaceFormat = displaySurface.surfaceFormat
@@ -83,8 +79,8 @@ class SwapChain (
 			createInfo.clipped(true)
 
 			createInfo.presentMode(
-				if (vsync) VK_PRESENT_MODE_FIFO_KHR
-				else VK_PRESENT_MODE_IMMEDIATE_KHR
+				if (vsync) PresentMode.FirstInFirstOut.vk
+				else PresentMode.Immediate.vk
 			)
 
 			val lp = stack.mallocLong(1)
@@ -93,7 +89,6 @@ class SwapChain (
 				"Failed to create swap chain"
 			)
 			vkSwapChain = lp.get(0)
-//			imageViews = emptyList()
 
 			val ip = stack.mallocInt(1)
 			gpuCheck(
@@ -112,7 +107,7 @@ class SwapChain (
 			)
 			renderThinger = List(numImages) {
 				val im = ImageView(device, swapChainImages[it], imageViewData, false)
-				InProgressRenderThinger(
+				FrameDataz(
 					renderer,
 					this,
 					im,
@@ -123,7 +118,6 @@ class SwapChain (
 
 	fun acquireNextImage(imageAqSem: Semaphore): Int
 	{
-		val imageIndex: Int
 		MemoryStack.stackPush().use { stack ->
 			val ip = stack.mallocInt(1)
 			val err = vkAcquireNextImageKHR(
@@ -146,23 +140,21 @@ class SwapChain (
 					throw RuntimeException("Failed to acquire image: $err")
 				}
 			}
-			imageIndex = ip.get(0)
+			return ip.get(0)
 		}
-		return imageIndex
 	}
-
 
 	fun presentImage(queue: CommandSequence, imageIndex: Int): Boolean
 	{
 		MemoryStack.stackPush().use { stack ->
 			val present = VkPresentInfoKHR.calloc(stack)
-				.`sType$Default`()
-				.pWaitSemaphores(stack.longs(
-					renderThinger[imageIndex].renderCompleteFlag.vkSemaphore,
-				))
-				.swapchainCount(1)
-				.pSwapchains(stack.longs(vkSwapChain))
-				.pImageIndices(stack.ints(imageIndex))
+			present.`sType$Default`()
+			present.pWaitSemaphores(stack.longs(
+				renderThinger[imageIndex].renderCompleteFlag.vkSemaphore,
+			))
+			present.swapchainCount(1)
+			present.pSwapchains(stack.longs(vkSwapChain))
+			present.pImageIndices(stack.ints(imageIndex))
 			val err = vkQueuePresentKHR(queue.vkQueue, present)
 			if (err == VK_ERROR_OUT_OF_DATE_KHR)
 			{
@@ -182,9 +174,7 @@ class SwapChain (
 
 	fun free()
 	{
-		extents.free()
 		renderThinger.forEach { it.free() }
-//		imageViews.forEach { it.free() }
 		vkDestroySwapchainKHR(device.logicalDevice.vkDevice, vkSwapChain, null)
 	}
 }

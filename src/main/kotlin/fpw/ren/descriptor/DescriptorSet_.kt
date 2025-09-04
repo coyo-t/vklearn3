@@ -1,6 +1,5 @@
 package fpw.ren.descriptor
 
-import fpw.ren.descriptor.DescriptorSetLayout
 import fpw.ren.GPUBuffer
 import fpw.ren.GPUtil
 import fpw.ren.image.ImageView
@@ -14,9 +13,9 @@ import org.lwjgl.vulkan.VkDescriptorSetAllocateInfo
 import org.lwjgl.vulkan.VkWriteDescriptorSet
 
 // shader sockets
-class DescriptorSet (
+class DescriptorSet_ (
 	val device: GPUDevice,
-	descPool: DescriptorPool,
+	descPool: DescriptorPool_,
 	descSetLayout: DescriptorSetLayout,
 )
 {
@@ -25,8 +24,7 @@ class DescriptorSet (
 	init
 	{
 		MemoryStack.stackPush().use { stack ->
-			val pDescriptorSetLayout = stack.mallocLong(1)
-			pDescriptorSetLayout.put(0, descSetLayout.vkDescLayout)
+			val pDescriptorSetLayout = stack.longs(descSetLayout.vkDescLayout)
 			val allocInfo = VkDescriptorSetAllocateInfo.calloc(stack)
 				.`sType$Default`()
 				.descriptorPool(descPool.vkDescPool)

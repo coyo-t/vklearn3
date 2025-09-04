@@ -4,7 +4,6 @@ import fpw.LuaCoyote
 import fpw.ResourceLocation
 import fpw.ren.GPUBuffer
 import fpw.ren.GPUtil
-import fpw.ren.model.InputMesh
 import fpw.ren.Renderer
 import fpw.ren.command.CommandBuffer
 import fpw.ren.command.CommandPool
@@ -73,7 +72,7 @@ class ModelManager (val context: Renderer)
 
 			return loadModels(
 				context,
-				context.currentSwapChainDirector.commandPool,
+				context.swapChainDirector.commandPool,
 				context.graphicsQueue,
 				mRlrl,
 				InputMesh(

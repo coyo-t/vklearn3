@@ -4,7 +4,6 @@ import fpw.ren.goobers.Projection
 import fpw.ren.goobers.RenderEntity
 import fpw.ren.Renderer
 import fpw.ren.goobers.EntityViewPoint
-import fpw.ren.goobers.RenderEntityUpdateCallback
 import org.joml.Math.toRadians
 import org.lwjgl.glfw.GLFW.glfwPollEvents
 import kotlin.math.PI
@@ -42,6 +41,10 @@ class Engine (val window: Window)
 
 	fun run ()
 	{
+		render.init()
+		render.viewPoint = viewPoint
+		window.show()
+
 		viewPoint.viewer = addEntity(RenderEntity("camera")) {
 			location.set(0.5, 0.0, 0.0)
 		}
@@ -53,7 +56,7 @@ class Engine (val window: Window)
 		addEntity(RenderEntity("tha cube")) {
 			model = testModelTriangle
 			location.set(0.0, 0.0, -2.0)
-			setUpdateCallback { milliTimeDiff ->
+			setUpdateCallback {
 				location.set(
 					cos(window.time * PI * 0.5) * 1.0,
 					sin(window.time * PI) * 0.5,
@@ -67,9 +70,6 @@ class Engine (val window: Window)
 					.rotateY(toRadians(fdt * 60f))
 			}
 		}
-
-		render.init()
-		render.viewPoint = viewPoint
 
 		try
 		{

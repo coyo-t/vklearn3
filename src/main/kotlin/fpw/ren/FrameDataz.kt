@@ -1,6 +1,5 @@
 package fpw.ren
 
-import fpw.ren.Renderer
 import fpw.ren.image.ImageView
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
@@ -9,7 +8,7 @@ import org.lwjgl.vulkan.VkRect2D
 import org.lwjgl.vulkan.VkRenderingAttachmentInfo
 import org.lwjgl.vulkan.VkRenderingInfo
 
-class InProgressRenderThinger(
+class FrameDataz(
 	val renderer: Renderer,
 	val swapChain: SwapChain,
 	val imageView: ImageView,
@@ -51,7 +50,9 @@ class InProgressRenderThinger(
 	val renderInfo = run {
 		stackPush().use { stack ->
 			val extent = swapChain.extents
-			val renderArea = VkRect2D.calloc(stack).extent(extent)
+			val renderArea = VkRect2D.calloc(stack)
+			renderArea.extent(extent)
+
 			val f = VkRenderingInfo.calloc()
 			f.`sType$Default`()
 			f.renderArea(renderArea)

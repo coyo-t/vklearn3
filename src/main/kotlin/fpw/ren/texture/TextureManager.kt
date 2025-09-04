@@ -28,7 +28,7 @@ class TextureManager (val renderer: Renderer)
 			val outs = Texture(renderer, p, srcImage, VK10.VK_FORMAT_R8G8B8A8_SRGB)
 			textureMap[p] = outs
 			uploadTextures(
-				renderer.currentSwapChainDirector.commandPool,
+				renderer.swapChainDirector.commandPool,
 				renderer.graphicsQueue,
 				outs,
 			)

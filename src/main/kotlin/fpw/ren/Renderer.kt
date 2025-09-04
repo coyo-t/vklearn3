@@ -2,7 +2,6 @@ package fpw.ren
 
 import fpw.Engine
 import fpw.ren.goobers.IdentityViewPoint
-import fpw.ResourceLocation
 import fpw.TestCube
 import fpw.ren.goobers.ViewPoint
 import fpw.ren.command.CommandBuffer
@@ -33,7 +32,6 @@ import java.awt.Color
 
 class Renderer (val engineContext: Engine)
 {
-	val maxInFlightFrameCount = 2
 	val preferredImageBufferingCount = 3
 	var useVerticalSync = false
 	var preferredPhysicalDevice: String? = null
@@ -69,18 +67,16 @@ class Renderer (val engineContext: Engine)
 		useVerticalSync,
 	)
 
-	var currentFrame = 0
-		private set
+	val graphicsQueue = CommandSequence.createGraphics(this, 0)
+	val presentQueue = CommandSequence.createPresentation(this, 0)
 
-	val graphicsQueue = CommandSequence.Companion.createGraphics(this, 0)
-	val presentQueue = CommandSequence.Companion.createPresentation(this, 0)
+	val swapChainDirector = SwapChainDirector(this)
 
-	val swapChainDirectors = List(maxInFlightFrameCount) {
-		SwapChainDirector(this)
-	}
-
-	private val meshManager = ModelManager(this)
 	private var doResize = false
+	val meshManager = ModelManager(this)
+	val shaderManager = ShaderCodeManager(this)
+	var viewPoint: ViewPoint = IdentityViewPoint()
+	val mvMatrix = Matrix4f()
 
 	val descriptorLayoutVertexStage = DescriptorSetLayout(
 		this,
@@ -102,12 +98,9 @@ class Renderer (val engineContext: Engine)
 		),
 	)
 
-	val shaderManager = ShaderCodeManager(this)
 
-	var viewPoint: ViewPoint = IdentityViewPoint()
-	val shaderMatrixBuffer = createHostVisibleBuffs(
+	val shaderMatrixBuffer = createHostVisibleBuff(
 		GPUtil.SIZEOF_MAT4 * 2L,
-		maxInFlightFrameCount,
 		VK10.VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		"MATRIX",
 		descriptorLayoutVertexStage,
@@ -115,9 +108,8 @@ class Renderer (val engineContext: Engine)
 	val shaderTextureShit = descAlloc.addDescSets(
 		"TEXTURE",
 		descriptorLayoutFragmentStage,
-		maxInFlightFrameCount,
+		1,
 	)
-	val mvMatrix = Matrix4f()
 
 	val pipeline = run {
 		val shCode = shaderManager[engineContext.testShader]
@@ -136,7 +128,7 @@ class Renderer (val engineContext: Engine)
 		val outs = Pipeline(
 			this,
 			shaderModules = shaderModules,
-			vertexFormat = TestCube.format.vi,
+			vertexFormat = TestCube.format,
 			colorFormat = displaySurface.surfaceFormat.imageFormat,
 			depthFormat = VK10.VK_FORMAT_D16_UNORM,
 			descriptorSetLayouts = listOf(
@@ -157,11 +149,9 @@ class Renderer (val engineContext: Engine)
 
 	val textureTerrain = textureManager[engineContext.testTexture]
 
-	val currentSwapChainDirector get() = swapChainDirectors[currentFrame]
-
 	fun init ()
 	{
-		val test = VertexFormatBuilder.Companion.buildVertexFormat {
+		VertexFormatBuilder.buildVertexFormat {
 			location3D()
 			texcoord2D()
 			normal()
@@ -171,11 +161,10 @@ class Renderer (val engineContext: Engine)
 	}
 
 
-	private fun submit(cmdBuff: CommandBuffer, currentFrame: Int, imageIndex: Int)
+	private fun submit(cmdBuff: CommandBuffer, imageIndex: Int)
 	{
-		val director = swapChainDirectors[currentFrame]
 		MemoryStack.stackPush().use { stack ->
-			val fence = director.fence
+			val fence = swapChainDirector.fence
 			fence.reset()
 			val commands = VkCommandBufferSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
@@ -183,7 +172,7 @@ class Renderer (val engineContext: Engine)
 			val waits = VkSemaphoreSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
 				.stageMask(VK13.VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT)
-				.semaphore(director.imageAcquiredSemaphore.vkSemaphore)
+				.semaphore(swapChainDirector.imageAcquiredSemaphore.vkSemaphore)
 			val signals = VkSemaphoreSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
 				.stageMask(VK13.VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)
@@ -194,7 +183,7 @@ class Renderer (val engineContext: Engine)
 
 	fun render ()
 	{
-		val director = swapChainDirectors[currentFrame]
+		val director = swapChainDirector
 		director.fence.waitForFences()
 		val cmdPool = director.commandPool
 		val cmdBuffer = director.commandBuffer
@@ -277,7 +266,7 @@ class Renderer (val engineContext: Engine)
 			VK10.vkCmdSetScissor(cmdHandle, 0, scissor)
 
 
-			shaderTextureShit[currentFrame].setImages(textureSampler, 1, textureTerrain.imageView)
+			shaderTextureShit[0].setImages(textureSampler, 1, textureTerrain.imageView)
 
 
 			val vbCount = 1
@@ -289,7 +278,7 @@ class Renderer (val engineContext: Engine)
 			val projectionMatrix = viewPoint.projectionMatrix
 			val entities = engineContext.entities
 			val numEntities = entities.size
-			val curMatrixBuffer = shaderMatrixBuffer[currentFrame]
+			val curMatrixBuffer = shaderMatrixBuffer
 			for (i in 0..<numEntities)
 			{
 				val entity = entities[i]
@@ -341,11 +330,9 @@ class Renderer (val engineContext: Engine)
 
 		cmdBuffer.endRecording()
 
-		submit(cmdBuffer, currentFrame, imageIndex)
+		submit(cmdBuffer, imageIndex)
 
 		doResize = swapChain.presentImage(presentQueue, imageIndex)
-
-		currentFrame = (currentFrame + 1) % maxInFlightFrameCount
 	}
 
 	private fun resize ()
@@ -355,7 +342,6 @@ class Renderer (val engineContext: Engine)
 		{
 			return
 		}
-		doResize = false
 		gpu.logicalDevice.waitIdle()
 
 		swapChain.free()
@@ -371,11 +357,12 @@ class Renderer (val engineContext: Engine)
 			useVerticalSync,
 		)
 
-		swapChainDirectors.forEach(SwapChainDirector::onResize)
+		swapChainDirector.onResize()
 
 		val extent = swapChain.extents
 		engineContext.lens.resize(extent.width(), extent.height())
 
+		doResize = false
 	}
 
 	fun createHostVisibleBuffs(
@@ -441,7 +428,7 @@ class Renderer (val engineContext: Engine)
 
 		descriptorLayoutVertexStage.free()
 		descriptorLayoutFragmentStage.free()
-		shaderMatrixBuffer.forEach { it.free() }
+		shaderMatrixBuffer.free()
 		textureSampler.free()
 
 		descAlloc.free()
@@ -450,7 +437,7 @@ class Renderer (val engineContext: Engine)
 		clrValueDepth.free()
 
 		meshManager.free()
-		swapChainDirectors.forEach { it.free() }
+		swapChainDirector.free()
 
 		swapChain.free()
 		displaySurface.free(instance)

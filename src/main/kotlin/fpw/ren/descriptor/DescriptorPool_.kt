@@ -1,6 +1,5 @@
 package fpw.ren.descriptor
 
-import fpw.ren.descriptor.DescriptorSet
 import fpw.ren.GPUtil
 import fpw.ren.device.GPUDevice
 import org.lwjgl.system.MemoryStack
@@ -8,7 +7,7 @@ import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkDescriptorPoolCreateInfo
 import org.lwjgl.vulkan.VkDescriptorPoolSize
 
-class DescriptorPool (
+class DescriptorPool_ (
 	val device: GPUDevice,
 	val descTypeCounts: MutableList<DescTypeCount>,
 )
@@ -49,7 +48,7 @@ class DescriptorPool (
 		VK10.vkDestroyDescriptorPool(device.logicalDevice.vkDevice, vkDescPool, null)
 	}
 
-	fun freeDescriptorSet (vkDescriptorSet: DescriptorSet)
+	fun freeDescriptorSet (vkDescriptorSet: DescriptorSet_)
 	{
 		MemoryStack.stackPush().use { stack ->
 			val longBuffer = stack.mallocLong(1)

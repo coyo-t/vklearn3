@@ -1,8 +1,5 @@
 package fpw.ren.descriptor
 
-import fpw.ren.descriptor.DescriptorPool
-import fpw.ren.descriptor.DescriptorSet
-import fpw.ren.descriptor.DescriptorSetLayout
 import fpw.ren.device.GPUDevice
 import org.lwjgl.vulkan.VK10
 
@@ -34,11 +31,11 @@ class DescriptorAllocator (
 	private fun createDescPoolInfo (descLimits: MutableMap<Int, Int>): PoolInfo
 	{
 		val descCount = descLimits.toMutableMap()
-		val descTypeCounts = mutableListOf<DescriptorPool.DescTypeCount>()
+		val descTypeCounts = mutableListOf<DescriptorPool_.DescTypeCount>()
 		descLimits.forEach { (k, v) ->
-			descTypeCounts.add(DescriptorPool.DescTypeCount(k, v))
+			descTypeCounts.add(DescriptorPool_.DescTypeCount(k, v))
 		}
-		val descPool = DescriptorPool(gpu, descTypeCounts)
+		val descPool = DescriptorPool_(gpu, descTypeCounts)
 		return PoolInfo(descCount, descPool)
 	}
 
@@ -46,7 +43,7 @@ class DescriptorAllocator (
 		id: String,
 		descSetLayout: DescriptorSetLayout,
 		count: Int=1,
-	): List<DescriptorSet>
+	): List<DescriptorSet_>
 	{
 		// Check if we have room for the sets in any descriptor pool
 		var targetPool: PoolInfo? = null
@@ -85,7 +82,7 @@ class DescriptorAllocator (
 		}
 
 		val result = MutableList(count) {
-			DescriptorSet(gpu, targetPool.descPool, descSetLayout)
+			DescriptorSet_(gpu, targetPool.descPool, descSetLayout)
 		}
 
 		descSetInfoMap[id] = SetInfo(result, poolPos)
@@ -107,18 +104,18 @@ class DescriptorAllocator (
 		descPoolList.forEach { it.descPool.free() }
 	}
 
-	fun getDescSet(id: String, pos: Int=0): DescriptorSet
+	fun getDescSet(id: String, pos: Int=0): DescriptorSet_
 	{
 		return descSetInfoMap[id]?.let { it.descSets[pos] }!!
 	}
 
 	class PoolInfo (
 		val descCount: MutableMap<Int, Int>,
-		val descPool: DescriptorPool,
+		val descPool: DescriptorPool_,
 	)
 
 	class SetInfo(
-		val descSets: MutableList<DescriptorSet>,
+		val descSets: MutableList<DescriptorSet_>,
 		val poolPos: Int,
 	)
 }

@@ -1,5 +1,6 @@
 package fpw
 
+import org.lwjgl.system.MemoryUtil
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.nio.ByteBuffer
@@ -17,6 +18,12 @@ object FUtil
 {
 	val RESOURCES_PATH = Path("./resources/").normalize().toAbsolutePath()
 	val ASSETS_PATH = RESOURCES_PATH/"assets/"
+
+	inline fun requireHandleNotNullptr (who: Long, errProvider: ()-> String): Long
+	{
+		require(who != MemoryUtil.NULL, errProvider)
+		return who
+	}
 
 	private fun memToBuffer (m: MemorySegment)
 		= m.asByteBuffer().order(ByteOrder.nativeOrder())
