@@ -2,7 +2,7 @@ package fpw.ren.descriptor
 
 import org.lwjgl.vulkan.VK10.*
 
-enum class DescriptorType (
+enum class DescType (
 	val vk: Int,
 	val validForBuffer: Boolean
 )

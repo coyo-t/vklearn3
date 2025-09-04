@@ -1,16 +1,17 @@
 package fpw.ren
 
 import fpw.Engine
+import fpw.FUtil
 import fpw.ren.command.CommandBuffer
 import fpw.ren.command.CommandPool
 import fpw.ren.command.CommandSequence
 import fpw.ren.descriptor.*
-import fpw.ren.descriptor.DescriptorAllocatorGrowable.DescSet
 import fpw.ren.device.GPUDevice
 import fpw.ren.enums.ShaderType
 import fpw.ren.enums.VkFormat
 import fpw.ren.goobers.IdentityViewPoint
 import fpw.ren.goobers.ViewPoint
+import fpw.ren.image.ImageLayout
 import fpw.ren.model.ModelManager
 import fpw.ren.model.VertexFormatBuilder.Companion.buildVertexFormat
 import fpw.ren.pipeline.Pipeline
@@ -26,6 +27,7 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VK13.*
 import java.awt.Color
+import kotlin.use
 
 class Renderer (val engineContext: Engine)
 {
@@ -55,7 +57,7 @@ class Renderer (val engineContext: Engine)
 	)
 
 	val memAlloc = MemAlloc(instance, gpu)
-	val descAlloc = DescriptorAllocator(gpu)
+//	val descAlloc = DescriptorAllocator(gpu)
 
 	var displaySurface = DisplaySurface(instance, gpu, engineContext.window)
 	val graphicsQueue = CommandSequence.createGraphics(this, 0)
@@ -89,48 +91,41 @@ class Renderer (val engineContext: Engine)
 	var viewPoint: ViewPoint = IdentityViewPoint()
 	val mvMatrix = Matrix4f()
 
-	val descriptors = DescriptorAllocatorGrowable(gpu).apply {
+	val textureManager = TextureManager(this)
+	val textureSampler = Sampler(
+		this,
+		wrapping = SamplerWrapping.Repeat,
+		filter = SamplerFilter.Nearest,
+	)
+
+	val textureTerrain = textureManager[engineContext.testTexture]
+
+
+	val descriptors = DescAllocator(gpu).apply {
 		init(
 			1000,
-			DescriptorType.StorageImage to 3,
-			DescriptorType.StorageBuffer to 3,
-			DescriptorType.UniformBuffer to 3,
-			DescriptorType.CombinedImageSampler to 4,
+			DescType.StorageImage to 3,
+			DescType.StorageBuffer to 3,
+			DescType.UniformBuffer to 3,
+			DescType.CombinedImageSampler to 4,
 		)
 	}
 
-//	val descriptorLayoutVertexStage = DescriptorSetLayout(
-//		this,
-//		DescriptorSetLayout.Info(
-//			DescriptorType.UniformBuffer,
-//			0,
-//			1,
-//			VK_SHADER_STAGE_VERTEX_BIT
-//		),
-//	)
-//
-//	val descriptorLayoutFragmentStage = DescriptorSetLayout(
-//		this,
-//		DescriptorSetLayout.Info(
-//			DescriptorType.CombinedImageSampler,
-//			1,
-//			1,
-//			VK_SHADER_STAGE_FRAGMENT_BIT
-//		),
-//	)
-
-
-//	val shaderMatrixBuffer = createHostVisibleBuff(
-//		GPUtil.SIZEOF_MAT4 * 2L,
-//		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-//		"MATRIX",
-//		descriptorLayoutVertexStage,
-//	)
-//	val shaderTextureShit = descAlloc.addDescSets(
-//		"TEXTURE",
-//		descriptorLayoutFragmentStage,
-//		1,
-//	)
+	val uniformBufferDescLayout = DescSetLayout(
+		this,
+		DescSetLayout.Info(
+			DescType.UniformBuffer,
+			0,
+			1,
+			VK_SHADER_STAGE_VERTEX_BIT,
+		),
+		DescSetLayout.Info(
+			DescType.CombinedImageSampler,
+			1,
+			1,
+			VK_SHADER_STAGE_FRAGMENT_BIT,
+		),
+	)
 
 	val shaderUniformBuffer = GPUBuffer(
 		this,
@@ -141,17 +136,7 @@ class Renderer (val engineContext: Engine)
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 	)
 
-	init
-	{
-//		val writer = DescWriter()
-//		writer.writeBuffer(
-//			0,
-//			shaderUniformBuffer,
-//			GPUtil.SIZEOF_MAT4 * 2L,
-//			0L,
-//			DescriptorType.UniformBuffer,
-//		)
-	}
+	val FUCK_descsets = descriptors.allocate(uniformBufferDescLayout)
 
 	val pipeline = run {
 		val shCode = shaderManager[engineContext.testShader]
@@ -174,25 +159,33 @@ class Renderer (val engineContext: Engine)
 			colorFormat = displaySurface.surfaceFormat.imageFormat,
 			depthFormat = VkFormat.D16_UNORM,
 			descriptorSetLayouts = listOf(
-//				descriptorLayoutVertexStage,
-//				descriptorLayoutFragmentStage,
+				uniformBufferDescLayout,
 			),
 		)
 		shaderModules.forEach { it.free() }
 		outs
 	}
 
-	val textureManager = TextureManager(this)
-	val textureSampler = Sampler(
-		this,
-		wrapping = SamplerWrapping.Repeat,
-		filter = SamplerFilter.Nearest,
-	)
-
-	val textureTerrain = textureManager[engineContext.testTexture]
-
 	fun init ()
 	{
+		MemoryStack.stackPush().use { s2 ->
+			val writer = DescWriter(s2)
+			writer.writeBuffer(
+				0,
+				shaderUniformBuffer,
+				GPUtil.SIZEOF_MAT4 * 2L,
+				0L,
+				DescType.UniformBuffer,
+			)
+			writer.writeImage(
+				1,
+				textureTerrain.imageView,
+				textureSampler,
+				ImageLayout.OptimalShaderReadOnly,
+				DescType.CombinedImageSampler,
+			)
+			writer.updateSet(gpu, FUCK_descsets)
+		}
 	}
 
 	private fun submit(cmdBuff: CommandBuffer, imageIndex: Int)
@@ -218,7 +211,7 @@ class Renderer (val engineContext: Engine)
 	fun render ()
 	{
 		SCDfence.waitForFences()
-		descriptors.clearPools()
+//		descriptors.clearPools()
 		val cmdPool = SCDcommandPool
 		val cmdBuffer = SCDcommandBuffer
 
@@ -270,18 +263,35 @@ class Renderer (val engineContext: Engine)
 			val renInf = thinger.renderInfo
 			vkCmdBeginRendering(cmdHandle, renInf)
 			vkCmdBindPipeline(cmdHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vkPipeline)
-//			val descr = stack.longs(
+			val descr = stack.longs(
+				FUCK_descsets.vkDescSet,
 //				descAlloc.getDescSet("MATRIX").vkDescriptorSet,
 //				descAlloc.getDescSet("TEXTURE").vkDescriptorSet,
-//			)
-//			VK10.vkCmdBindDescriptorSets(
-//				cmdHandle,
-//				VK10.VK_PIPELINE_BIND_POINT_GRAPHICS,
-//				pipeline.vkPipelineLayout,
-//				0,
-//				descr,
-//				null,
-//			)
+			)
+			vkCmdBindDescriptorSets(
+				cmdHandle,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				pipeline.vkPipelineLayout,
+				0,
+				descr,
+				null,
+			)
+			val writer = DescWriter(stack)
+			writer.writeBuffer(
+				0,
+				shaderUniformBuffer,
+				GPUtil.SIZEOF_MAT4 * 2L,
+				0L,
+				DescType.UniformBuffer,
+			)
+			writer.writeImage(
+				1,
+				textureTerrain.imageView,
+				textureSampler,
+				ImageLayout.OptimalShaderReadOnly,
+				DescType.CombinedImageSampler,
+			)
+			writer.updateSet(gpu, FUCK_descsets)
 			val swapChainExtent = this.swapChain.extents
 			val width = swapChainExtent.width()
 			val height = swapChainExtent.height()
@@ -299,10 +309,7 @@ class Renderer (val engineContext: Engine)
 			scissor.offset { it.x(0).y(0) }
 			vkCmdSetScissor(cmdHandle, 0, scissor)
 
-
 //			shaderTextureShit[0].setImages(textureSampler, 1, textureTerrain.imageView)
-
-
 			val offsets = stack.longs(0L)
 			val vbAddress = stack.longs(0L)
 
@@ -311,7 +318,6 @@ class Renderer (val engineContext: Engine)
 			val projectionMatrix = viewPoint.projectionMatrix
 			val entities = engineContext.entities
 			val numEntities = entities.size
-//			val curMatrixBuffer = shaderMatrixBuffer
 			for (i in 0..<numEntities)
 			{
 				val entity = entities[i]
@@ -320,11 +326,12 @@ class Renderer (val engineContext: Engine)
 				entity.updateModelMatrix()
 				viewMatrix.mul(entity.modelMatrix, mvMatrix)
 
-//				GPUtil.copyMatrixToBuffer(curMatrixBuffer, projectionMatrix, 0)
-//				GPUtil.copyMatrixToBuffer(curMatrixBuffer, mvMatrix, GPUtil.SIZEOF_MAT4)
+				GPUtil.copyMatrixToBuffer(shaderUniformBuffer, projectionMatrix, 0)
+				GPUtil.copyMatrixToBuffer(shaderUniformBuffer, mvMatrix, GPUtil.SIZEOF_MAT4)
 
 //				projectionMatrix.get(pushConstantsBuffer)
 //				mvMatrix.get(GPUtil.SIZEOF_MAT4, pushConstantsBuffer)
+
 
 //				vkCmdPushConstants(
 //					cmdHandle, pipeline.vkPipelineLayout,
@@ -399,31 +406,31 @@ class Renderer (val engineContext: Engine)
 		doResize = false
 	}
 
-	fun createHostVisibleBuff (
-		buffSize: Long,
-		usage: Int,
-		id: String,
-		layout: DescriptorSetLayout,
-	): GPUBuffer
-	{
-		val descSet = descAlloc.addDescSets(id, layout, 1).first()
-		val buff = GPUBuffer(
-			this,
-			buffSize,
-			usage,
-			VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
-			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-		)
-		val first = layout.layoutInfos.first()
-		descSet.setBuffer(
-			buff,
-			buff.requestedSize,
-			first.binding,
-			first.descType.vk
-		)
-		return buff
-	}
+//	fun createHostVisibleBuff (
+//		buffSize: Long,
+//		usage: Int,
+//		id: String,
+//		layout: DescriptorSetLayout,
+//	): GPUBuffer
+//	{
+//		val descSet = descAlloc.addDescSets(id, layout, 1).first()
+//		val buff = GPUBuffer(
+//			this,
+//			buffSize,
+//			usage,
+//			VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+//			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+//			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+//		)
+//		val first = layout.layoutInfos.first()
+//		descSet.setBuffer(
+//			buff,
+//			buff.requestedSize,
+//			first.binding,
+//			first.descType.vk
+//		)
+//		return buff
+//	}
 
 	fun free()
 	{
@@ -438,10 +445,13 @@ class Renderer (val engineContext: Engine)
 		textureSampler.free()
 
 		descriptors.free()
-		descAlloc.free()
+//		descAlloc.free()
 		pipeline.free()
 		clrValueColor.free()
 		clrValueDepth.free()
+
+		shaderUniformBuffer.free()
+		uniformBufferDescLayout.free()
 
 		meshManager.free()
 		SCDcommandBuffer.free(this, SCDcommandPool)

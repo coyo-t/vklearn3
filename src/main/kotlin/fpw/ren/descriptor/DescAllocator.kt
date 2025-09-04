@@ -8,7 +8,7 @@ import org.lwjgl.vulkan.VkDescriptorPoolCreateInfo
 import org.lwjgl.vulkan.VkDescriptorPoolSize
 import org.lwjgl.vulkan.VkDescriptorSetAllocateInfo
 
-class DescriptorAllocatorGrowable(val device: GPUDevice)
+class DescAllocator(val device: GPUDevice)
 {
 
 	private val ratios = mutableListOf<PoolSizeRatio>()
@@ -16,7 +16,7 @@ class DescriptorAllocatorGrowable(val device: GPUDevice)
 	private val readyPools = mutableListOf<DescPool>()
 	private var setsPerPool = 0
 
-	fun init (maxSets: Int, vararg ratios: Pair<DescriptorType, Number>)
+	fun init (maxSets: Int, vararg ratios: Pair<DescType, Number>)
 	{
 		init(maxSets, ratios.map { (type, number) -> PoolSizeRatio(type, number) })
 	}
@@ -65,7 +65,7 @@ class DescriptorAllocatorGrowable(val device: GPUDevice)
 		destroyPools()
 	}
 
-	fun allocate (layout: DescriptorSetLayout, pNext:Long=0L): DescSet
+	fun allocate (layout: DescSetLayout, pNext:Long=0L): DescSet
 	{
 		// get or create a pool to allocate from
 		MemoryStack.stackPush().use { stack ->
@@ -74,7 +74,7 @@ class DescriptorAllocatorGrowable(val device: GPUDevice)
 			allocInfo.pNext(pNext)
 			allocInfo.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO)
 			allocInfo.descriptorPool(poolToUse.vkDescPool)
-			allocInfo.pSetLayouts(stack.longs(layout.vkDescLayout))
+			allocInfo.pSetLayouts(stack.longs(layout.vk))
 
 //			VkDescriptorSet ds;
 			val dsPtr = stack.mallocLong(1)
@@ -145,16 +145,14 @@ class DescriptorAllocatorGrowable(val device: GPUDevice)
 		}
 	}
 
-	class DescSet (val vkDescSet: Long)
-
 	class DescPool (val vkDescPool: Long)
 
 	class PoolSizeRatio(
-		val type: DescriptorType,
+		val type: DescType,
 		val ratio: Float,
 	)
 	{
-		constructor(type: DescriptorType, ratio: Number): this(type, ratio.toFloat())
+		constructor(type: DescType, ratio: Number): this(type, ratio.toFloat())
 	}
 
 	// https://vkguide.dev/docs/new_chapter_4/descriptor_abstractions/

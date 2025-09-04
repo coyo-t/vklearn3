@@ -4,7 +4,7 @@ import fpw.ren.GPUtil
 import fpw.ren.GPUtil.longs
 import fpw.ren.Renderer
 import fpw.ren.ShaderModule
-import fpw.ren.descriptor.DescriptorSetLayout
+import fpw.ren.descriptor.DescSetLayout
 import fpw.ren.enums.CompareOperation
 import fpw.ren.enums.CullingMode
 import fpw.ren.enums.DynamicStates
@@ -28,7 +28,7 @@ class Pipeline (
 	vertexFormat: VertexFormat,
 	depthFormat: VkFormat = VkFormat.UNDEFINED,
 	pushConstRange: List<Triple<Int, Int, Int>> = emptyList(),
-	descriptorSetLayouts: List<DescriptorSetLayout> = emptyList(),
+	descriptorSetLayouts: List<DescSetLayout> = emptyList(),
 )
 {
 	val vkPipeline: Long
@@ -107,7 +107,7 @@ class Pipeline (
 //			}
 
 			val ppLayout = stack.longs(descriptorSetLayouts.size) {
-				descriptorSetLayouts[it].vkDescLayout
+				descriptorSetLayouts[it].vk
 			}
 
 			val pPipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo.calloc(stack)
