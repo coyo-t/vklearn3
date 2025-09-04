@@ -69,7 +69,7 @@ class SwapChain (
 			createInfo.`sType$Default`()
 			createInfo.surface(displaySurface.vkSurface)
 			createInfo.minImageCount(reqImages)
-			createInfo.imageFormat(surfaceFormat.imageFormat)
+			createInfo.imageFormat(surfaceFormat.imageFormat.vk)
 			createInfo.imageColorSpace(surfaceFormat.colorSpace)
 			createInfo.imageExtent(extents)
 			createInfo.imageArrayLayers(1)

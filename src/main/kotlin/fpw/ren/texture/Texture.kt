@@ -8,6 +8,7 @@ import fpw.ren.image.GPUImage
 import fpw.ren.GPUtil
 import fpw.ren.image.ImageView
 import fpw.ren.command.CommandBuffer
+import fpw.ren.enums.VkFormat
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.vma.Vma
 import org.lwjgl.vulkan.VK10
@@ -25,7 +26,7 @@ class Texture
 	private var recordedTransition: Boolean
 	private var stgBuffer: GPUBuffer?
 
-	constructor (vkCtx: Renderer, id: String, srcImage: Image, imageFormat: Int)
+	constructor (vkCtx: Renderer, id: String, srcImage: Image, imageFormat: VkFormat)
 	{
 		this.id = id
 		recordedTransition = false

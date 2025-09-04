@@ -2,6 +2,7 @@ package fpw.ren.image
 
 import fpw.ren.GPUtil
 import fpw.ren.device.GPUDevice
+import fpw.ren.enums.VkFormat
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkImageViewCreateInfo
@@ -21,7 +22,7 @@ class ImageView (
 		viewCreateInfo.`sType$Default`()
 		viewCreateInfo.image(vkImage)
 		viewCreateInfo.viewType(imageViewData.viewType)
-		viewCreateInfo.format(imageViewData.format)
+		viewCreateInfo.format(imageViewData.format.vk)
 		viewCreateInfo.subresourceRange {
 			it.aspectMask(aspectMask)
 			it.baseMipLevel(0)
@@ -46,7 +47,7 @@ class ImageView (
 	data class Data(
 		val aspectMask: Int = 0,
 		val baseArrayLayer: Int = 0,
-		val format: Int = 0,
+		val format: VkFormat = VkFormat.UNDEFINED,
 		val layerCount: Int = 1,
 		val mipLevels: Int = 1,
 		val viewType: Int = VK10.VK_IMAGE_VIEW_TYPE_2D,

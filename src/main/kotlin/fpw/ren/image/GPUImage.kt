@@ -2,6 +2,7 @@ package fpw.ren.image
 
 import fpw.ren.Renderer
 import fpw.ren.GPUtil
+import fpw.ren.enums.VkFormat
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.vma.Vma
 import org.lwjgl.util.vma.VmaAllocationCreateInfo
@@ -10,7 +11,7 @@ import org.lwjgl.vulkan.VkImageCreateInfo
 
 class GPUImage (val vkCtx: Renderer, imageData: Data)
 {
-	val format: Int
+	val format: VkFormat
 	val mipCount: Int
 	val vkImage: Long
 	val allocation: Long
@@ -24,7 +25,7 @@ class GPUImage (val vkCtx: Renderer, imageData: Data)
 			val ic = VkImageCreateInfo.calloc(stack)
 			ic.`sType$Default`()
 			ic.imageType(VK10.VK_IMAGE_TYPE_2D)
-			ic.format(format)
+			ic.format(format.vk)
 			ic.extent {
 				it.width(imageData.wide)
 				it.height(imageData.tall)
@@ -67,7 +68,7 @@ class GPUImage (val vkCtx: Renderer, imageData: Data)
 		var wide: Int = 0,
 		var tall: Int = 0,
 
-		var format: Int = VK10.VK_FORMAT_R8G8B8A8_SRGB,
+		var format: VkFormat = VkFormat.R8G8B8A8_SRGB,
 		var mipCount: Int = 1,
 		var sampleCount: Int = 1,
 		var arrayLayerCount: Int = 1,

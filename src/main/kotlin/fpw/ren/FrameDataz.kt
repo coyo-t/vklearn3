@@ -1,5 +1,6 @@
 package fpw.ren
 
+import fpw.ren.enums.VkFormat
 import fpw.ren.image.ImageView
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
@@ -32,7 +33,7 @@ class FrameDataz(
 		swapChain.wide,
 		swapChain.tall,
 //				VK_FORMAT_D32_SFLOAT,
-		VK_FORMAT_D16_UNORM,
+		VkFormat.D16_UNORM,
 		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
 	)
 

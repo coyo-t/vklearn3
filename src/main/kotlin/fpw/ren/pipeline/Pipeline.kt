@@ -23,10 +23,10 @@ import org.lwjgl.vulkan.VkPipelineShaderStageCreateInfo
 
 class Pipeline (
 	val renderer: Renderer,
-	colorFormat: Int,
+	colorFormat: VkFormat,
 	shaderModules: List<ShaderModule>,
 	vertexFormat: VertexFormat,
-	depthFormat: VkFormat = VkFormat.Undefined,
+	depthFormat: VkFormat = VkFormat.UNDEFINED,
 	pushConstRange: List<Triple<Int, Int, Int>> = emptyList(),
 	descriptorSetLayouts: List<DescriptorSetLayout> = emptyList(),
 )
@@ -72,7 +72,6 @@ class Pipeline (
 				zWriteEnabled(true)
 				zCompareOperation(CompareOperation.LessThanOrEqual)
 				stencilEnabled(false)
-
 
 				depthStencilState.depthBoundsTestEnable(false)
 				colorBlendState.pAttachments(blendAttachState)
@@ -138,7 +137,7 @@ class Pipeline (
 			val rendCreateInfo = VkPipelineRenderingCreateInfo.calloc(stack)
 			rendCreateInfo.`sType$Default`()
 			rendCreateInfo.colorAttachmentCount(1)
-			rendCreateInfo.pColorAttachmentFormats(stack.ints(colorFormat))
+			rendCreateInfo.pColorAttachmentFormats(stack.ints(colorFormat.vk))
 			if (ds != null)
 			{
 				rendCreateInfo.depthAttachmentFormat(depthFormat.vk)

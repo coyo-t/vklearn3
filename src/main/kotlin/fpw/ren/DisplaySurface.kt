@@ -3,6 +3,7 @@ package fpw.ren
 import fpw.Window
 import fpw.ren.GPUtil.gpuCheck
 import fpw.ren.device.GPUDevice
+import fpw.ren.enums.VkFormat
 import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.KHRSurface
@@ -56,12 +57,13 @@ class DisplaySurface
 					), "Failed to get surface formats"
 				)
 
-				var imageFormat = VK_FORMAT_B8G8R8A8_SRGB
+				val baseImageFormat = VkFormat.B8G8R8A8_SRGB
+				var imageFormat = baseImageFormat.vk
 				var colorSpace = surfaceFormats[0].colorSpace()
 				for (i in 0..<numFormats)
 				{
 					val surfaceFormatKHR = surfaceFormats[i]
-					if (surfaceFormatKHR.format() == VK_FORMAT_B8G8R8A8_SRGB &&
+					if (surfaceFormatKHR.format() == baseImageFormat.vk &&
 						surfaceFormatKHR.colorSpace() == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
 					)
 					{
@@ -70,7 +72,7 @@ class DisplaySurface
 						break
 					}
 				}
-				Format(imageFormat, colorSpace)
+				Format(VkFormat.byNumeric.getValue(imageFormat), colorSpace)
 			}
 		}
 	}
@@ -82,7 +84,7 @@ class DisplaySurface
 	}
 
 	data class Format(
-		val imageFormat: Int,
+		val imageFormat: VkFormat,
 		val colorSpace: Int,
 	)
 
