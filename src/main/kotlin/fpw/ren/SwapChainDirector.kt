@@ -2,6 +2,9 @@ package fpw.ren
 
 import fpw.ren.command.CommandBuffer
 import fpw.ren.command.CommandPool
+import fpw.ren.descriptor.DescriptorAllocatorGrowable
+import fpw.ren.descriptor.DescriptorAllocatorGrowable.PoolSizeRatio
+import fpw.ren.descriptor.DescriptorType
 
 class SwapChainDirector (val renderer: Renderer)
 {
@@ -17,6 +20,18 @@ class SwapChainDirector (val renderer: Renderer)
 	val fence
 		= Fence(renderer, signaled = true)
 
+	val descriptors = DescriptorAllocatorGrowable(renderer.gpu)
+
+	init
+	{
+		val sizes = listOf(
+			PoolSizeRatio(DescriptorType.StorageImage, 3),
+			PoolSizeRatio(DescriptorType.StorageBuffer, 3),
+			PoolSizeRatio(DescriptorType.UniformBuffer, 3),
+			PoolSizeRatio(DescriptorType.CombinedImageSampler, 4),
+		)
+		descriptors.init(1000, sizes)
+	}
 
 	fun onResize ()
 	{
@@ -30,5 +45,6 @@ class SwapChainDirector (val renderer: Renderer)
 		commandPool.free()
 		imageAcquiredSemaphore.free()
 		fence.free()
+		descriptors.destroyPools()
 	}
 }

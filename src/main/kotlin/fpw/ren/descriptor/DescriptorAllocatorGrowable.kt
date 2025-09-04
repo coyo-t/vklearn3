@@ -16,7 +16,6 @@ class DescriptorAllocatorGrowable(val device: GPUDevice)
 	private val readyPools = mutableListOf<DescPool>()
 	private var setsPerPool = 0
 
-
 	fun init (maxSets: Int, poolRatios: List<PoolSizeRatio>)
 	{
 		ratios.clear()
@@ -144,6 +143,9 @@ class DescriptorAllocatorGrowable(val device: GPUDevice)
 		val type: DescriptorType,
 		val ratio: Float,
 	)
+	{
+		constructor(type: DescriptorType, ratio: Number): this(type, ratio.toFloat())
+	}
 
 	// https://vkguide.dev/docs/new_chapter_4/descriptor_abstractions/
 }

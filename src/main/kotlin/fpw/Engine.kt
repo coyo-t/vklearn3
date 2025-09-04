@@ -32,7 +32,7 @@ class Engine (val window: Window)
 	private val render = Renderer(this)
 
 
-	private fun <T: RenderEntity> addEntity (who: T, init:T.()->Unit): T
+	private inline fun <T: RenderEntity> addEntity (who: T, init:T.()->Unit): T
 	{
 		init.invoke(who)
 		entities.add(who)

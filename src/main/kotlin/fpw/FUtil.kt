@@ -16,8 +16,8 @@ import kotlin.use
 
 object FUtil
 {
-	val RESOURCES_PATH = Path("./resources/").normalize().toAbsolutePath()
-	val ASSETS_PATH = RESOURCES_PATH/"assets/"
+	val RESOURCES_PATH: Path = Path("./resources/").normalize().toAbsolutePath()
+	val ASSETS_PATH: Path = RESOURCES_PATH/"assets/"
 
 	inline fun requireHandleNotNullptr (who: Long, errProvider: ()-> String): Long
 	{
@@ -32,8 +32,6 @@ object FUtil
 	{
 		return memToBuffer(createMemory(sz))
 	}
-
-	fun createBuffer (sz: Int) = createBuffer(sz.toLong())
 
 	fun createMemoryAt (addr: Long, size: Long): MemorySegment
 	{

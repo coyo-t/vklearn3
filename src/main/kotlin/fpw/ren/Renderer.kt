@@ -2,7 +2,6 @@ package fpw.ren
 
 import fpw.Engine
 import fpw.ren.goobers.IdentityViewPoint
-import fpw.TestCube
 import fpw.ren.goobers.ViewPoint
 import fpw.ren.command.CommandBuffer
 import fpw.ren.command.CommandSequence
@@ -13,6 +12,7 @@ import fpw.ren.device.GPUDevice
 import fpw.ren.enums.ShaderType
 import fpw.ren.model.ModelManager
 import fpw.ren.model.VertexFormatBuilder
+import fpw.ren.model.VertexFormatBuilder.Companion.buildVertexFormat
 import fpw.ren.texture.Sampler
 import fpw.ren.texture.SamplerFilter
 import fpw.ren.texture.SamplerWrapping
@@ -36,6 +36,10 @@ class Renderer (val engineContext: Engine)
 	var useVerticalSync = false
 	var preferredPhysicalDevice: String? = null
 	var useValidationLayers = true
+	val testVertexFormat = buildVertexFormat {
+		location3D()
+		texcoord2D()
+	}
 
 	val clrValueColor = GPUtil.createClearValue(Color(0x7FB2E5))
 	val clrValueDepth = GPUtil.createClearValue().color {
@@ -57,6 +61,9 @@ class Renderer (val engineContext: Engine)
 	val descAlloc = DescriptorAllocator(gpu)
 
 	var displaySurface = DisplaySurface(instance, gpu, engineContext.window)
+	val graphicsQueue = CommandSequence.createGraphics(this, 0)
+	val presentQueue = CommandSequence.createPresentation(this, 0)
+
 	var swapChain = SwapChain(
 		this,
 		gpu,
@@ -67,8 +74,6 @@ class Renderer (val engineContext: Engine)
 		useVerticalSync,
 	)
 
-	val graphicsQueue = CommandSequence.createGraphics(this, 0)
-	val presentQueue = CommandSequence.createPresentation(this, 0)
 
 	val swapChainDirector = SwapChainDirector(this)
 
@@ -128,7 +133,7 @@ class Renderer (val engineContext: Engine)
 		val outs = Pipeline(
 			this,
 			shaderModules = shaderModules,
-			vertexFormat = TestCube.format,
+			vertexFormat = testVertexFormat,
 			colorFormat = displaySurface.surfaceFormat.imageFormat,
 			depthFormat = VK10.VK_FORMAT_D16_UNORM,
 			descriptorSetLayouts = listOf(
