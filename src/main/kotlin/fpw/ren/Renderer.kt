@@ -7,6 +7,7 @@ import fpw.ren.descriptor.*
 import fpw.ren.descriptor.DescriptorAllocatorGrowable.PoolSizeRatio
 import fpw.ren.device.GPUDevice
 import fpw.ren.enums.ShaderType
+import fpw.ren.enums.VkFormat
 import fpw.ren.goobers.IdentityViewPoint
 import fpw.ren.goobers.ViewPoint
 import fpw.ren.model.ModelManager
@@ -147,7 +148,7 @@ class Renderer (val engineContext: Engine)
 			shaderModules = shaderModules,
 			vertexFormat = testVertexFormat,
 			colorFormat = displaySurface.surfaceFormat.imageFormat,
-			depthFormat = VK10.VK_FORMAT_D16_UNORM,
+			depthFormat = VkFormat.D16_UNORM,
 			descriptorSetLayouts = listOf(
 				descriptorLayoutVertexStage,
 				descriptorLayoutFragmentStage,
