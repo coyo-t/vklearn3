@@ -1,14 +1,17 @@
-package fpw.ren
+package fpw.ren.descriptor
 
-import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.descriptor.DescriptorSetLayout
+import fpw.ren.GPUBuffer
+import fpw.ren.GPUtil
+import fpw.ren.image.ImageView
+import fpw.ren.texture.Sampler
 import fpw.ren.device.GPUDevice
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkDescriptorBufferInfo
 import org.lwjgl.vulkan.VkDescriptorImageInfo
 import org.lwjgl.vulkan.VkDescriptorSetAllocateInfo
 import org.lwjgl.vulkan.VkWriteDescriptorSet
-
 
 // shader sockets
 class DescriptorSet (
@@ -30,8 +33,8 @@ class DescriptorSet (
 				.pSetLayouts(pDescriptorSetLayout)
 
 			val pDescriptorSet = stack.mallocLong(1)
-			gpuCheck(
-				vkAllocateDescriptorSets(device.logicalDevice.vkDevice, allocInfo, pDescriptorSet),
+			GPUtil.gpuCheck(
+				VK10.vkAllocateDescriptorSets(device.logicalDevice.vkDevice, allocInfo, pDescriptorSet),
 				"Failed to create descriptor set"
 			)
 			vkDescriptorSet = pDescriptorSet.get(0)
@@ -54,14 +57,15 @@ class DescriptorSet (
 				.descriptorType(type)
 				.descriptorCount(1)
 				.pBufferInfo(bufferInfo)
-			vkUpdateDescriptorSets(device.logicalDevice.vkDevice, descrBuffer, null)
+			VK10.vkUpdateDescriptorSets(device.logicalDevice.vkDevice, descrBuffer, null)
 		}
 	}
 
 	fun setImages (
 		textureSampler: Sampler,
 		baseBinding: Int,
-		vararg imgViews: ImageView)
+		vararg imgViews: ImageView
+	)
 	{
 		if (imgViews.isEmpty())
 			return
@@ -76,20 +80,20 @@ class DescriptorSet (
 					.sampler(textureSampler.vkSampler)
 
 				val layout = if (iv.isDepthImage)
-					VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+					VK10.VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
 				else
-					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+					VK10.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 				imageInfo.imageLayout(layout)
 
 				descrBuffer.get(i)
 					.`sType$Default`()
 					.dstSet(vkDescriptorSet)
 					.dstBinding(baseBinding + i)
-					.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+					.descriptorType(VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
 					.descriptorCount(1)
 					.pImageInfo(imageInfo)
 			}
-			vkUpdateDescriptorSets(device.logicalDevice.vkDevice, descrBuffer, null)
+			VK10.vkUpdateDescriptorSets(device.logicalDevice.vkDevice, descrBuffer, null)
 		}
 	}
 
@@ -112,11 +116,11 @@ class DescriptorSet (
 
 				if (iv.isDepthImage)
 				{
-					imageInfo.imageLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL)
+					imageInfo.imageLayout(VK10.VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL)
 				}
 				else
 				{
-					imageInfo.imageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+					imageInfo.imageLayout(VK10.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 				}
 			}
 
@@ -126,10 +130,10 @@ class DescriptorSet (
 				.dstSet(vkDescriptorSet)
 				.dstBinding(baseBinding)
 				.dstArrayElement(0)
-				.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+				.descriptorType(VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
 				.descriptorCount(numImages)
 				.pImageInfo(imageInfos)
-			vkUpdateDescriptorSets(device.logicalDevice.vkDevice, descrBuffer, null)
+			VK10.vkUpdateDescriptorSets(device.logicalDevice.vkDevice, descrBuffer, null)
 		}
 	}
 }

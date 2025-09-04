@@ -2,11 +2,8 @@ package fpw
 
 import org.lwjgl.stb.STBImage.*
 import org.lwjgl.system.MemoryStack
-import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
-import java.lang.foreign.ValueLayout.JAVA_INT
 import java.nio.file.Path
-import kotlin.io.path.Path
 import kotlin.io.path.div
 
 class Image private constructor (
@@ -18,11 +15,9 @@ class Image private constructor (
 
 	companion object
 	{
-		val cbcb = Path("./resources/assets/").normalize().toAbsolutePath()
-
 		fun load (p: Path): Image?
 		{
-			val finp = cbcb/p
+			val finp = FUtil.ASSETS_PATH/p
 			MemoryStack.stackPush().use { arena ->
 				val wp = arena.mallocInt(1)
 				val hp = arena.mallocInt(1)

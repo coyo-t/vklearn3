@@ -1,6 +1,8 @@
 package fpw.ren
 
-import fpw.Renderer
+import fpw.ren.Renderer
+import fpw.ren.image.GPUImage
+import fpw.ren.image.ImageView
 import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT
 import org.lwjgl.vulkan.VK14.*
 

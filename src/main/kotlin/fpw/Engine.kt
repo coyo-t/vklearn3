@@ -1,5 +1,10 @@
 package fpw
 
+import fpw.ren.goobers.Projection
+import fpw.ren.goobers.RenderEntity
+import fpw.ren.Renderer
+import fpw.ren.goobers.EntityViewPoint
+import fpw.ren.goobers.RenderEntityUpdateCallback
 import org.joml.Math.toRadians
 import org.lwjgl.glfw.GLFW.glfwPollEvents
 import kotlin.math.PI
@@ -48,18 +53,18 @@ class Engine (val window: Window)
 		addEntity(RenderEntity("tha cube")) {
 			model = testModelTriangle
 			location.set(0.0, 0.0, -2.0)
-			update = { milliTimeDiff ->
+			setUpdateCallback { milliTimeDiff ->
 				location.set(
-					cos(window.time * PI*0.5) * 1.0,
+					cos(window.time * PI * 0.5) * 1.0,
 					sin(window.time * PI) * 0.5,
 					-2.0,
 				)
 
 				val fdt = window.time.toFloat()
 				rotation
-				.identity()
-				.rotateX(toRadians(fdt * 45f))
-				.rotateY(toRadians(fdt * 60f))
+					.identity()
+					.rotateX(toRadians(fdt * 45f))
+					.rotateY(toRadians(fdt * 60f))
 			}
 		}
 
@@ -88,7 +93,7 @@ class Engine (val window: Window)
 					val diffTimeMillis = now - updateTime
 					for (entity in entities)
 					{
-						entity.update?.invoke(entity, diffTimeMillis)
+						entity.update?.invokeitalize(diffTimeMillis)
 					}
 					updateTime = now
 					ticks--

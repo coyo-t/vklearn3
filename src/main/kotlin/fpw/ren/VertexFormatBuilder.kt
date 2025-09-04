@@ -16,7 +16,6 @@ import org.lwjgl.vulkan.VkVertexInputBindingDescription
 
 class VertexFormatBuilder
 {
-
 	companion object
 	{
 		fun buildVertexFormat (vb: VertexFormatBuilder.()->Unit): VertexFormat

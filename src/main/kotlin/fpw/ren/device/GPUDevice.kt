@@ -1,6 +1,6 @@
 package fpw.ren.device
 
-import fpw.Renderer
+import fpw.ren.Renderer
 
 class GPUDevice (
 	val renderer: Renderer,

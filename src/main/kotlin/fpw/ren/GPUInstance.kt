@@ -1,7 +1,7 @@
 package fpw.ren
 
 import fpw.FUtil
-import fpw.Renderer
+import fpw.ren.Renderer
 import fpw.ren.GPUtil.DBG_CALL_BACK_PREF
 import fpw.ren.GPUtil.MESSAGE_SEVERITY_BITMASK
 import fpw.ren.GPUtil.MESSAGE_TYPE_BITMASK

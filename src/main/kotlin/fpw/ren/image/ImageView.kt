@@ -1,11 +1,10 @@
-package fpw.ren
+package fpw.ren.image
 
-import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.GPUtil
 import fpw.ren.device.GPUDevice
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkImageViewCreateInfo
-
 
 class ImageView (
 	val device: GPUDevice,
@@ -31,8 +30,8 @@ class ImageView (
 			it.layerCount(imageViewData.layerCount)
 		}
 
-		gpuCheck(
-			vkCreateImageView(device.logicalDevice.vkDevice, viewCreateInfo, null, lp),
+		GPUtil.gpuCheck(
+			VK10.vkCreateImageView(device.logicalDevice.vkDevice, viewCreateInfo, null, lp),
 			"image view creation"
 		)
 		lp.get(0)
@@ -41,7 +40,7 @@ class ImageView (
 
 	fun free ()
 	{
-		vkDestroyImageView(device.logicalDevice.vkDevice, vkImageView, null)
+		VK10.vkDestroyImageView(device.logicalDevice.vkDevice, vkImageView, null)
 	}
 
 	data class Data(
@@ -50,7 +49,6 @@ class ImageView (
 		val format: Int = 0,
 		val layerCount: Int = 1,
 		val mipLevels: Int = 1,
-		val viewType: Int = VK_IMAGE_VIEW_TYPE_2D,
+		val viewType: Int = VK10.VK_IMAGE_VIEW_TYPE_2D,
 	)
 }
-

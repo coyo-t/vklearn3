@@ -1,7 +1,9 @@
 package fpw.ren
 
-import fpw.Renderer
+import fpw.ren.Renderer
 import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.GPUtil.longs
+import fpw.ren.descriptor.DescriptorSetLayout
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.VK_POLYGON_MODE_FILL
@@ -33,10 +35,8 @@ class Pipeline (
 
 			val numModules = shaderModules.size
 			val shaderStages = VkPipelineShaderStageCreateInfo.calloc(numModules, stack)
-			for (i in 0..<numModules)
-			{
+			shaderStages.withIndex().forEach { (i, shStage) ->
 				val shaderModule = shaderModules[i]
-				val shStage = shaderStages.get(i)
 				shStage.`sType$Default`()
 				shStage.stage(shaderModule.shaderStage.vkFlag)
 				shStage.module(shaderModule.handle)
@@ -115,12 +115,8 @@ class Pipeline (
 //				vpcr = null
 //			}
 
-			val numLayouts = descriptorSetLayouts.size
-
-			val ppLayout = stack.mallocLong(numLayouts)
-			for (i in 0..<numLayouts)
-			{
-				ppLayout.put(i, descriptorSetLayouts[i].vkDescLayout)
+			val ppLayout = stack.longs(descriptorSetLayouts.size) {
+				descriptorSetLayouts[it].vkDescLayout
 			}
 
 			val pPipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo.calloc(stack)

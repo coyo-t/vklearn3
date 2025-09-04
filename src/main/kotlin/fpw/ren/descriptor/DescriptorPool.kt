@@ -1,15 +1,12 @@
-package fpw.ren
+package fpw.ren.descriptor
 
-import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.descriptor.DescriptorSet
+import fpw.ren.GPUtil
 import fpw.ren.device.GPUDevice
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT
-import org.lwjgl.vulkan.VK10.vkCreateDescriptorPool
-import org.lwjgl.vulkan.VK10.vkDestroyDescriptorPool
-import org.lwjgl.vulkan.VK10.vkFreeDescriptorSets
+import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkDescriptorPoolCreateInfo
 import org.lwjgl.vulkan.VkDescriptorPoolSize
-
 
 class DescriptorPool (
 	val device: GPUDevice,
@@ -34,13 +31,13 @@ class DescriptorPool (
 
 			val descriptorPoolInfo = VkDescriptorPoolCreateInfo.calloc(stack)
 				.`sType$Default`()
-				.flags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
+				.flags(VK10.VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
 				.pPoolSizes(typeCounts)
 				.maxSets(maxSets)
 
 			val pDescriptorPool = stack.mallocLong(1)
-			gpuCheck(
-				vkCreateDescriptorPool(device.logicalDevice.vkDevice, descriptorPoolInfo, null, pDescriptorPool),
+			GPUtil.gpuCheck(
+				VK10.vkCreateDescriptorPool(device.logicalDevice.vkDevice, descriptorPoolInfo, null, pDescriptorPool),
 				"Failed to create descriptor pool"
 			)
 			vkDescPool = pDescriptorPool[0]
@@ -49,7 +46,7 @@ class DescriptorPool (
 
 	fun free ()
 	{
-		vkDestroyDescriptorPool(device.logicalDevice.vkDevice, vkDescPool, null)
+		VK10.vkDestroyDescriptorPool(device.logicalDevice.vkDevice, vkDescPool, null)
 	}
 
 	fun freeDescriptorSet (vkDescriptorSet: DescriptorSet)
@@ -57,8 +54,8 @@ class DescriptorPool (
 		MemoryStack.stackPush().use { stack ->
 			val longBuffer = stack.mallocLong(1)
 			longBuffer.put(0, vkDescriptorSet.vkDescriptorSet)
-			gpuCheck(
-				vkFreeDescriptorSets(device.logicalDevice.vkDevice, vkDescPool, longBuffer),
+			GPUtil.gpuCheck(
+				VK10.vkFreeDescriptorSets(device.logicalDevice.vkDevice, vkDescPool, longBuffer),
 				"Failed to free descriptor set"
 			)
 		}

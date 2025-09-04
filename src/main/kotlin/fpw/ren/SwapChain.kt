@@ -1,9 +1,11 @@
 package fpw.ren
 
-import fpw.Renderer
+import fpw.ren.Renderer
 import fpw.ren.GPUtil.gpuCheck
-import fpw.ren.ImageView.Data
+import fpw.ren.image.ImageView.Data
+import fpw.ren.command.CommandSequence
 import fpw.ren.device.GPUDevice
+import fpw.ren.image.ImageView
 import org.joml.Math.clamp
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil

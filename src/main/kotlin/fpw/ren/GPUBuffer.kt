@@ -1,6 +1,6 @@
 package fpw.ren
 
-import fpw.Renderer
+import fpw.ren.Renderer
 import fpw.ren.GPUtil.gpuCheck
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack

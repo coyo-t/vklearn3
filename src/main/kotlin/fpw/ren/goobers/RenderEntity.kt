@@ -1,9 +1,9 @@
-package fpw
+package fpw.ren.goobers
 
+import fpw.ResourceLocation
 import org.joml.Matrix4f
 import org.joml.Quaternionf
 import org.joml.Vector3f
-
 
 open class RenderEntity
 {
@@ -15,11 +15,17 @@ open class RenderEntity
 	val rotation = Quaternionf()
 	var scale = 1f
 
-	var update: (RenderEntity.(dt:Long)->Unit)? = null
+	var update: RenderEntityUpdateCallback? = null
+//	var update: (RenderEntity.(dt:Long)->Unit)? = null
 
 	constructor (id: String)
 	{
 		this.id = id
+	}
+
+	fun setUpdateCallback (f:RenderEntityUpdateCallback?)
+	{
+		update = f
 	}
 
 	fun updateModelMatrix()

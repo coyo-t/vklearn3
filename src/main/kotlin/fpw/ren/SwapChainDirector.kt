@@ -1,6 +1,8 @@
 package fpw.ren
 
-import fpw.Renderer
+import fpw.ren.Renderer
+import fpw.ren.command.CommandBuffer
+import fpw.ren.command.CommandPool
 
 class SwapChainDirector (val renderer: Renderer)
 {

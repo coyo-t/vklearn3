@@ -1,6 +1,7 @@
 package fpw.ren
 
-import fpw.Renderer
+import fpw.ren.Renderer
+import fpw.ren.image.ImageView
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.KHRSynchronization2.VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR
 import org.lwjgl.vulkan.VK10.*

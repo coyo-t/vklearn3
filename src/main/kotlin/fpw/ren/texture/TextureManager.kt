@@ -1,12 +1,14 @@
-package fpw.ren
+package fpw.ren.texture
 
 import fpw.FUtil
 import fpw.Image
-import fpw.Renderer
 import fpw.ResourceLocation
-import org.lwjgl.vulkan.VK10.VK_FORMAT_R8G8B8A8_SRGB
+import fpw.ren.Renderer
+import fpw.ren.command.CommandBuffer
+import fpw.ren.command.CommandPool
+import fpw.ren.command.CommandSequence
+import org.lwjgl.vulkan.VK10
 import kotlin.io.path.div
-
 
 class TextureManager (val renderer: Renderer)
 {
@@ -22,8 +24,8 @@ class TextureManager (val renderer: Renderer)
 
 		try
 		{
-			val srcImage = Image.load(FUtil.ASSETS_PATH/p)!!
-			val outs = Texture(renderer, p, srcImage, VK_FORMAT_R8G8B8A8_SRGB)
+			val srcImage = Image.Companion.load(FUtil.ASSETS_PATH / p)!!
+			val outs = Texture(renderer, p, srcImage, VK10.VK_FORMAT_R8G8B8A8_SRGB)
 			textureMap[p] = outs
 			uploadTextures(
 				renderer.currentSwapChainDirector.commandPool,

@@ -1,4 +1,4 @@
-package fpw.ren.enums
+package fpw.ren.descriptor
 
 import org.lwjgl.vulkan.VK10
 

@@ -1,13 +1,12 @@
-package fpw.ren
+package fpw.ren.texture
 
-import fpw.Renderer
-import fpw.ren.GPUtil.gpuCheck
-import fpw.ren.enums.SamplerFilter
-import fpw.ren.enums.SamplerWrapping
+import fpw.ren.Renderer
+import fpw.ren.GPUtil
+import fpw.ren.texture.SamplerFilter
+import fpw.ren.texture.SamplerWrapping
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkSamplerCreateInfo
-
 
 class Sampler (
 	val vkCtx: Renderer,
@@ -29,11 +28,11 @@ class Sampler (
 			samplerInfo.addressModeU(wrapping.vkEnum)
 			samplerInfo.addressModeV(wrapping.vkEnum)
 			samplerInfo.addressModeW(wrapping.vkEnum)
-			samplerInfo.borderColor(VK_BORDER_COLOR_INT_OPAQUE_BLACK)
+			samplerInfo.borderColor(VK10.VK_BORDER_COLOR_INT_OPAQUE_BLACK)
 			samplerInfo.unnormalizedCoordinates(false)
 			samplerInfo.compareEnable(false)
-			samplerInfo.compareOp(VK_COMPARE_OP_NEVER)
-			samplerInfo.mipmapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST)
+			samplerInfo.compareOp(VK10.VK_COMPARE_OP_NEVER)
+			samplerInfo.mipmapMode(VK10.VK_SAMPLER_MIPMAP_MODE_NEAREST)
 			samplerInfo.minLod(0f)
 			samplerInfo.maxLod(0f)
 			samplerInfo.mipLodBias(0f)
@@ -46,7 +45,10 @@ class Sampler (
 //			}
 
 			val lp = stack.mallocLong(1)
-			gpuCheck(vkCreateSampler(vkCtx.gpu.logicalDevice.vkDevice, samplerInfo, null, lp), "Failed to create sampler")
+			GPUtil.gpuCheck(
+				VK10.vkCreateSampler(vkCtx.gpu.logicalDevice.vkDevice, samplerInfo, null, lp),
+				"Failed to create sampler",
+			)
 			vkSampler = lp[0]
 		}
 	}
@@ -54,7 +56,6 @@ class Sampler (
 
 	fun free ()
 	{
-		vkDestroySampler(vkCtx.gpu.logicalDevice.vkDevice, vkSampler, null)
+		VK10.vkDestroySampler(vkCtx.gpu.logicalDevice.vkDevice, vkSampler, null)
 	}
 }
-

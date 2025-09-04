@@ -1,8 +1,11 @@
 package fpw.ren
 
 import fpw.LuaCoyote
-import fpw.Renderer
+import fpw.ren.Renderer
 import fpw.ResourceLocation
+import fpw.ren.command.CommandBuffer
+import fpw.ren.command.CommandPool
+import fpw.ren.command.CommandSequence
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
@@ -12,7 +15,7 @@ import org.lwjgl.vulkan.VkBufferCopy
 import party.iroiro.luajava.value.LuaTableValue
 
 
-class ModelsCache (val context: Renderer)
+class ModelManager (val context: Renderer)
 {
 	val modelMap = mutableMapOf<ResourceLocation, Mesh>()
 

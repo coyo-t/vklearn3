@@ -1,12 +1,11 @@
-package fpw.ren
+package fpw.ren.command
 
-import fpw.Renderer
-import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.Renderer
+import fpw.ren.Fence
+import fpw.ren.GPUtil
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.KHRSurface
 import org.lwjgl.vulkan.VK10
-import org.lwjgl.vulkan.VK10.VK_QUEUE_GRAPHICS_BIT
-import org.lwjgl.vulkan.VK10.VK_TRUE
 import org.lwjgl.vulkan.VK13
 import org.lwjgl.vulkan.VkCommandBufferSubmitInfo
 import org.lwjgl.vulkan.VkQueue
@@ -53,7 +52,7 @@ open class CommandSequence (
 				submitInfo.pWaitSemaphoreInfos(waitSemaphores)
 			}
 			val fenceHandle = fence?.vkFence ?: VK10.VK_NULL_HANDLE
-			gpuCheck(
+			GPUtil.gpuCheck(
 				VK13.vkQueueSubmit2(vkQueue, submitInfo, fenceHandle),
 				"Failed to submit command to queue",
 			)
@@ -71,7 +70,7 @@ open class CommandSequence (
 		internal fun Renderer.getGraphicsQueueFamilyIndex(): Int
 		{
 			val queuePropsBuff = gpu.hardwareDevice.vkQueueFamilyProps
-			val uhh = queuePropsBuff.indexOfFirst { (it.queueFlags() and VK_QUEUE_GRAPHICS_BIT) != 0 }
+			val uhh = queuePropsBuff.indexOfFirst { (it.queueFlags() and VK10.VK_QUEUE_GRAPHICS_BIT) != 0 }
 			require(uhh >= 0) {
 				"Failed to get graphics Queue family index"
 			}
@@ -90,7 +89,7 @@ open class CommandSequence (
 						gpu.hardwareDevice.vkPhysicalDevice,
 						i, displaySurface.vkSurface, intBuff
 					)
-					if (intBuff.get(0) == VK_TRUE)
+					if (intBuff.get(0) == VK10.VK_TRUE)
 					{
 						return i
 					}

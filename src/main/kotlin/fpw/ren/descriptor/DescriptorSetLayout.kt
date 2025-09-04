@@ -1,14 +1,12 @@
-package fpw.ren
+package fpw.ren.descriptor
 
-import fpw.Renderer
-import fpw.ren.GPUtil.gpuCheck
-import fpw.ren.enums.DescriptorType
+import fpw.ren.Renderer
+import fpw.ren.GPUtil
+import fpw.ren.descriptor.DescriptorType
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.vulkan.VK10.vkCreateDescriptorSetLayout
-import org.lwjgl.vulkan.VK10.vkDestroyDescriptorSetLayout
+import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkDescriptorSetLayoutBinding
 import org.lwjgl.vulkan.VkDescriptorSetLayoutCreateInfo
-
 
 class DescriptorSetLayout (
 	val vkCtx: Renderer,
@@ -38,8 +36,8 @@ class DescriptorSetLayout (
 			vkLayoutInfo.pBindings(layoutBindings)
 
 			val pSetLayout = stack.mallocLong(1)
-			gpuCheck(
-				vkCreateDescriptorSetLayout(
+			GPUtil.gpuCheck(
+				VK10.vkCreateDescriptorSetLayout(
 					vkCtx.gpu.logicalDevice.vkDevice,
 					vkLayoutInfo,
 					null,
@@ -53,7 +51,7 @@ class DescriptorSetLayout (
 
 	fun free ()
 	{
-		vkDestroyDescriptorSetLayout(vkCtx.gpu.logicalDevice.vkDevice, vkDescLayout, null)
+		VK10.vkDestroyDescriptorSetLayout(vkCtx.gpu.logicalDevice.vkDevice, vkDescLayout, null)
 	}
 
 	data class Info(

@@ -1,10 +1,10 @@
-package fpw.ren
+package fpw.ren.descriptor
 
+import fpw.ren.descriptor.DescriptorPool
+import fpw.ren.descriptor.DescriptorSet
+import fpw.ren.descriptor.DescriptorSetLayout
 import fpw.ren.device.GPUDevice
-import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
-import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-
+import org.lwjgl.vulkan.VK10
 
 class DescriptorAllocator (
 	val gpu: GPUDevice,
@@ -19,13 +19,13 @@ class DescriptorAllocator (
 	{
 		val limits = gpu.hardwareDevice.vkPhysicalDeviceProperties.properties().limits()
 		descLimits = mutableMapOf(
-			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+			VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
 			to limits.maxDescriptorSetUniformBuffers(),
 
-			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+			VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
 			to limits.maxDescriptorSetSamplers(),
 
-			VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+			VK10.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
 			to limits.maxDescriptorSetStorageBuffers(),
 		)
 		descPoolList.add(createDescPoolInfo(descLimits))

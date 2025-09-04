@@ -1,7 +1,7 @@
 package fpw.ren
 
 import fpw.FUtil
-import fpw.Renderer
+import fpw.ren.Renderer
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
@@ -14,6 +14,7 @@ import java.awt.Color
 import java.lang.foreign.ValueLayout.JAVA_FLOAT
 import java.lang.foreign.ValueLayout.JAVA_INT
 import java.lang.ref.Cleaner
+import java.nio.LongBuffer
 
 
 object GPUtil
@@ -212,4 +213,13 @@ object GPUtil
 		vkBuffer.unMap()
 	}
 
+	inline fun MemoryStack.longs (count:Int, factory: (Int)->Long): LongBuffer
+	{
+		val outs = mallocLong(count)
+		for (i in 0..<count)
+		{
+			outs.put(i, factory(i))
+		}
+		return outs
+	}
 }

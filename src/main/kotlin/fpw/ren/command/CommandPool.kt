@@ -1,11 +1,10 @@
-package fpw.ren
+package fpw.ren.command
 
-import fpw.Renderer
-import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.Renderer
+import fpw.ren.GPUtil
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkCommandPoolCreateInfo
-import kotlin.use
 
 class CommandPool (
 	val vkCtx: Renderer,
@@ -23,12 +22,12 @@ class CommandPool (
 				.queueFamilyIndex(queueFamilyIndex)
 			if (supportReset)
 			{
-				cmdPoolInfo.flags(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
+				cmdPoolInfo.flags(VK10.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
 			}
 
 			val lp = stack.mallocLong(1)
-			gpuCheck(
-				vkCreateCommandPool(vkCtx.gpu.logicalDevice.vkDevice, cmdPoolInfo, null, lp),
+			GPUtil.gpuCheck(
+				VK10.vkCreateCommandPool(vkCtx.gpu.logicalDevice.vkDevice, cmdPoolInfo, null, lp),
 				"Failed to create command pool"
 			)
 			vkCommandPool = lp[0]
@@ -37,11 +36,11 @@ class CommandPool (
 
 	fun reset ()
 	{
-		vkResetCommandPool(vkCtx.gpu.logicalDevice.vkDevice, vkCommandPool, 0)
+		VK10.vkResetCommandPool(vkCtx.gpu.logicalDevice.vkDevice, vkCommandPool, 0)
 	}
 
 	fun free ()
 	{
-		vkDestroyCommandPool(vkCtx.gpu.logicalDevice.vkDevice, vkCommandPool, null)
+		VK10.vkDestroyCommandPool(vkCtx.gpu.logicalDevice.vkDevice, vkCommandPool, null)
 	}
 }

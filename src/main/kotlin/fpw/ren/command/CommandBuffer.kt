@@ -1,11 +1,18 @@
-package fpw.ren
+package fpw.ren.command
 
-import fpw.Renderer
-import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.Renderer
+import fpw.ren.command.CommandPool
+import fpw.ren.command.CommandSequence
+import fpw.ren.Fence
+import fpw.ren.GPUtil
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.VK10.*
-
+import org.lwjgl.vulkan.VK10
+import org.lwjgl.vulkan.VkCommandBuffer
+import org.lwjgl.vulkan.VkCommandBufferAllocateInfo
+import org.lwjgl.vulkan.VkCommandBufferBeginInfo
+import org.lwjgl.vulkan.VkCommandBufferInheritanceInfo
+import org.lwjgl.vulkan.VkCommandBufferInheritanceRenderingInfo
+import org.lwjgl.vulkan.VkCommandBufferSubmitInfo
 
 class CommandBuffer
 {
@@ -30,14 +37,14 @@ class CommandBuffer
 				.commandPool(cmdPool.vkCommandPool)
 				.level(
 					if (inherit == null)
-						VK_COMMAND_BUFFER_LEVEL_PRIMARY
+						VK10.VK_COMMAND_BUFFER_LEVEL_PRIMARY
 					else
-						VK_COMMAND_BUFFER_LEVEL_SECONDARY
+						VK10.VK_COMMAND_BUFFER_LEVEL_SECONDARY
 				)
 				.commandBufferCount(1)
 			val pb = stack.mallocPointer(1)
-			gpuCheck(
-				vkAllocateCommandBuffers(vkDevice, cmdBufAllocateInfo, pb),
+			GPUtil.gpuCheck(
+				VK10.vkAllocateCommandBuffers(vkDevice, cmdBufAllocateInfo, pb),
 				"allocate render command buffer"
 			)
 			vkCommandBuffer = VkCommandBuffer(pb[0], vkDevice)
@@ -51,7 +58,7 @@ class CommandBuffer
 			val cmdBufInfo = VkCommandBufferBeginInfo.calloc(stack).`sType$Default`()
 			if (oneTimeSubmit)
 			{
-				cmdBufInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
+				cmdBufInfo.flags(VK10.VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
 			}
 			val inherit = inheritanceInfo
 			if (inherit != null)
@@ -72,8 +79,8 @@ class CommandBuffer
 				vkInheritanceInfo.pNext(renderingInfo)
 				cmdBufInfo.pInheritanceInfo(vkInheritanceInfo)
 			}
-			gpuCheck(
-				vkBeginCommandBuffer(vkCommandBuffer, cmdBufInfo),
+			GPUtil.gpuCheck(
+				VK10.vkBeginCommandBuffer(vkCommandBuffer, cmdBufInfo),
 				"begin command buffer",
 			)
 		}
@@ -81,7 +88,7 @@ class CommandBuffer
 
 	fun free(vkCtx: Renderer, cmdPool: CommandPool)
 	{
-		vkFreeCommandBuffers(
+		VK10.vkFreeCommandBuffers(
 			vkCtx.gpu.logicalDevice.vkDevice, cmdPool.vkCommandPool,
 			vkCommandBuffer
 		)
@@ -89,15 +96,15 @@ class CommandBuffer
 
 	fun endRecording()
 	{
-		gpuCheck(
-			vkEndCommandBuffer(vkCommandBuffer),
+		GPUtil.gpuCheck(
+			VK10.vkEndCommandBuffer(vkCommandBuffer),
 			"end command buffer"
 		)
 	}
 
 	fun reset()
 	{
-		vkResetCommandBuffer(vkCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
+		VK10.vkResetCommandBuffer(vkCommandBuffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
 	}
 
 	fun submitAndWait(vkCtx: Renderer, queue: CommandSequence)

@@ -1,15 +1,12 @@
-package fpw.ren
+package fpw.ren.image
 
-import fpw.Renderer
-import fpw.ren.GPUtil.gpuCheck
+import fpw.ren.Renderer
+import fpw.ren.GPUtil
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO
-import org.lwjgl.util.vma.Vma.vmaCreateImage
-import org.lwjgl.util.vma.Vma.vmaDestroyImage
+import org.lwjgl.util.vma.Vma
 import org.lwjgl.util.vma.VmaAllocationCreateInfo
-import org.lwjgl.vulkan.VK14.*
+import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkImageCreateInfo
-
 
 class GPUImage (val vkCtx: Renderer, imageData: Data)
 {
@@ -26,7 +23,7 @@ class GPUImage (val vkCtx: Renderer, imageData: Data)
 
 			val ic = VkImageCreateInfo.calloc(stack)
 			ic.`sType$Default`()
-			ic.imageType(VK_IMAGE_TYPE_2D)
+			ic.imageType(VK10.VK_IMAGE_TYPE_2D)
 			ic.format(format)
 			ic.extent {
 				it.width(imageData.wide)
@@ -36,20 +33,20 @@ class GPUImage (val vkCtx: Renderer, imageData: Data)
 			ic.mipLevels(1)
 			ic.arrayLayers(imageData.arrayLayerCount)
 			ic.samples(imageData.sampleCount)
-			ic.initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
-			ic.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
-			ic.tiling(VK_IMAGE_TILING_OPTIMAL)
+			ic.initialLayout(VK10.VK_IMAGE_LAYOUT_UNDEFINED)
+			ic.sharingMode(VK10.VK_SHARING_MODE_EXCLUSIVE)
+			ic.tiling(VK10.VK_IMAGE_TILING_OPTIMAL)
 			ic.usage(imageData.usage)
 
 			val ac = VmaAllocationCreateInfo.calloc(stack)
-			ac.usage(VMA_MEMORY_USAGE_AUTO)
+			ac.usage(Vma.VMA_MEMORY_USAGE_AUTO)
 			ac.flags(imageData.memUsage)
 			ac.priority(1.0f)
 
 			val pAllocation = stack.callocPointer(1)
 			val lp = stack.mallocLong(1)
-			gpuCheck(
-				vmaCreateImage(vkCtx.memAlloc.vmaAlloc, ic, ac, lp, pAllocation, null),
+			GPUtil.gpuCheck(
+				Vma.vmaCreateImage(vkCtx.memAlloc.vmaAlloc, ic, ac, lp, pAllocation, null),
 				"Failed to create image"
 			)
 			vkImage = lp.get(0)
@@ -59,7 +56,7 @@ class GPUImage (val vkCtx: Renderer, imageData: Data)
 
 	fun free()
 	{
-		vmaDestroyImage(vkCtx.memAlloc.vmaAlloc, vkImage, allocation)
+		Vma.vmaDestroyImage(vkCtx.memAlloc.vmaAlloc, vkImage, allocation)
 //		val d = vkCtx.vkDevice
 //		vkDestroyImage(d, vkImage, null)
 //		vkFreeMemory(d, vkMemory, null)
@@ -70,7 +67,7 @@ class GPUImage (val vkCtx: Renderer, imageData: Data)
 		var wide: Int = 0,
 		var tall: Int = 0,
 
-		var format: Int = VK_FORMAT_R8G8B8A8_SRGB,
+		var format: Int = VK10.VK_FORMAT_R8G8B8A8_SRGB,
 		var mipCount: Int = 1,
 		var sampleCount: Int = 1,
 		var arrayLayerCount: Int = 1,
