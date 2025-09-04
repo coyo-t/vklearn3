@@ -5,11 +5,11 @@ import fpw.LuaCoyote
 import fpw.ResourceLocation
 import fpw.ren.enums.ShaderType
 import org.lwjgl.util.shaderc.Shaderc.*
-import party.iroiro.luajava.Lua
+import party.iroiro.luajava.Lua.LuaType
 import java.nio.ByteBuffer
 import kotlin.io.path.div
 
-object ShaderAssetThinger
+class ShaderCodeManager (val renderer: Renderer)
 {
 	val L = LuaCoyote {
 		openLibraries()
@@ -17,7 +17,47 @@ object ShaderAssetThinger
 
 	var doGenerateShaderDebugSymbols = true
 
-	fun compileSPIRV (shaderCode: String, shaderType: ShaderType): ByteBuffer
+	val nametable = mutableMapOf<ResourceLocation, Entry>()
+
+
+	operator fun get (at: ResourceLocation): Entry
+	{
+		if (at in nametable)
+		{
+			return nametable[at]!!
+		}
+
+		try
+		{
+			val rp = FUtil.ASSETS_PATH/at.path
+			L.run(FUtil.getFileBytes(rp), "")
+			val result = L.get()
+			check(result.type() == LuaType.TABLE) {
+				"expecting a table, got ${result.type()}"
+			}
+			val vertexSrc = result["vertex"]!!.toString()
+			val fragmentSrc = result["fragment"]!!.toString()
+
+			val vc = compileSPIRV(at, vertexSrc, ShaderType.Vertex)
+			val fc = compileSPIRV(at, fragmentSrc, ShaderType.Fragment)
+			val outs = Entry(
+				vertex = vc,
+				fragment = fc,
+			)
+			nametable[at] = outs
+			return outs
+		}
+		catch (e: Exception)
+		{
+			throw e
+		}
+		finally
+		{
+			L.top = 0
+		}
+	}
+
+	private fun compileSPIRV (who: ResourceLocation, shaderCode: String, shaderType: ShaderType): ByteBuffer
 	{
 		var compiler = 0L
 		var options = 0L
@@ -37,7 +77,7 @@ object ShaderAssetThinger
 				compiler,
 				shaderCode,
 				shaderType.scEnum,
-				"shader.glsl",
+				"$who @ $shaderType",
 				"main",
 				options
 			)
@@ -54,34 +94,13 @@ object ShaderAssetThinger
 		}
 	}
 
-	fun loadFromLuaScript (at: ResourceLocation): Sources
+	fun free ()
 	{
-		try
-		{
-			val rp = FUtil.ASSETS_PATH/at.path
-			L.run(FUtil.getFileBytes(rp), "")
-			val result = L.get()
-			check(result.type() == Lua.LuaType.TABLE) {
-				"expecting a table, got ${result.type()}"
-			}
-
-			return Sources(
-				vertex = result["vertex"]!!.toString(),
-				fragment = result["fragment"]!!.toString(),
-			)
-		}
-		catch (e: Exception)
-		{
-			throw e
-		}
-		finally
-		{
-			L.top = 0
-		}
+		L.close()
 	}
 
-	data class Sources (
-		val vertex: String,
-		val fragment: String,
+	data class Entry (
+		val vertex: ByteBuffer,
+		val fragment: ByteBuffer,
 	)
 }

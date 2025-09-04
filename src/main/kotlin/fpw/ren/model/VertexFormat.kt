@@ -1,11 +1,9 @@
-package fpw.ren
+package fpw.ren.model
 
-import fpw.FUtil
-import org.lwjgl.system.MemoryUtil.nmemFree
+import fpw.ren.GPUtil
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
-
 
 class VertexFormat (
 	val vi: VkPipelineVertexInputStateCreateInfo,

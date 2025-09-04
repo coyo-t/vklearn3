@@ -1,4 +1,4 @@
-package fpw.ren
+package fpw.ren.model
 
 class InputMesh (
 	val positions: FloatArray,

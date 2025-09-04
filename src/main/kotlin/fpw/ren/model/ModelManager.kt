@@ -1,19 +1,20 @@
-package fpw.ren
+package fpw.ren.model
 
 import fpw.LuaCoyote
-import fpw.ren.Renderer
 import fpw.ResourceLocation
+import fpw.ren.GPUBuffer
+import fpw.ren.GPUtil
+import fpw.ren.model.InputMesh
+import fpw.ren.Renderer
 import fpw.ren.command.CommandBuffer
 import fpw.ren.command.CommandPool
 import fpw.ren.command.CommandSequence
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.util.vma.Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
-import org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_AUTO
-import org.lwjgl.vulkan.VK14.*
+import org.lwjgl.util.vma.Vma
+import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkBufferCopy
 import party.iroiro.luajava.value.LuaTableValue
-
 
 class ModelManager (val context: Renderer)
 {
@@ -124,16 +125,16 @@ class ModelManager (val context: Renderer)
 		val srcBuffer = GPUBuffer(
 			context,
 			bufferSize,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VMA_MEMORY_USAGE_AUTO,
-			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+			VK10.VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			Vma.VMA_MEMORY_USAGE_AUTO,
+			Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+			VK10.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 		)
 		val dstBuffer = GPUBuffer(
 			context,
 			bufferSize,
-			VK_BUFFER_USAGE_TRANSFER_DST_BIT or VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-			VMA_MEMORY_USAGE_AUTO,
+			VK10.VK_BUFFER_USAGE_TRANSFER_DST_BIT or VK10.VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+			Vma.VMA_MEMORY_USAGE_AUTO,
 			0,
 			0,
 		)
@@ -160,16 +161,16 @@ class ModelManager (val context: Renderer)
 		val srcBuffer = GPUBuffer(
 			context,
 			bufferSize,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VMA_MEMORY_USAGE_AUTO,
-			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+			VK10.VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			Vma.VMA_MEMORY_USAGE_AUTO,
+			Vma.VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+			VK10.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 		)
 		val dstBuffer = GPUBuffer(
 			context,
 			bufferSize,
-			VK_BUFFER_USAGE_TRANSFER_DST_BIT or VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-			VMA_MEMORY_USAGE_AUTO,
+			VK10.VK_BUFFER_USAGE_TRANSFER_DST_BIT or VK10.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+			Vma.VMA_MEMORY_USAGE_AUTO,
 			0,
 			0,
 		)
@@ -203,7 +204,7 @@ class ModelManager (val context: Renderer)
 				.srcOffset(0)
 				.dstOffset(0)
 				.size(from.requestedSize)
-			vkCmdCopyBuffer(cmd.vkCommandBuffer, from.bufferStruct, to.bufferStruct, copyRegion)
+			VK10.vkCmdCopyBuffer(cmd.vkCommandBuffer, from.bufferStruct, to.bufferStruct, copyRegion)
 		}
 	}
 

@@ -12,6 +12,8 @@ import fpw.ren.descriptor.DescriptorSetLayout
 import fpw.ren.descriptor.DescriptorType
 import fpw.ren.device.GPUDevice
 import fpw.ren.enums.ShaderType
+import fpw.ren.model.ModelManager
+import fpw.ren.model.VertexFormatBuilder
 import fpw.ren.texture.Sampler
 import fpw.ren.texture.SamplerFilter
 import fpw.ren.texture.SamplerWrapping
@@ -100,6 +102,8 @@ class Renderer (val engineContext: Engine)
 		),
 	)
 
+	val shaderManager = ShaderCodeManager(this)
+
 	var viewPoint: ViewPoint = IdentityViewPoint()
 	val shaderMatrixBuffer = createHostVisibleBuffs(
 		GPUtil.SIZEOF_MAT4 * 2L,
@@ -116,24 +120,17 @@ class Renderer (val engineContext: Engine)
 	val mvMatrix = Matrix4f()
 
 	val pipeline = run {
-		val shPath = ResourceLocation.Companion.create("shader/scene.lua")
-		val srcs = ShaderAssetThinger.loadFromLuaScript(shPath)
+		val shCode = shaderManager[engineContext.testShader]
 		val shaderModules = listOf(
 			ShaderModule(
 				this,
 				shaderStage = ShaderType.Vertex,
-				spirv = ShaderAssetThinger.compileSPIRV(
-					srcs.vertex,
-					ShaderType.Vertex,
-				),
+				spirv = shCode.vertex,
 			),
 			ShaderModule(
 				this,
 				shaderStage = ShaderType.Fragment,
-				spirv = ShaderAssetThinger.compileSPIRV(
-					srcs.fragment,
-					ShaderType.Fragment,
-				),
+				spirv = shCode.fragment,
 			),
 		)
 		val outs = Pipeline(
@@ -158,7 +155,7 @@ class Renderer (val engineContext: Engine)
 		filter = SamplerFilter.Nearest,
 	)
 
-	val textureTerrain = textureManager[ResourceLocation.Companion.create("image/terrain.png")]
+	val textureTerrain = textureManager[engineContext.testTexture]
 
 	val currentSwapChainDirector get() = swapChainDirectors[currentFrame]
 
@@ -440,6 +437,7 @@ class Renderer (val engineContext: Engine)
 	{
 		gpu.waitIdle()
 		textureManager.free()
+		shaderManager.free()
 
 		descriptorLayoutVertexStage.free()
 		descriptorLayoutFragmentStage.free()

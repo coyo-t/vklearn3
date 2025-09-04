@@ -26,6 +26,11 @@ private constructor (
 		)
 	}
 
+	override fun toString(): String
+	{
+		return "$namespace:$path"
+	}
+
 	companion object
 	{
 		var DEFAULT_NAMESPACE = "fpw"

@@ -1,21 +1,20 @@
-package fpw.ren
+package fpw.ren.model
 
-import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
 
-/*
-	UNORM is a float in the range of [0, 1].
-	SNORM is the same but in the range of [-1, 1]
-	USCALED is the unsigned integer value converted to float
-	SSCALED is the integer value converted to float
-	UINT is an unsigned integer
-	SINT is a signed integer
-*/
-
 class VertexFormatBuilder
 {
+	/*
+		UNORM is a float in the range of [0, 1].
+		SNORM is the same but in the range of [-1, 1]
+		USCALED is the unsigned integer value converted to float
+		SSCALED is the integer value converted to float
+		UINT is an unsigned integer
+		SINT is a signed integer
+	*/
 	companion object
 	{
 		fun buildVertexFormat (vb: VertexFormatBuilder.()->Unit): VertexFormat
@@ -40,7 +39,7 @@ class VertexFormatBuilder
 				val vbl = VkVertexInputBindingDescription.calloc(1)
 				vbl[0].apply {
 					binding(0)
-					inputRate(VK_VERTEX_INPUT_RATE_VERTEX)
+					inputRate(VK10.VK_VERTEX_INPUT_RATE_VERTEX)
 					stride(stride)
 				}
 
@@ -53,8 +52,8 @@ class VertexFormatBuilder
 				return VertexFormat(
 					viAttrs = vip,
 					viBindings = vbl,
-					vi=vinfo,
-					stride=stride,
+					vi = vinfo,
+					stride = stride,
 				)
 			}
 		}
@@ -68,27 +67,27 @@ class VertexFormatBuilder
 			val byteSize = componentByteSize * componentCount
 		}
 
-		val UNDEFINED = AttributeType(0, 0, VK_FORMAT_UNDEFINED)
+		val UNDEFINED = AttributeType(0, 0, VK10.VK_FORMAT_UNDEFINED)
 
-		val UBYTE1 = AttributeType(1, 1, VK_FORMAT_R8_UINT)
-		val UBYTE2 = AttributeType(1, 2, VK_FORMAT_R8G8_UINT)
-		val UBYTE3 = AttributeType(1, 3, VK_FORMAT_R8G8B8_UINT)
-		val UBYTE4 = AttributeType(1, 4, VK_FORMAT_R8G8B8A8_UINT)
+		val UBYTE1 = AttributeType(1, 1, VK10.VK_FORMAT_R8_UINT)
+		val UBYTE2 = AttributeType(1, 2, VK10.VK_FORMAT_R8G8_UINT)
+		val UBYTE3 = AttributeType(1, 3, VK10.VK_FORMAT_R8G8B8_UINT)
+		val UBYTE4 = AttributeType(1, 4, VK10.VK_FORMAT_R8G8B8A8_UINT)
 
-		val SF8_1 = AttributeType(1, 1, VK_FORMAT_R8_SNORM)
-		val SF8_2 = AttributeType(1, 2, VK_FORMAT_R8G8_SNORM)
-		val SF8_3 = AttributeType(1, 3, VK_FORMAT_R8G8B8_SNORM)
-		val SF8_4 = AttributeType(1, 4, VK_FORMAT_R8G8B8A8_SNORM)
+		val SF8_1 = AttributeType(1, 1, VK10.VK_FORMAT_R8_SNORM)
+		val SF8_2 = AttributeType(1, 2, VK10.VK_FORMAT_R8G8_SNORM)
+		val SF8_3 = AttributeType(1, 3, VK10.VK_FORMAT_R8G8B8_SNORM)
+		val SF8_4 = AttributeType(1, 4, VK10.VK_FORMAT_R8G8B8A8_SNORM)
 
-		val UF8_1 = AttributeType(1, 1, VK_FORMAT_R8_UNORM)
-		val UF8_2 = AttributeType(1, 2, VK_FORMAT_R8G8_UNORM)
-		val UF8_3 = AttributeType(1, 3, VK_FORMAT_R8G8B8_UNORM)
-		val UF8_4 = AttributeType(1, 4, VK_FORMAT_R8G8B8A8_UNORM)
+		val UF8_1 = AttributeType(1, 1, VK10.VK_FORMAT_R8_UNORM)
+		val UF8_2 = AttributeType(1, 2, VK10.VK_FORMAT_R8G8_UNORM)
+		val UF8_3 = AttributeType(1, 3, VK10.VK_FORMAT_R8G8B8_UNORM)
+		val UF8_4 = AttributeType(1, 4, VK10.VK_FORMAT_R8G8B8A8_UNORM)
 
-		val FLOAT1 = AttributeType(4, 1, VK_FORMAT_R32_SFLOAT)
-		val FLOAT2 = AttributeType(4, 2, VK_FORMAT_R32G32_SFLOAT)
-		val FLOAT3 = AttributeType(4, 3, VK_FORMAT_R32G32B32_SFLOAT)
-		val FLOAT4 = AttributeType(4, 4, VK_FORMAT_R32G32B32A32_SFLOAT)
+		val FLOAT1 = AttributeType(4, 1, VK10.VK_FORMAT_R32_SFLOAT)
+		val FLOAT2 = AttributeType(4, 2, VK10.VK_FORMAT_R32G32_SFLOAT)
+		val FLOAT3 = AttributeType(4, 3, VK10.VK_FORMAT_R32G32B32_SFLOAT)
+		val FLOAT4 = AttributeType(4, 4, VK10.VK_FORMAT_R32G32B32A32_SFLOAT)
 	}
 
 	class Entry (

@@ -13,7 +13,7 @@ import kotlin.math.sin
 
 class Engine (val window: Window)
 {
-	val testTexture = ResourceLocation.create("image/cros.png")
+	val testTexture = ResourceLocation.create("image/terrain.png")
 	val testShader = ResourceLocation.create("shader/scene.lua")
 	val testModel = ResourceLocation.create("mesh/test cube.lua")
 	val testModelTriangle = ResourceLocation.create("mesh/triangle.lua")

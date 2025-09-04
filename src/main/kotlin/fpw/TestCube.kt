@@ -1,6 +1,6 @@
 package fpw
 
-import fpw.ren.VertexFormatBuilder.Companion.buildVertexFormat
+import fpw.ren.model.VertexFormatBuilder.Companion.buildVertexFormat
 
 object TestCube
 {
