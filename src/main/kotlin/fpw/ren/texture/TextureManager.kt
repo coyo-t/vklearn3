@@ -8,7 +8,6 @@ import fpw.ren.command.CommandBuffer
 import fpw.ren.command.CommandPool
 import fpw.ren.command.CommandSequence
 import fpw.ren.enums.VkFormat
-import org.lwjgl.vulkan.VK10
 import kotlin.io.path.div
 
 class TextureManager (val renderer: Renderer)
@@ -29,7 +28,7 @@ class TextureManager (val renderer: Renderer)
 			val outs = Texture(renderer, p, srcImage, VkFormat.R8G8B8A8_SRGB)
 			textureMap[p] = outs
 			uploadTextures(
-				renderer.swapChainDirector.commandPool,
+				renderer.SCDcommandPool,
 				renderer.graphicsQueue,
 				outs,
 			)

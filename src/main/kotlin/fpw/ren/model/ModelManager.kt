@@ -72,7 +72,7 @@ class ModelManager (val context: Renderer)
 
 			return loadModels(
 				context,
-				context.swapChainDirector.commandPool,
+				context.SCDcommandPool,
 				context.graphicsQueue,
 				mRlrl,
 				InputMesh(

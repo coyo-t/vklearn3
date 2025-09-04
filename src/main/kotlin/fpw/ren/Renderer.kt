@@ -2,6 +2,7 @@ package fpw.ren
 
 import fpw.Engine
 import fpw.ren.command.CommandBuffer
+import fpw.ren.command.CommandPool
 import fpw.ren.command.CommandSequence
 import fpw.ren.descriptor.*
 import fpw.ren.device.GPUDevice
@@ -67,7 +68,17 @@ class Renderer (val engineContext: Engine)
 	)
 
 
-	val swapChainDirector = SwapChainDirector(this)
+	val SCDcommandPool
+		= CommandPool(this, graphicsQueue.queueFamilyIndex, false)
+
+	val SCDcommandBuffer
+		= CommandBuffer(this, SCDcommandPool, oneTimeSubmit = true)
+
+	var SCDimageAcquiredSemaphore
+		= Semaphore(this)
+
+	val SCDfence
+		= Fence(this, signaled = true)
 
 	private var doResize = false
 	val meshManager = ModelManager(this)
@@ -181,7 +192,7 @@ class Renderer (val engineContext: Engine)
 	private fun submit(cmdBuff: CommandBuffer, imageIndex: Int)
 	{
 		MemoryStack.stackPush().use { stack ->
-			val fence = swapChainDirector.fence
+			val fence = SCDfence
 			fence.reset()
 			val commands = VkCommandBufferSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
@@ -189,7 +200,7 @@ class Renderer (val engineContext: Engine)
 			val waits = VkSemaphoreSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
 				.stageMask(VK13.VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT)
-				.semaphore(swapChainDirector.imageAcquiredSemaphore.vkSemaphore)
+				.semaphore(SCDimageAcquiredSemaphore.vkSemaphore)
 			val signals = VkSemaphoreSubmitInfo.calloc(1, stack)
 				.`sType$Default`()
 				.stageMask(VK13.VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)
@@ -200,11 +211,10 @@ class Renderer (val engineContext: Engine)
 
 	fun render ()
 	{
-		val director = swapChainDirector
-		director.fence.waitForFences()
+		SCDfence.waitForFences()
 		descriptors.clearPools()
-		val cmdPool = director.commandPool
-		val cmdBuffer = director.commandBuffer
+		val cmdPool = SCDcommandPool
+		val cmdBuffer = SCDcommandBuffer
 
 		cmdPool.reset()
 		cmdBuffer.beginRecording()
@@ -214,7 +224,7 @@ class Renderer (val engineContext: Engine)
 			resize()
 			return
 		}
-		val imageIndex = swapChain.acquireNextImage(director.imageAcquiredSemaphore)
+		val imageIndex = swapChain.acquireNextImage(SCDimageAcquiredSemaphore)
 		if (imageIndex < 0)
 		{
 			resize()
@@ -375,7 +385,8 @@ class Renderer (val engineContext: Engine)
 			useVerticalSync,
 		)
 
-		swapChainDirector.onResize()
+		SCDimageAcquiredSemaphore.free()
+		SCDimageAcquiredSemaphore = Semaphore(this)
 
 		val extent = swapChain.extents
 		engineContext.lens.resize(extent.width(), extent.height())
@@ -428,7 +439,10 @@ class Renderer (val engineContext: Engine)
 		clrValueDepth.free()
 
 		meshManager.free()
-		swapChainDirector.free()
+		SCDcommandBuffer.free(this, SCDcommandPool)
+		SCDcommandPool.free()
+		SCDimageAcquiredSemaphore.free()
+		SCDfence.free()
 
 		swapChain.free()
 		displaySurface.free(instance)
