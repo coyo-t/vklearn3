@@ -1,0 +1,27 @@
+package fpw.ren.enums
+
+import org.lwjgl.vulkan.VK10
+
+enum class LogicOperation(val vk:Int)
+{
+	And(VK10.VK_LOGIC_OP_AND),
+	NotAnd(VK10.VK_LOGIC_OP_NAND),
+	ReversedAnd(VK10.VK_LOGIC_OP_AND_REVERSE),
+	InvertedAnd(VK10.VK_LOGIC_OP_AND_INVERTED),
+
+	Xor(VK10.VK_LOGIC_OP_XOR),
+
+	Or(VK10.VK_LOGIC_OP_OR),
+	NotOr(VK10.VK_LOGIC_OP_NOR),
+	ReversedOr(VK10.VK_LOGIC_OP_OR_REVERSE),
+	InvertedOr(VK10.VK_LOGIC_OP_OR_INVERTED),
+
+	Eq(VK10.VK_LOGIC_OP_EQUIVALENT),
+	Invert(VK10.VK_LOGIC_OP_INVERT),
+
+	Non(VK10.VK_LOGIC_OP_NO_OP),
+	Clear(VK10.VK_LOGIC_OP_CLEAR),
+	Set(VK10.VK_LOGIC_OP_SET),
+	Copy(VK10.VK_LOGIC_OP_COPY),
+	InvertedCopy(VK10.VK_LOGIC_OP_COPY_INVERTED),
+}

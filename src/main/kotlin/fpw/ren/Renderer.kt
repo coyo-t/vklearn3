@@ -4,7 +4,6 @@ import fpw.Engine
 import fpw.ren.command.CommandBuffer
 import fpw.ren.command.CommandSequence
 import fpw.ren.descriptor.*
-import fpw.ren.descriptor.DescriptorAllocatorGrowable.PoolSizeRatio
 import fpw.ren.device.GPUDevice
 import fpw.ren.enums.ShaderType
 import fpw.ren.enums.VkFormat

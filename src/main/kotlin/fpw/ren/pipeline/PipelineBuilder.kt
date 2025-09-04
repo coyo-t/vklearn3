@@ -127,6 +127,11 @@ class PipelineBuilder
 		assemblyState.topology(pr.vkEnum)
 	}
 
+	fun primitiveRestartEnabled (uhh: Boolean)
+	{
+		assemblyState.primitiveRestartEnable(uhh)
+	}
+
 	fun lineSize (c: Number)
 	{
 		rasterState.lineWidth(c.toFloat())
